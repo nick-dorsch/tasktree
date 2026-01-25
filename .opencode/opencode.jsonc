@@ -4,10 +4,8 @@
     "tasktree": {
       "type": "local",
       "command": [
-        "uv",
-        "run",
-        "python",
-        "src/mcp/server.py"
+        "task",
+        "mcp"
       ],
       "enabled": true,
     }
