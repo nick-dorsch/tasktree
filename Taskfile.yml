@@ -9,6 +9,7 @@ tasks:
       - rm -f data/tasktree.db
       - task create-db
       - task seed-db
+      - task refresh-views
 
   create-db:
     desc: Create SQLite database from SQL schemas
@@ -22,3 +23,9 @@ tasks:
     desc: Seed database with test data
     cmds:
       - sqlite3 data/tasktree.db < src/sql/seed.sql
+
+  refresh-views:
+    desc: Refresh all database views
+    aliases: [rl]
+    cmds:
+      - cat src/sql/views/*.sql | sqlite3 data/tasktree.db
