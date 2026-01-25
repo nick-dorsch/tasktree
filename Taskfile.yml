@@ -34,3 +34,18 @@ tasks:
     desc: Output the task dependency graph as JSON
     cmds:
       - sqlite3 data/tasktree.db "SELECT graph_json FROM v_graph_json" | jq .
+
+  tree:
+    desc: Output the task dependency tree as ASCII art
+    cmds:
+      - sqlite3 data/tasktree.db "SELECT tree_line FROM v_graph_tree"
+
+  draw:
+    desc: Draw the task dependency graph in the terminal with colored highlighting
+    cmds:
+      - ./scripts/draw-graph.sh data/tasktree.db
+
+  dot:
+    desc: Output the task dependency graph in DOT format (Graphviz)
+    cmds:
+      - sqlite3 data/tasktree.db "SELECT dot_graph FROM v_graph_dot"

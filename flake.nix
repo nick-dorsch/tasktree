@@ -39,6 +39,10 @@
             jq
             ripgrep
             bat
+            
+            # Graph visualization
+            graphviz
+            graph-easy
           ];
 
           shellHook = ''

@@ -1,6 +1,9 @@
 -- View that outputs the entire task graph as a JSON structure
 -- Format: {"nodes": [...], "edges": [...]}
-CREATE VIEW IF NOT EXISTS v_graph_json AS
+-- Each node includes an is_available flag indicating if all dependencies are complete
+DROP VIEW IF EXISTS v_graph_json;
+
+CREATE VIEW v_graph_json AS
 SELECT json_object(
     'nodes', (
         SELECT json_group_array(
@@ -9,7 +12,8 @@ SELECT json_object(
                 'name', t.name,
                 'status', t.status,
                 'priority', t.priority,
-                'completed_at', t.completed_at
+                'completed_at', t.completed_at,
+                'is_available', CASE WHEN t.id IN (SELECT id FROM v_available_tasks) THEN 1 ELSE 0 END
             )
         )
         FROM tasks t
