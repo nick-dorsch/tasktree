@@ -11,7 +11,7 @@ WHERE t.status = 'pending'  -- Only tasks that aren't already completed
     FROM dependencies d
     JOIN tasks dep_task ON d.depends_on_task_name = dep_task.name
     WHERE d.task_name = t.name
-      AND dep_task.status != 'completed'
+      AND dep_task.status != 'complete'
   )
   AND (
     -- Include tasks with no dependencies
