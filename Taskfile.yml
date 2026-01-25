@@ -31,7 +31,7 @@ tasks:
 
   refresh-views:
     desc: Refresh all database views
-    aliases: [rl]
+    aliases: [rv]
     cmds:
       - cat src/sql/views/*.sql | sqlite3 data/tasktree.db
 
