@@ -188,6 +188,20 @@ def register_task_tools(mcp: FastMCP) -> None:
         validate_task_name(request.name)
         return TaskRepository.delete_task(request.name)
 
+    @mcp.tool()
+    def start_task(name: str) -> Optional[Dict[str, Any]]:
+        """
+        Start a task by setting its status to 'in_progress'.
+
+        Args:
+            name: Name of the task to start
+
+        Returns:
+            Updated task dictionary if found, None otherwise
+        """
+        validate_task_name(name)
+        return TaskRepository.update_task(name=name, status="in_progress")
+
 
 def register_dependency_tools(mcp: FastMCP) -> None:
     """Register all dependency-related tools with the MCP server."""
