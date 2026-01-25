@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   status TEXT DEFAULT 'pending',
   priority INTEGER DEFAULT 0,
 
-  created_at TIMESTAMP DEFAULT CURRENT TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   started_at TIMESTAMP,
-  completed_at TIMESTAMP,
+  completed_at TIMESTAMP
 );

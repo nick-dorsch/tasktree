@@ -14,6 +14,9 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
+            # Database
+            sqlite
+
             # Python + uv
             python312
             uv
@@ -21,6 +24,9 @@
             # Version control
             git
             lazygit
+
+            # Task runner
+            go-task
 
             # Pre-commit hooks
             pre-commit
