@@ -7,7 +7,26 @@ from typing import Any, Dict, List, Optional
 from fastmcp import FastMCP
 
 from .database import DependencyRepository, TaskRepository
-from .models import Dependency, Task
+from .models import (
+    AddDependencyRequest,
+    AddTaskRequest,
+    DeleteTaskRequest,
+    Dependency,
+    DependencyCreateResponse,
+    DependencyListResponse,
+    DependencyRemoveResponse,
+    GetTaskRequest,
+    ListDependenciesRequest,
+    ListTasksRequest,
+    RemoveDependencyRequest,
+    Task,
+    TaskCreateResponse,
+    TaskDeleteResponse,
+    TaskListResponse,
+    TaskStatus,
+    TaskUpdateResponse,
+    UpdateTaskRequest,
+)
 from .validators import (
     validate_description,
     validate_priority,
@@ -33,9 +52,12 @@ def register_task_tools(mcp: FastMCP) -> None:
         Returns:
             List of task dictionaries with name, description, status, priority, and timestamps
         """
-        validate_status(status)
-        validate_priority(priority_min)
-        return TaskRepository.list_tasks(status=status, priority_min=priority_min)
+        request = ListTasksRequest(status=status, priority_min=priority_min)
+        validate_status(request.status)
+        validate_priority(request.priority_min)
+        return TaskRepository.list_tasks(
+            status=request.status, priority_min=request.priority_min
+        )
 
     @mcp.tool()
     def get_task(name: str) -> Optional[Dict[str, Any]]:
@@ -48,8 +70,9 @@ def register_task_tools(mcp: FastMCP) -> None:
         Returns:
             Task dictionary if found, None otherwise
         """
-        validate_task_name(name)
-        return TaskRepository.get_task(name)
+        request = GetTaskRequest(name=name)
+        validate_task_name(request.name)
+        return TaskRepository.get_task(request.name)
 
     @mcp.tool()
     def add_task(
@@ -67,9 +90,17 @@ def register_task_tools(mcp: FastMCP) -> None:
         Returns:
             The created task dictionary
         """
-        task = Task(
+        request = AddTaskRequest(
             name=name, description=description, priority=priority, status=status
-        )  # type: ignore[arg-type]
+        )
+        # Convert string status to TaskStatus enum
+        task_status = TaskStatus(request.status)
+        task = Task(
+            name=request.name,
+            description=request.description,
+            priority=request.priority,
+            status=task_status,
+        )
         return TaskRepository.add_task(
             name=task.name,
             description=task.description,
@@ -100,18 +131,26 @@ def register_task_tools(mcp: FastMCP) -> None:
         Returns:
             Updated task dictionary if found, None otherwise
         """
-        validate_task_name(name)
-        validate_status(status)
-        validate_priority(priority)
-        validate_description(description)
-
-        return TaskRepository.update_task(
+        request = UpdateTaskRequest(
             name=name,
             description=description,
             status=status,
             priority=priority,
             started_at=started_at,
             completed_at=completed_at,
+        )
+        validate_task_name(request.name)
+        validate_status(request.status)
+        validate_priority(request.priority)
+        validate_description(request.description)
+
+        return TaskRepository.update_task(
+            name=request.name,
+            description=request.description,
+            status=request.status,
+            priority=request.priority,
+            started_at=request.started_at,
+            completed_at=request.completed_at,
         )
 
     @mcp.tool()
@@ -125,8 +164,9 @@ def register_task_tools(mcp: FastMCP) -> None:
         Returns:
             True if task was deleted, False if task was not found
         """
-        validate_task_name(name)
-        return TaskRepository.delete_task(name)
+        request = DeleteTaskRequest(name=name)
+        validate_task_name(request.name)
+        return TaskRepository.delete_task(request.name)
 
 
 def register_dependency_tools(mcp: FastMCP) -> None:
@@ -143,7 +183,8 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         Returns:
             List of dependency relationships
         """
-        return DependencyRepository.list_dependencies(task_name=task_name)
+        request = ListDependenciesRequest(task_name=task_name)
+        return DependencyRepository.list_dependencies(task_name=request.task_name)
 
     @mcp.tool()
     def add_dependency(task_name: str, depends_on_task_name: str) -> Dict[str, Any]:
@@ -157,8 +198,12 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         Returns:
             The created dependency relationship
         """
-        dependency = Dependency(
+        request = AddDependencyRequest(
             task_name=task_name, depends_on_task_name=depends_on_task_name
+        )
+        dependency = Dependency(
+            task_name=request.task_name,
+            depends_on_task_name=request.depends_on_task_name,
         )
         return DependencyRepository.add_dependency(
             task_name=dependency.task_name,
@@ -177,8 +222,12 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         Returns:
             True if dependency was removed, False if not found
         """
-        dependency = Dependency(
+        request = RemoveDependencyRequest(
             task_name=task_name, depends_on_task_name=depends_on_task_name
+        )
+        dependency = Dependency(
+            task_name=request.task_name,
+            depends_on_task_name=request.depends_on_task_name,
         )
         return DependencyRepository.remove_dependency(
             task_name=dependency.task_name,

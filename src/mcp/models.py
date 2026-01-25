@@ -3,7 +3,7 @@ Data models for TaskTree.
 """
 
 from enum import StrEnum
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -58,3 +58,217 @@ class Dependency(BaseModel):
         if "task_name" in info.data and v == info.data["task_name"]:
             raise ValueError("A task cannot depend on itself")
         return v
+
+
+# Request models for function arguments
+class ListTasksRequest(BaseModel):
+    """Request model for list_tasks function."""
+
+    status: Optional[str] = Field(None, description="Filter by status")
+    priority_min: Optional[int] = Field(
+        None, ge=0, le=10, description="Minimum priority filter"
+    )
+
+
+class GetTaskRequest(BaseModel):
+    """Request model for get_task function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Task name to retrieve"
+    )
+
+
+class AddTaskRequest(BaseModel):
+    """Request model for add_task function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Unique name for the task"
+    )
+    description: str = Field(
+        ..., min_length=1, description="Description of what the task involves"
+    )
+    priority: int = Field(
+        default=0,
+        ge=0,
+        le=10,
+        description="Priority level (0-10, higher is more important)",
+    )
+    status: str = Field(default="pending", description="Initial status")
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def validate_status(cls, v: Any) -> str:
+        """Validate status is one of the allowed values."""
+        if isinstance(v, str):
+            v = v.lower()
+            valid_statuses = [status.value for status in TaskStatus]
+            if v not in valid_statuses:
+                raise ValueError(f"Status must be one of: {', '.join(valid_statuses)}")
+            return v
+        raise ValueError(f"Invalid status type: {type(v)}")
+
+
+class UpdateTaskRequest(BaseModel):
+    """Request model for update_task function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the task to update"
+    )
+    description: Optional[str] = Field(
+        None, min_length=1, description="New description"
+    )
+    status: Optional[str] = Field(None, description="New status")
+    priority: Optional[int] = Field(None, ge=0, le=10, description="New priority")
+    started_at: Optional[str] = Field(
+        None, description="ISO timestamp when task was started"
+    )
+    completed_at: Optional[str] = Field(
+        None, description="ISO timestamp when task was completed"
+    )
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def validate_status(cls, v: Any) -> Optional[str]:
+        """Validate status is one of the allowed values."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            v = v.lower()
+            valid_statuses = [status.value for status in TaskStatus]
+            if v not in valid_statuses:
+                raise ValueError(f"Status must be one of: {', '.join(valid_statuses)}")
+            return v
+        raise ValueError(f"Invalid status type: {type(v)}")
+
+
+class DeleteTaskRequest(BaseModel):
+    """Request model for delete_task function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the task to delete"
+    )
+
+
+class ListDependenciesRequest(BaseModel):
+    """Request model for list_dependencies function."""
+
+    task_name: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=255,
+        description="Filter dependencies for a specific task",
+    )
+
+
+class AddDependencyRequest(BaseModel):
+    """Request model for add_dependency function."""
+
+    task_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Name of the task that depends on another task",
+    )
+    depends_on_task_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Name of the task that must be completed first",
+    )
+
+    @field_validator("depends_on_task_name")
+    @classmethod
+    def validate_no_self_dependency(cls, v: str, info) -> str:
+        """Ensure a task doesn't depend on itself."""
+        if "task_name" in info.data and v == info.data["task_name"]:
+            raise ValueError("A task cannot depend on itself")
+        return v
+
+
+class RemoveDependencyRequest(BaseModel):
+    """Request model for remove_dependency function."""
+
+    task_name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the task"
+    )
+    depends_on_task_name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the task it depends on"
+    )
+
+    @field_validator("depends_on_task_name")
+    @classmethod
+    def validate_no_self_dependency(cls, v: str, info) -> str:
+        """Ensure a task doesn't depend on itself."""
+        if "task_name" in info.data and v == info.data["task_name"]:
+            raise ValueError("A task cannot depend on itself")
+        return v
+
+
+# Response models for function returns
+class TaskResponse(BaseModel):
+    """Response model for task data."""
+
+    name: str = Field(..., description="Task name")
+    description: str = Field(..., description="Task description")
+    priority: int = Field(..., ge=0, le=10, description="Task priority")
+    status: str = Field(..., description="Task status")
+    created_at: Optional[str] = Field(None, description="Creation timestamp")
+    started_at: Optional[str] = Field(None, description="Start timestamp")
+    completed_at: Optional[str] = Field(None, description="Completion timestamp")
+
+
+class TaskListResponse(BaseModel):
+    """Response model for list of tasks."""
+
+    tasks: List[TaskResponse] = Field(..., description="List of tasks")
+
+
+class DependencyResponse(BaseModel):
+    """Response model for dependency data."""
+
+    task_name: str = Field(..., description="Name of the task")
+    depends_on_task_name: str = Field(..., description="Name of the dependency task")
+
+
+class DependencyListResponse(BaseModel):
+    """Response model for list of dependencies."""
+
+    dependencies: List[DependencyResponse] = Field(
+        ..., description="List of dependencies"
+    )
+
+
+class TaskCreateResponse(BaseModel):
+    """Response model for task creation."""
+
+    task: TaskResponse = Field(..., description="Created task")
+
+
+class TaskUpdateResponse(BaseModel):
+    """Response model for task update."""
+
+    task: Optional[TaskResponse] = Field(
+        ..., description="Updated task or None if not found"
+    )
+
+
+class TaskDeleteResponse(BaseModel):
+    """Response model for task deletion."""
+
+    deleted: bool = Field(
+        ..., description="True if task was deleted, False if not found"
+    )
+
+
+class DependencyCreateResponse(BaseModel):
+    """Response model for dependency creation."""
+
+    dependency: DependencyResponse = Field(..., description="Created dependency")
+
+
+class DependencyRemoveResponse(BaseModel):
+    """Response model for dependency removal."""
+
+    removed: bool = Field(
+        ..., description="True if dependency was removed, False if not found"
+    )
