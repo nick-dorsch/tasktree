@@ -29,3 +29,8 @@ tasks:
     aliases: [rl]
     cmds:
       - cat src/sql/views/*.sql | sqlite3 data/tasktree.db
+
+  graph:
+    desc: Output the task dependency graph as JSON
+    cmds:
+      - sqlite3 data/tasktree.db "SELECT graph_json FROM v_graph_json" | jq .
