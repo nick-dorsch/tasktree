@@ -14,7 +14,7 @@ SELECT
         SELECT GROUP_CONCAT(
             '  "' || t.name || '"' || 
             CASE 
-                WHEN t.id IN (SELECT id FROM v_available_tasks)
+                WHEN t.name IN (SELECT name FROM v_available_tasks)
                 THEN ' [style="rounded,filled", fillcolor=lightgreen]'
                 ELSE ''
             END || ';',
@@ -23,14 +23,12 @@ SELECT
         FROM tasks t
     ) || CHAR(10) ||
     CHAR(10) ||
-    -- Add all edges (source -> target means target depends on source)
+    -- Add all edges (from -> to means from depends on to)
     (
         SELECT GROUP_CONCAT(
-            '  "' || t2.name || '" -> "' || t1.name || '";',
+            '  "' || d.depends_on_task_name || '" -> "' || d.task_name || '";',
             CHAR(10)
         )
         FROM dependencies d
-        JOIN tasks t1 ON d.task_id = t1.id
-        JOIN tasks t2 ON d.depends_on_task_id = t2.id
     ) || CHAR(10) ||
     '}' as dot_graph;

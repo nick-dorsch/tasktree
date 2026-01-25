@@ -20,25 +20,25 @@ INSERT INTO tasks (name, description, status, priority) VALUES
 
 -- Create dependencies
 -- Level 2 -> Level 1 dependencies
-INSERT INTO dependencies (task_id, depends_on_task_id) VALUES
+INSERT INTO dependencies (task_name, depends_on_task_name) VALUES
 -- Design API depends on Setup Database and Create Project Structure
-(4, 1), (4, 3),
+('Design API', 'Setup Database'), ('Design API', 'Create Project Structure'),
 -- Implement Database Layer depends on Setup Database and Install Dependencies  
-(5, 1), (5, 2),
+('Implement Database Layer', 'Setup Database'), ('Implement Database Layer', 'Install Dependencies'),
 -- Setup Authentication depends on Install Dependencies and Create Project Structure
-(6, 2), (6, 3);
+('Setup Authentication', 'Install Dependencies'), ('Setup Authentication', 'Create Project Structure');
 
 -- Level 3 -> Level 2 dependencies
-INSERT INTO dependencies (task_id, depends_on_task_id) VALUES
+INSERT INTO dependencies (task_name, depends_on_task_name) VALUES
 -- Build User Interface depends on Design API
-(7, 4),
+('Build User Interface', 'Design API'),
 -- Implement Business Logic depends on Design API and Implement Database Layer
-(8, 4), (8, 5),
+('Implement Business Logic', 'Design API'), ('Implement Business Logic', 'Implement Database Layer'),
 -- Add Testing Suite depends on Implement Database Layer and Setup Authentication
-(9, 5), (9, 6),
+('Add Testing Suite', 'Implement Database Layer'), ('Add Testing Suite', 'Setup Authentication'),
 -- Deploy Application depends on all Level 2 tasks
-(10, 4), (10, 5), (10, 6);
+('Deploy Application', 'Design API'), ('Deploy Application', 'Implement Database Layer'), ('Deploy Application', 'Setup Authentication');
 
 -- Create some circular dependency for testing (commented out - uncomment if needed for testing)
--- INSERT INTO dependencies (task_id, depends_on_task_id) VALUES
--- (1, 10); -- This would create a circular dependency
+-- INSERT INTO dependencies (task_name, depends_on_task_name) VALUES
+-- ('Setup Database', 'Deploy Application'); -- This would create a circular dependency

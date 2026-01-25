@@ -8,12 +8,11 @@ SELECT json_object(
     'nodes', (
         SELECT json_group_array(
             json_object(
-                'id', t.id,
                 'name', t.name,
                 'status', t.status,
                 'priority', t.priority,
                 'completed_at', t.completed_at,
-                'is_available', CASE WHEN t.id IN (SELECT id FROM v_available_tasks) THEN 1 ELSE 0 END
+                'is_available', CASE WHEN t.name IN (SELECT name FROM v_available_tasks) THEN 1 ELSE 0 END
             )
         )
         FROM tasks t
@@ -21,14 +20,10 @@ SELECT json_object(
     'edges', (
         SELECT json_group_array(
             json_object(
-                'source', d.task_id,
-                'target', d.depends_on_task_id,
-                'source_name', t1.name,
-                'target_name', t2.name
+                'from', d.task_name,
+                'to', d.depends_on_task_name
             )
         )
         FROM dependencies d
-        JOIN tasks t1 ON d.task_id = t1.id
-        JOIN tasks t2 ON d.depends_on_task_id = t2.id
     )
 ) as graph_json;

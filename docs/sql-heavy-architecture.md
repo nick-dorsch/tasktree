@@ -31,176 +31,145 @@ TaskTree is built on a **SQL-first architecture** where the database is the prim
 #### Custom SQL Functions
 ```sql
 -- Task availability checking
-CREATE FUNCTION is_task_available(task_id INTEGER) RETURNS INTEGER AS $$
+CREATE FUNCTION is_task_available(task_name TEXT) RETURNS INTEGER AS $$
 SELECT CASE WHEN NOT EXISTS (
-    SELECT 1 FROM task_dependencies td
-    JOIN tasks t ON td.depends_on_task_id = t.id
-    WHERE td.task_id = task_id AND t.status != 'completed'
+    SELECT 1 FROM dependencies d
+    JOIN tasks t ON d.depends_on_task_name = t.name
+    WHERE d.task_name = task_name AND t.status != 'completed'
 ) THEN 1 ELSE 0 END;
 $$ LANGUAGE SQL;
 
 -- Priority calculation with age weighting
-CREATE FUNCTION task_priority_score(task_id INTEGER, created_time TEXT) RETURNS REAL AS $$
+CREATE FUNCTION task_priority_score(task_name TEXT, created_time TEXT) RETURNS REAL AS $$
 SELECT (
-    (SELECT priority FROM tasks WHERE id = task_id) * 10 +
+    (SELECT priority FROM tasks WHERE name = task_name) * 10 +
     (julianday('now') - julianday(created_time)) * 2.4
 );
 $$ LANGUAGE SQL;
 
--- Dependency cycle detection
-CREATE FUNCTION would_create_cycle(task_id INTEGER, depends_on INTEGER) RETURNS INTEGER AS $$
-WITH RECURSIVE check_cycle(path) AS (
-    SELECT depends_on
-    UNION ALL
-    SELECT td.depends_on_task_id
-    FROM task_dependencies td
-    JOIN check_cycle cc ON td.task_id = cc.path
-    WHERE td.depends_on_task_id != task_id
-)
-SELECT CASE WHEN EXISTS (
-    SELECT 1 FROM check_cycle WHERE path = task_id
-) THEN 1 ELSE 0 END;
-$$ LANGUAGE SQL;
+-- Note: Dependency cycle detection is handled by the prevent_circular_dependencies trigger
+-- which uses a recursive CTE to check for cycles before allowing dependency inserts
 ```
 
 #### Core SQL Views
 
 ##### Available Tasks View
 ```sql
-CREATE VIEW available_tasks AS
-SELECT 
-    t.*,
-    task_priority_score(t.id, t.created_at) as priority_score,
-    is_task_available(t.id) as is_available,
-    (
-        SELECT json_group_array(td.depends_on_task_id)
-        FROM task_dependencies td
-        WHERE td.task_id = t.id
-    ) as dependency_list
+CREATE VIEW v_available_tasks AS
+SELECT t.*
 FROM tasks t
 WHERE t.status = 'pending'
-AND is_task_available(t.id) = 1
-ORDER BY priority_score DESC, t.created_at ASC;
+  AND NOT EXISTS (
+    SELECT 1
+    FROM dependencies d
+    JOIN tasks dep_task ON d.depends_on_task_name = dep_task.name
+    WHERE d.task_name = t.name
+      AND dep_task.status != 'completed'
+  )
+ORDER BY t.priority DESC, t.created_at ASC;
 ```
 
 ##### Dependency Tree View
 ```sql
-CREATE VIEW dependency_tree AS
+CREATE VIEW v_dependency_tree AS
 WITH RECURSIVE task_tree AS (
     -- Root tasks (no dependencies)
     SELECT 
-        t.id,
         t.name,
+        t.description,
         t.status,
         t.priority,
+        t.completed_at,
         0 as level,
-        CAST(t.id AS TEXT) as path,
-        CAST(NULL AS INTEGER) as parent_id
+        CAST(t.name AS TEXT) as path,
+        CAST(NULL AS TEXT) as parent_name
     FROM tasks t
     WHERE NOT EXISTS (
-        SELECT 1 FROM task_dependencies td 
-        WHERE td.depends_on_task_id = t.id
+        SELECT 1 FROM dependencies d 
+        WHERE d.task_name = t.name
     )
     
     UNION ALL
     
     -- Dependent tasks
     SELECT 
-        t.id,
         t.name,
+        t.description,
         t.status,
         t.priority,
+        t.completed_at,
         tt.level + 1,
-        tt.path || '->' || t.id,
-        td.depends_on_task_id
+        tt.path || '->' || t.name,
+        d.depends_on_task_name as parent_name
     FROM tasks t
-    JOIN task_dependencies td ON t.id = td.task_id
-    JOIN task_tree tt ON td.depends_on_task_id = tt.id
+    JOIN dependencies d ON t.name = d.task_name
+    JOIN task_tree tt ON d.depends_on_task_name = tt.name
 )
 SELECT 
-    id, name, status, priority, level, path, parent_id,
-    CASE 
-        WHEN status = 'completed' THEN '✓'
-        WHEN status = 'running' THEN '⟳'
-        WHEN status = 'failed' THEN '✗'
-        ELSE '○'
-    END as status_icon,
-    (
-        SELECT COUNT(*) FROM task_dependencies td 
-        WHERE td.task_id = task_tree.id
-    ) as dependency_count,
-    (
-        SELECT COUNT(*) FROM task_dependencies td 
-        WHERE td.depends_on_task_id = task_tree.id
-    ) as dependent_count
+    name, description, status, priority, completed_at, level, path, parent_name
 FROM task_tree
 ORDER BY path;
 ```
 
-##### Agent Workload View
+##### Graph JSON View
 ```sql
-CREATE VIEW agent_workload AS
-SELECT 
-    agent_id,
-    COUNT(*) as running_tasks,
-    COUNT(CASE WHEN priority >= 8 THEN 1 END) as high_priority_tasks,
-    SUM(priority) as total_priority,
-    AVG(julianday('now') - julianday(started_at)) * 24 as avg_run_time_hours,
-    MAX(julianday('now') - julianday(started_at)) * 24 as max_run_time_hours
-FROM tasks 
-WHERE status = 'running'
-GROUP BY agent_id;
+CREATE VIEW v_graph_json AS
+SELECT json_object(
+    'nodes', (
+        SELECT json_group_array(
+            json_object(
+                'name', t.name,
+                'status', t.status,
+                'priority', t.priority,
+                'completed_at', t.completed_at,
+                'is_available', CASE WHEN t.name IN (SELECT name FROM v_available_tasks) THEN 1 ELSE 0 END
+            )
+        )
+        FROM tasks t
+    ),
+    'edges', (
+        SELECT json_group_array(
+            json_object(
+                'from', d.task_name,
+                'to', d.depends_on_task_name
+            )
+        )
+        FROM dependencies d
+    )
+) as graph_json;
 ```
 
 ### SQL Stored Procedures Pattern
 
-#### Task Claiming Procedure
+#### Task Status Updates
+
+With name-based primary keys, task updates are ergonomic and human-readable:
+
 ```sql
--- Atomic task claiming with validation
-CREATE PROCEDURE claim_task(IN task_id INTEGER, IN agent_id TEXT, OUT success INTEGER)
-BEGIN
-    UPDATE tasks 
-    SET status = 'running', 
-        started_at = CURRENT_TIMESTAMP, 
-        agent_id = agent_id
-    WHERE id = task_id 
-    AND status = 'pending'
-    AND is_task_available(task_id) = 1;
-    
-    SET success = changes();
-END;
+-- Start a task
+UPDATE tasks 
+SET status = 'in_progress', 
+    started_at = CURRENT_TIMESTAMP
+WHERE name = 'Deploy Application' 
+AND status = 'pending';
 ```
 
-#### Task Completion Procedure
 ```sql
--- Task completion with dependent task activation
-CREATE PROCEDURE complete_task(IN task_id INTEGER, IN result_data TEXT)
-BEGIN
-    UPDATE tasks 
-    SET status = 'completed',
-        completed_at = CURRENT_TIMESTAMP,
-        result_data = result_data
-    WHERE id = task_id AND status = 'running';
-    
-    -- Dependent tasks automatically become available via the available_tasks view
-END;
+-- Complete a task
+UPDATE tasks 
+SET status = 'completed',
+    completed_at = CURRENT_TIMESTAMP
+WHERE name = 'Deploy Application' 
+AND status = 'in_progress';
 ```
 
-#### Failure Handling Procedure
 ```sql
--- Task failure with retry logic
-CREATE PROCEDURE fail_task(IN task_id INTEGER, IN error_message TEXT)
-BEGIN
-    UPDATE tasks 
-    SET status = CASE 
-            WHEN retry_count + 1 >= max_retries THEN 'failed'
-            ELSE 'pending'
-        END,
-        retry_count = retry_count + 1,
-        completed_at = CURRENT_TIMESTAMP,
-        error_message = error_message
-    WHERE id = task_id AND status = 'running';
-END;
+-- Reset a task
+UPDATE tasks 
+SET status = 'pending',
+    started_at = NULL,
+    completed_at = NULL
+WHERE name = 'Deploy Application';
 ```
 
 ## Python Layer Responsibilities
@@ -235,20 +204,28 @@ def _register_sql_functions(self, conn):
 #### Interface Methods
 ```python
 class TaskManager:
-    def get_available_tasks(self, agent_id: Optional[str] = None, limit: int = 10):
-        """Thin wrapper around available_tasks view"""
-        query = "SELECT * FROM available_tasks LIMIT ?"
-        if agent_id:
-            # Additional filtering if needed
-            query = "SELECT * FROM available_tasks WHERE agent_id = ? OR agent_id IS NULL LIMIT ?"
-            return [Task.from_row(row) for row in self.db.execute(query, (agent_id, limit))]
-        else:
-            return [Task.from_row(row) for row in self.db.execute(query, (limit,))]
+    def get_available_tasks(self, limit: int = 10):
+        """Thin wrapper around v_available_tasks view"""
+        query = "SELECT * FROM v_available_tasks LIMIT ?"
+        return [Task.from_row(row) for row in self.db.execute(query, (limit,))]
     
-    def claim_task(self, task_id: int, agent_id: str) -> bool:
-        """Calls SQL stored procedure"""
-        cursor = self.db.execute("CALL claim_task(?, ?)", (task_id, agent_id))
-        return cursor.fetchone()[0] == 1
+    def start_task(self, task_name: str) -> bool:
+        """Start a task by name"""
+        cursor = self.db.execute(
+            "UPDATE tasks SET status = 'in_progress', started_at = CURRENT_TIMESTAMP "
+            "WHERE name = ? AND status = 'pending'",
+            (task_name,)
+        )
+        return cursor.rowcount > 0
+    
+    def complete_task(self, task_name: str) -> bool:
+        """Complete a task by name"""
+        cursor = self.db.execute(
+            "UPDATE tasks SET status = 'completed', completed_at = CURRENT_TIMESTAMP "
+            "WHERE name = ? AND status = 'in_progress'",
+            (task_name,)
+        )
+        return cursor.rowcount > 0
 ```
 
 ## Performance Benefits of SQL-Heavy Design
