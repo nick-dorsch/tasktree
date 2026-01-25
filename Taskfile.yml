@@ -5,35 +5,37 @@ tasks:
   mcp:
     desc: Start the tasktree MCP Server
     cmds:
-      - cd src/mcp && uv run server.py
+      - uv run src/mcp/server.py
 
   init-db:
-    desc: Recreate and seed the database
+    desc: Recreate database (use SEED=true to seed with test data)
     aliases: [init]
+    vars:
+      SEED: '{{.SEED | default "false"}}'
     cmds:
       - rm -f data/tasktree.db
       - task create-db
-      - task seed-db
+      - '{{if eq .SEED "true"}}task seed-db{{end}}'
       - task refresh-views
 
   create-db:
     desc: Create SQLite database from SQL schemas
     cmds:
       - mkdir -p data
-      - cat src/sql/schemas/*.sql | sqlite3 data/tasktree.db
+      - cat sql/schemas/*.sql | sqlite3 data/tasktree.db
     generates:
       - data/tasktree.db
 
   seed-db:
     desc: Seed database with test data
     cmds:
-      - sqlite3 data/tasktree.db < src/sql/seed.sql
+      - sqlite3 data/tasktree.db < sql/seed.sql
 
   refresh-views:
     desc: Refresh all database views
     aliases: [rv]
     cmds:
-      - cat src/sql/views/*.sql | sqlite3 data/tasktree.db
+      - cat sql/views/*.sql | sqlite3 data/tasktree.db
 
   graph-json:
     desc: Output the task dependency graph as JSON

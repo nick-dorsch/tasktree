@@ -2,7 +2,10 @@
 
 # TaskTree - SQL-Heavy Task Execution System
 
-A SQLite-based task execution system with **complex dependency tracking**, designed for agentic coding workflows. The system uses a **SQL-first architecture** where the database handles the majority of business logic through functions, views, and recursive queries.
+A SQLite-based task execution system with **complex dependency tracking**, designed for
+agentic coding workflows. The system uses a **SQL-first architecture** where the
+database handles the majority of business logic through functions, views, and recursive
+queries.
 
 ## Key Features
 
