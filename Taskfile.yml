@@ -6,7 +6,7 @@ tasks:
     desc: Start the tasktree MCP Server
     cmds:
       - echo "Starting MCP server..."
-      - uv run src/mcp/server.py
+      - uv run server.py
     silent: true
 
   init-db:
