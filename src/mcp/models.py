@@ -94,6 +94,9 @@ class AddTaskRequest(BaseModel):
         description="Priority level (0-10, higher is more important)",
     )
     status: str = Field(default="pending", description="Initial status")
+    dependencies: Optional[List[str]] = Field(
+        default=None, description="List of task names this task depends on"
+    )
 
     @field_validator("status", mode="before")
     @classmethod
@@ -119,12 +122,6 @@ class UpdateTaskRequest(BaseModel):
     )
     status: Optional[str] = Field(None, description="New status")
     priority: Optional[int] = Field(None, ge=0, le=10, description="New priority")
-    started_at: Optional[str] = Field(
-        None, description="ISO timestamp when task was started"
-    )
-    completed_at: Optional[str] = Field(
-        None, description="ISO timestamp when task was completed"
-    )
 
     @field_validator("status", mode="before")
     @classmethod

@@ -76,7 +76,11 @@ def register_task_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def add_task(
-        name: str, description: str, priority: int = 0, status: str = "pending"
+        name: str,
+        description: str,
+        priority: int = 0,
+        status: str = "pending",
+        dependencies: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Add a new task to the database.
@@ -86,13 +90,25 @@ def register_task_tools(mcp: FastMCP) -> None:
             description: Description of what the task involves
             priority: Priority level (0-10, higher is more important)
             status: Initial status ('pending', 'in_progress', 'completed')
+            dependencies: List of task names this task depends on (optional)
 
         Returns:
             The created task dictionary
         """
         request = AddTaskRequest(
-            name=name, description=description, priority=priority, status=status
+            name=name,
+            description=description,
+            priority=priority,
+            status=status,
+            dependencies=dependencies,
         )
+
+        # Validate dependencies exist before creating task
+        if request.dependencies:
+            for dep_name in request.dependencies:
+                if not TaskRepository.get_task(dep_name):
+                    raise ValueError(f"Dependency task '{dep_name}' does not exist")
+
         # Convert string status to TaskStatus enum
         task_status = TaskStatus(request.status)
         task = Task(
@@ -101,12 +117,24 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority=request.priority,
             status=task_status,
         )
-        return TaskRepository.add_task(
+
+        # Create the task
+        created_task = TaskRepository.add_task(
             name=task.name,
             description=task.description,
             priority=task.priority,
             status=task.status.value,
         )
+
+        # Add dependencies if provided
+        if request.dependencies:
+            for dep_name in request.dependencies:
+                DependencyRepository.add_dependency(
+                    task_name=task.name,
+                    depends_on_task_name=dep_name,
+                )
+
+        return created_task
 
     @mcp.tool()
     def update_task(
@@ -114,8 +142,6 @@ def register_task_tools(mcp: FastMCP) -> None:
         description: Optional[str] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
-        started_at: Optional[str] = None,
-        completed_at: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Update an existing task.
@@ -125,8 +151,6 @@ def register_task_tools(mcp: FastMCP) -> None:
             description: New description (optional)
             status: New status (optional)
             priority: New priority (optional)
-            started_at: ISO timestamp when task was started (optional)
-            completed_at: ISO timestamp when task was completed (optional)
 
         Returns:
             Updated task dictionary if found, None otherwise
@@ -136,8 +160,6 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=description,
             status=status,
             priority=priority,
-            started_at=started_at,
-            completed_at=completed_at,
         )
         validate_task_name(request.name)
         validate_status(request.status)
@@ -149,8 +171,6 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=request.description,
             status=request.status,
             priority=request.priority,
-            started_at=request.started_at,
-            completed_at=request.completed_at,
         )
 
     @mcp.tool()

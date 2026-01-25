@@ -97,8 +97,6 @@ class TaskRepository:
         description: Optional[str] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
-        started_at: Optional[str] = None,
-        completed_at: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Update an existing task."""
         if not name or not name.strip():
@@ -123,12 +121,6 @@ class TaskRepository:
             if priority is not None:
                 updates.append("priority = ?")
                 params.append(priority)
-            if started_at is not None:
-                updates.append("started_at = ?")
-                params.append(started_at)
-            if completed_at is not None:
-                updates.append("completed_at = ?")
-                params.append(completed_at)
 
             if not updates:
                 return TaskRepository.get_task(name)

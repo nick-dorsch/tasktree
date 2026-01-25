@@ -18,3 +18,37 @@ CREATE TABLE IF NOT EXISTS tasks (
   started_at TIMESTAMP,
   completed_at TIMESTAMP
 );
+
+-- Triggers to automatically set timestamps based on status changes
+
+-- Trigger to set started_at when status becomes 'in_progress'
+CREATE TRIGGER IF NOT EXISTS set_started_at
+AFTER UPDATE ON tasks
+WHEN NEW.status = 'in_progress' AND OLD.status != 'in_progress'
+BEGIN
+    UPDATE tasks SET started_at = CURRENT_TIMESTAMP WHERE name = NEW.name;
+END;
+
+-- Trigger to set completed_at when status becomes 'complete'
+CREATE TRIGGER IF NOT EXISTS set_completed_at
+AFTER UPDATE ON tasks
+WHEN NEW.status = 'complete' AND OLD.status != 'complete'
+BEGIN
+    UPDATE tasks SET completed_at = CURRENT_TIMESTAMP WHERE name = NEW.name;
+END;
+
+-- Trigger to clear started_at when status changes from 'in_progress' to something else
+CREATE TRIGGER IF NOT EXISTS clear_started_at
+AFTER UPDATE ON tasks
+WHEN NEW.status != 'in_progress' AND OLD.status = 'in_progress'
+BEGIN
+    UPDATE tasks SET started_at = NULL WHERE name = NEW.name;
+END;
+
+-- Trigger to clear completed_at when status changes from 'complete' to something else
+CREATE TRIGGER IF NOT EXISTS clear_completed_at
+AFTER UPDATE ON tasks
+WHEN NEW.status != 'complete' AND OLD.status = 'complete'
+BEGIN
+    UPDATE tasks SET completed_at = NULL WHERE name = NEW.name;
+END;
