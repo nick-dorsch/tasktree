@@ -5,7 +5,9 @@ tasks:
   mcp:
     desc: Start the tasktree MCP Server
     cmds:
+      - echo "Starting MCP server..."
       - uv run src/mcp/server.py
+    silent: true
 
   init-db:
     desc: Recreate database (use SEED=true to seed with test data)
@@ -13,37 +15,50 @@ tasks:
     vars:
       SEED: '{{.SEED | default "false"}}'
     cmds:
+      - echo "Recreating database..."
       - rm -f data/tasktree.db
       - task create-db
       - '{{if eq .SEED "true"}}task seed-db{{end}}'
       - task refresh-views
+      - echo "Complete!"
+    silent: true
 
   create-db:
     desc: Create SQLite database from SQL schemas
     cmds:
+      - echo "Creating SQLite database schemas..."
       - mkdir -p data
       - cat sql/schemas/*.sql | sqlite3 data/tasktree.db
     generates:
       - data/tasktree.db
+    silent: true
 
   seed-db:
     desc: Seed database with test data
     cmds:
+      - echo "Seeding database..."
       - sqlite3 data/tasktree.db < sql/seed.sql
+    silent: true
 
   refresh-views:
     desc: Refresh all database views
     aliases: [rv]
     cmds:
+      - echo "Refreshing database views..."
       - cat sql/views/*.sql | sqlite3 data/tasktree.db
+    silent: true
 
   graph-json:
     desc: Output the task dependency graph as JSON
     aliases: [json]
     cmds:
+      - echo "Generating dependency graph JSON..."
       - sqlite3 data/tasktree.db "SELECT graph_json FROM v_graph_json" | jq .
+    silent: true
 
   draw:
     desc: Draw the task dependency graph in the terminal with colored highlighting
     cmds:
+      - echo "Drawing dependency graph..."
       - ./scripts/draw-graph.sh data/tasktree.db
+    silent: true
