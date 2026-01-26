@@ -10,6 +10,8 @@ from typing import Generator
 
 import pytest
 
+from tasktree_mcp.db_init import initialize_database
+
 
 @pytest.fixture(scope="function")
 def test_db() -> Generator[Path, None, None]:
@@ -31,35 +33,9 @@ def test_db() -> Generator[Path, None, None]:
     db_path = Path(temp_db.name)
     temp_db.close()
 
-    # Connect to the database and create schema
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    # Enable foreign key constraints
-    conn.execute("PRAGMA foreign_keys = ON")
-
     try:
-        # Get the schema files
-        schema_dir = Path(__file__).parent.parent / "sql" / "schemas"
-        schema_files = sorted(schema_dir.glob("*.sql"))
-
-        # Apply each schema file in order
-        for schema_file in schema_files:
-            with open(schema_file, "r") as f:
-                schema_sql = f.read()
-                conn.executescript(schema_sql)
-
-        # Get the view files
-        views_dir = Path(__file__).parent.parent / "sql" / "views"
-        view_files = sorted(views_dir.glob("*.sql"))
-
-        # Apply each view file in order
-        for view_file in view_files:
-            with open(view_file, "r") as f:
-                view_sql = f.read()
-                conn.executescript(view_sql)
-
-        conn.commit()
-        conn.close()
+        # Initialize database using bundled SQL assets
+        initialize_database(db_path, apply_views_flag=True)
 
         # Yield the database path to the test
         yield db_path
