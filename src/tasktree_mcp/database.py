@@ -143,14 +143,31 @@ class TaskRepository:
 
     @staticmethod
     def delete_task(name: str) -> bool:
-        """Delete a task from the database."""
+        """
+        Delete a task from the database.
+
+        Also deletes all dependencies associated with this task (both incoming
+        and outgoing dependencies) to maintain referential integrity.
+        """
         if not name or not name.strip():
             raise ValueError("Task name cannot be empty")
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
+
+            # First delete all dependencies associated with this task
+            # This includes both:
+            # - Dependencies where this task depends on others (task_name = name)
+            # - Dependencies where other tasks depend on this task (depends_on_task_name = name)
+            cursor.execute(
+                "DELETE FROM dependencies WHERE task_name = ? OR depends_on_task_name = ?",
+                (name, name),
+            )
+
+            # Then delete the task itself
             cursor.execute("DELETE FROM tasks WHERE name = ?", (name,))
             deleted = cursor.rowcount > 0
+
             conn.commit()
             return deleted
 
