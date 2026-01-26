@@ -50,16 +50,17 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Get all tasks sorted by priority (descending), then by status
+        # Get all tasks sorted by status, priority (descending), then name
         cursor.execute("""
             SELECT name, description, status, priority, created_at, started_at, completed_at
             FROM tasks
-            ORDER BY priority DESC, 
-                     CASE status 
-                         WHEN 'in_progress' THEN 1 
-                         WHEN 'pending' THEN 2 
-                         WHEN 'completed' THEN 3 
+            ORDER BY CASE status 
+                         WHEN 'blocked' THEN 1 
+                         WHEN 'in_progress' THEN 2 
+                         WHEN 'pending' THEN 3 
+                         WHEN 'completed' THEN 4 
                      END,
+                     priority DESC,
                      name
         """)
         tasks = cursor.fetchall()
@@ -94,6 +95,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 "pending": "#2196F3",
                 "in_progress": "#FFC107",
                 "completed": "#4CAF50",
+                "blocked": "#F44336",
             }
             status_color = status_colors.get(status, "#999")
 
@@ -425,12 +427,16 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         <div class="legend-section">
             <div class="legend-section-title">Status</div>
             <div class="legend-item">
-                <div class="legend-color-box" style="background: #2196F3;"></div>
-                <span>Pending</span>
+                <div class="legend-color-box" style="background: #F44336;"></div>
+                <span>Blocked</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color-box" style="background: #FFC107;"></div>
                 <span>In Progress</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color-box" style="background: #2196F3;"></div>
+                <span>Pending</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color-box" style="background: #4CAF50;"></div>
@@ -481,7 +487,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         const STATUS_COLORS = {{
             'pending': '#2196F3',      // Blue
             'in_progress': '#FFC107',  // Yellow/Amber
-            'completed': '#4CAF50'     // Green
+            'completed': '#4CAF50',    // Green
+            'blocked': '#F44336'       // Red
         }};
 
         // Create SVG

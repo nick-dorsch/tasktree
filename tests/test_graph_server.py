@@ -438,6 +438,43 @@ def test_root_endpoint_task_panel_priority_sorting(mock_db_path, server_thread):
         conn.close()
 
 
+def test_root_endpoint_task_panel_status_ordering(mock_db_path, server_thread):
+    """Test that tasks in the panel are sorted by status (blocked, in_progress, pending, completed), then priority."""
+    port = server_thread
+
+    # Add tasks with different statuses and priorities
+    TaskRepository.add_task(
+        "completed-high", "Completed high priority", priority=10, status="completed"
+    )
+    TaskRepository.add_task(
+        "pending-high", "Pending high priority", priority=9, status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress-low", "In progress low priority", priority=5, status="in_progress"
+    )
+    TaskRepository.add_task(
+        "blocked-medium", "Blocked medium priority", priority=7, status="blocked"
+    )
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Find positions of task names in HTML
+        pos_blocked = html.find("blocked-medium")
+        pos_in_progress = html.find("in-progress-low")
+        pos_pending = html.find("pending-high")
+        pos_completed = html.find("completed-high")
+
+        # Status order should be: blocked, in_progress, pending, completed
+        assert pos_blocked < pos_in_progress < pos_pending < pos_completed
+    finally:
+        conn.close()
+
+
 def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
     """Test that task panel shows correct status color coding."""
     port = server_thread
@@ -446,6 +483,7 @@ def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
     TaskRepository.add_task("pending-task", "Pending", status="pending")
     TaskRepository.add_task("in-progress-task", "In Progress", status="in_progress")
     TaskRepository.add_task("completed-task", "Completed", status="completed")
+    TaskRepository.add_task("blocked-task", "Blocked", status="blocked")
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -458,6 +496,7 @@ def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
         assert "#2196F3" in html  # Pending - Blue
         assert "#FFC107" in html  # In Progress - Yellow/Amber
         assert "#4CAF50" in html  # Completed - Green
+        assert "#F44336" in html  # Blocked - Red
     finally:
         conn.close()
 
@@ -554,5 +593,29 @@ def test_root_endpoint_includes_graph_visualization(server_thread):
 
         # Check for API endpoint reference
         assert "/api/graph" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_legend_includes_blocked_status(server_thread):
+    """Test that the legend includes the blocked status."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that legend includes all status types
+        assert "Blocked" in html
+        assert "In Progress" in html
+        assert "Pending" in html
+        assert "Completed" in html
+
+        # Check that blocked status appears in legend with correct color
+        # The legend should contain the blocked color (#F44336)
+        assert "#F44336" in html
     finally:
         conn.close()
