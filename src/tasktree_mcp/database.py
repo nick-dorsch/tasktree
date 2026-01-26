@@ -261,24 +261,15 @@ class DependencyRepository:
 
     @staticmethod
     def get_available_tasks() -> List[Dict[str, Any]]:
-        """Get tasks that can be started (no uncompleted dependencies)."""
+        """Get pending tasks that can be started (no uncompleted dependencies)."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
             cursor.execute(
                 """
-                SELECT t.* FROM tasks t
-                WHERE t.status != 'completed'
-                AND NOT EXISTS (
-                    SELECT 1 FROM dependencies d
-                    WHERE d.task_name = t.name
-                    AND EXISTS (
-                        SELECT 1 FROM tasks t2
-                        WHERE t2.name = d.depends_on_task_name
-                        AND t2.status != 'completed'
-                    )
-                )
-                ORDER BY t.priority DESC, t.created_at ASC
+                SELECT *
+                FROM v_available_tasks
+                ORDER BY priority DESC, created_at ASC
                 """
             )
 

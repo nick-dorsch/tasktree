@@ -61,7 +61,7 @@ def test_get_available_tasks_no_dependencies(mock_db_path):
 
 
 def test_get_available_tasks_excludes_completed(mock_db_path):
-    """Test that completed tasks are excluded from available tasks."""
+    """Test that only pending tasks are available."""
     TaskRepository.add_task("completed-task", "Already done", status="completed")
     TaskRepository.add_task("pending-task", "Not yet done", status="pending")
     TaskRepository.add_task(
@@ -70,12 +70,12 @@ def test_get_available_tasks_excludes_completed(mock_db_path):
 
     available = DependencyRepository.get_available_tasks()
 
-    # Only non-completed tasks should be available
-    assert len(available) == 2
+    # Only pending tasks should be available
+    assert len(available) == 1
     task_names = {task["name"] for task in available}
     assert "pending-task" in task_names
-    assert "in-progress-task" in task_names
     assert "completed-task" not in task_names
+    assert "in-progress-task" not in task_names
 
 
 def test_get_available_tasks_simple_dependency_chain(mock_db_path):
@@ -241,8 +241,7 @@ def test_get_available_tasks_in_progress_dependencies(mock_db_path):
 
     # main-task should not be available (dep-task is in_progress, not completed)
     available = DependencyRepository.get_available_tasks()
-    assert len(available) == 1
-    assert available[0]["name"] == "dep-task"
+    assert len(available) == 0
 
 
 def test_get_available_tasks_no_uncompleted_dependencies_only(mock_db_path):
@@ -262,7 +261,7 @@ def test_get_available_tasks_no_uncompleted_dependencies_only(mock_db_path):
 
 
 def test_get_available_tasks_handles_orphaned_tasks(mock_db_path):
-    """Test that tasks with no dependencies are always available if not completed."""
+    """Test that only pending orphans are available."""
     TaskRepository.add_task("orphan-1", "Orphan task 1", status="pending", priority=5)
     TaskRepository.add_task(
         "orphan-2", "Orphan task 2", status="in_progress", priority=3
@@ -274,14 +273,14 @@ def test_get_available_tasks_handles_orphaned_tasks(mock_db_path):
 
     DependencyRepository.add_dependency("with-deps", "dep")
 
-    # Both orphans and dep should be available
+    # Only pending orphans and dep should be available
     available = DependencyRepository.get_available_tasks()
-    assert len(available) == 3
+    assert len(available) == 2
     task_names = {task["name"] for task in available}
     assert "orphan-1" in task_names
-    assert "orphan-2" in task_names
     assert "dep" in task_names
     assert "with-deps" not in task_names
+    assert "orphan-2" not in task_names
 
 
 def test_get_available_tasks_all_completed(mock_db_path):

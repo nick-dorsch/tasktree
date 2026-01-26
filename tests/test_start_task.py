@@ -174,7 +174,7 @@ def test_start_task_with_dependencies(test_db: Path, monkeypatch):
 
 
 def test_start_task_makes_task_unavailable(test_db: Path, monkeypatch):
-    """Test that starting a task changes it from available to in_progress in get_available_tasks."""
+    """Test that starting a task removes it from available tasks."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
     # Create a pending task
@@ -188,7 +188,7 @@ def test_start_task_makes_task_unavailable(test_db: Path, monkeypatch):
     # Start the task
     TaskRepository.update_task(name="available-task", status="in_progress")
 
-    # Verify it's still in available tasks (in_progress tasks can still be worked on)
+    # Verify it's no longer in available tasks
     available_after = DependencyRepository.get_available_tasks()
     available_names_after = [t["name"] for t in available_after]
-    assert "available-task" in available_names_after
+    assert "available-task" not in available_names_after

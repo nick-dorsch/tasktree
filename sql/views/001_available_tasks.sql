@@ -4,7 +4,7 @@ DROP VIEW IF EXISTS v_available_tasks;
 CREATE VIEW v_available_tasks AS
 SELECT t.*
 FROM tasks t
-WHERE t.status = 'pending'  -- Only tasks that aren't already completed
+WHERE t.status = 'pending'  -- Only tasks that are pending
   AND NOT EXISTS (
     -- Check for any uncompleted dependencies
     SELECT 1
