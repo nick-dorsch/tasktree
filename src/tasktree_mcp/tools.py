@@ -23,6 +23,7 @@ from .models import (
 )
 from .validators import (
     validate_description,
+    validate_feature_name,
     validate_priority,
     validate_status,
     validate_task_name,
@@ -102,6 +103,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             details=details,
             feature_name=feature_name,
         )
+        validate_feature_name(request.feature_name)
 
         # Validate dependencies exist before creating task
         if request.dependencies:

@@ -34,3 +34,13 @@ def validate_description(description: Optional[str]) -> None:
     """Validate description if provided."""
     if description is not None and not description.strip():
         raise ValueError("Description cannot be empty")
+
+
+def validate_feature_name(feature_name: Optional[str]) -> None:
+    """Validate feature name if provided."""
+    if feature_name is None:
+        return
+    if not feature_name.strip():
+        raise ValueError("Feature name cannot be empty")
+    if len(feature_name) > 55:
+        raise ValueError("Feature name must be 55 characters or fewer")

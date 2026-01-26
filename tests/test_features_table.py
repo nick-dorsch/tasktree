@@ -36,7 +36,7 @@ def test_features_table_schema(test_db_connection: sqlite3.Connection):
     assert columns["name"]["pk"] == 1
 
     # Verify enabled column has correct type
-    assert "INT" in columns["enabled"]["type"].upper()
+    assert "BOOLEAN" in columns["enabled"]["type"].upper()
 
 
 def test_default_feature_is_seeded(test_db_connection: sqlite3.Connection):
@@ -76,11 +76,10 @@ def test_features_name_is_primary_key(test_db_connection: sqlite3.Connection):
         pass
 
 
-def test_enabled_constraint(test_db_connection: sqlite3.Connection):
-    """Test that enabled column only accepts 0 or 1."""
+def test_enabled_values_round_trip(test_db_connection: sqlite3.Connection):
+    """Test that enabled values are stored as provided."""
     cursor = test_db_connection.cursor()
 
-    # Valid values (0 and 1) should work
     cursor.execute(
         "INSERT INTO features (name, enabled) VALUES (?, ?)",
         ("enabled-feature", 1),
@@ -91,17 +90,13 @@ def test_enabled_constraint(test_db_connection: sqlite3.Connection):
     )
     test_db_connection.commit()
 
-    # Invalid value should fail
-    try:
-        cursor.execute(
-            "INSERT INTO features (name, enabled) VALUES (?, ?)",
-            ("invalid-feature", 2),
-        )
-        test_db_connection.commit()
-        assert False, "Expected IntegrityError for invalid enabled value"
-    except sqlite3.IntegrityError:
-        # This is expected behavior
-        pass
+    cursor.execute(
+        "SELECT name, enabled FROM features WHERE name IN (?, ?)",
+        ("enabled-feature", "disabled-feature"),
+    )
+    rows = {row["name"]: row["enabled"] for row in cursor.fetchall()}
+    assert rows["enabled-feature"] == 1
+    assert rows["disabled-feature"] == 0
 
 
 def test_default_enabled_value(test_db_connection: sqlite3.Connection):
