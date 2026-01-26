@@ -675,3 +675,38 @@ def test_graph_viewer_legend_shows_completed_fixed_size(graph_viewer_path):
     assert "fixed" in content_lower or "small" in content_lower, (
         "Legend should indicate completed tasks have fixed or small size"
     )
+
+
+def test_graph_viewer_legend_has_glass_inlay_styling(graph_viewer_path):
+    """Test that the legend uses glass inlay styling for consistency."""
+    content = graph_viewer_path.read_text()
+
+    # Find the legend CSS block
+    lines = content.split("\n")
+    found_legend_css = False
+    for i, line in enumerate(lines):
+        if ".legend {" in line or ".legend{" in line:
+            # Get the CSS block (next ~20 lines to capture all properties)
+            css_block = "\n".join(lines[i : i + 20])
+
+            # Check for glass inlay properties
+            assert "rgba(0, 0, 0, 0.6)" in css_block, (
+                "Legend should have semi-transparent background rgba(0, 0, 0, 0.6)"
+            )
+            assert "backdrop-filter: blur(10px)" in css_block, (
+                "Legend should have backdrop-filter: blur(10px) for frosted glass effect"
+            )
+            assert "-webkit-backdrop-filter: blur(10px)" in css_block, (
+                "Legend should have -webkit-backdrop-filter for Safari support"
+            )
+            assert "rgba(255, 255, 255, 0.1)" in css_block, (
+                "Legend should have subtle white border rgba(255, 255, 255, 0.1)"
+            )
+            assert "border-radius: 12px" in css_block, (
+                "Legend should have 12px border radius for modern glass look"
+            )
+
+            found_legend_css = True
+            break
+
+    assert found_legend_css, "Could not find .legend CSS definition"
