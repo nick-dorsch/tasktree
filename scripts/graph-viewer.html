@@ -222,9 +222,13 @@
             const previousNodeCount = positionCache.size;
             const previousLinkCount = link ? link.size() : 0;
 
-            // Update links
+            // Update links (stable key function handles D3 mutation)
             link = linkGroup.selectAll('.link')
-                .data(links, d => `${d.source}-${d.target}`);
+                .data(links, d => {
+                    const source = typeof d.source === 'object' ? d.source.name : d.source;
+                    const target = typeof d.target === 'object' ? d.target.name : d.target;
+                    return `${source}-${target}`;
+                });
 
             link.exit().remove();
 

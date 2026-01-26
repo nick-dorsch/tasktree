@@ -289,3 +289,46 @@ def test_graph_viewer_no_simulation_restart_for_property_updates(graph_viewer_pa
                 "this causes graph drift bug. Only structural changes should restart simulation."
             )
             break
+
+
+def test_graph_viewer_has_stable_link_key_function(graph_viewer_path):
+    """Test that link data join uses stable key function to handle D3 mutations."""
+    content = graph_viewer_path.read_text()
+
+    # The key function should handle both string and object forms of source/target
+    # This prevents edges from disappearing during polling after D3 mutates the data
+    assert "typeof d.source === 'object'" in content, (
+        "Link key function should check if d.source is an object (after D3 mutation)"
+    )
+    assert "typeof d.target === 'object'" in content, (
+        "Link key function should check if d.target is an object (after D3 mutation)"
+    )
+
+    # Should extract the name property when it's an object
+    assert "d.source.name" in content, (
+        "Link key function should extract name from source object reference"
+    )
+    assert "d.target.name" in content, (
+        "Link key function should extract name from target object reference"
+    )
+
+    # Find the link data join and verify the stable key function
+    lines = content.split("\n")
+    found_stable_key_pattern = False
+    for i, line in enumerate(lines):
+        if ".data(links," in line and "d =>" in line:
+            # Check the next few lines for the stable key function logic
+            next_lines = "\n".join(lines[i : i + 5])
+            if (
+                "typeof d.source === 'object'" in next_lines
+                and "typeof d.target === 'object'" in next_lines
+                and "d.source.name" in next_lines
+                and "d.target.name" in next_lines
+            ):
+                found_stable_key_pattern = True
+                break
+
+    assert found_stable_key_pattern, (
+        "Link data join should use a stable key function that handles both "
+        "string IDs (initial) and object references (after D3 mutation)"
+    )
