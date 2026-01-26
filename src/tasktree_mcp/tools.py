@@ -92,6 +92,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         dependencies: Optional[List[str]] = None,
         details: Optional[str] = None,
         feature_name: str = "default",
+        tests_required: bool = True,
     ) -> TaskResponse:
         """
         Add a new task to the database.
@@ -104,6 +105,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             dependencies: List of task names this task depends on (optional)
             details: Optional field for more detailed implementation details of the task
             feature_name: Feature this task belongs to (defaults to 'default')
+            tests_required: Whether tests are required for this task
 
         Returns:
             TaskResponse model with the created task data
@@ -116,6 +118,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             dependencies=dependencies,
             details=details,
             feature_name=feature_name,
+            tests_required=tests_required,
         )
         validate_feature_name(request.feature_name)
 
@@ -134,6 +137,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status=task_status,
             details=request.details,
             feature_name=request.feature_name,
+            tests_required=request.tests_required,
         )
 
         # Create the task
@@ -144,6 +148,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status=task.status.value,
             details=task.details,
             feature_name=task.feature_name,
+            tests_required=task.tests_required,
         )
 
         # Add dependencies if provided
@@ -163,6 +168,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         status: Optional[str] = None,
         priority: Optional[int] = None,
         details: Optional[str] = None,
+        tests_required: Optional[bool] = None,
     ) -> Optional[TaskResponse]:
         """
         Update an existing task.
@@ -173,6 +179,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status: New status (optional)
             priority: New priority (optional)
             details: New details (optional)
+            tests_required: Whether tests are required for this task (optional)
 
         Returns:
             TaskResponse model with updated task data if found, None otherwise
@@ -183,6 +190,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status=status,
             priority=priority,
             details=details,
+            tests_required=tests_required,
         )
         validate_task_name(request.name)
         validate_status(request.status)
@@ -195,6 +203,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status=request.status,
             priority=request.priority,
             details=request.details,
+            tests_required=request.tests_required,
         )
 
     @mcp.tool()

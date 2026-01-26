@@ -35,6 +35,7 @@ def test_add_task_basic(mock_db_path):
     assert task.priority == 0
     assert task.status == "pending"
     assert task.details is None
+    assert task.tests_required is True
     assert task.created_at is not None
 
 
@@ -46,6 +47,7 @@ def test_add_task_with_all_parameters(mock_db_path):
         priority=8,
         status="in_progress",
         details="Detailed implementation notes",
+        tests_required=False,
     )
 
     assert task.name == "full-task"
@@ -53,6 +55,18 @@ def test_add_task_with_all_parameters(mock_db_path):
     assert task.priority == 8
     assert task.status == "in_progress"
     assert task.details == "Detailed implementation notes"
+    assert task.tests_required is False
+
+
+def test_add_task_with_tests_required_flag(mock_db_path):
+    """Test adding a task with tests_required flag."""
+    task = TaskRepository.add_task(
+        name="no-tests-task",
+        description="A task without tests",
+        tests_required=False,
+    )
+
+    assert task.tests_required is False
 
 
 def test_add_task_with_priority_bounds(mock_db_path):

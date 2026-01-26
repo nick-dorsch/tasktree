@@ -158,6 +158,7 @@ class TestTaskRepositoryTypedReturns:
         assert hasattr(result, "priority")
         assert hasattr(result, "status")
         assert hasattr(result, "feature_name")
+        assert hasattr(result, "tests_required")
         assert hasattr(result, "created_at")
         assert hasattr(result, "updated_at")
         assert hasattr(result, "started_at")

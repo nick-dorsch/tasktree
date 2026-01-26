@@ -19,10 +19,30 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     # Enable foreign key constraints
     conn.execute("PRAGMA foreign_keys = ON")
+    _ensure_tests_required_column(conn)
     try:
         yield conn
     finally:
         conn.close()
+
+
+def _ensure_tests_required_column(conn: sqlite3.Connection) -> None:
+    """Ensure the tasks table has the tests_required column."""
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='tasks'")
+    if cursor.fetchone() is None:
+        return
+
+    cursor.execute("PRAGMA table_info(tasks)")
+    columns = {row["name"] for row in cursor.fetchall()}
+    if "tests_required" in columns:
+        return
+
+    conn.execute(
+        "ALTER TABLE tasks ADD COLUMN tests_required INTEGER NOT NULL DEFAULT 1 "
+        "CHECK (tests_required IN (0, 1))"
+    )
+    conn.commit()
 
 
 class TaskRepository:
@@ -109,6 +129,7 @@ class TaskRepository:
         status: str = "pending",
         details: Optional[str] = None,
         feature_name: str = "default",
+        tests_required: bool = True,
     ) -> TaskResponse:
         """
         Add a new task to the database.
@@ -120,6 +141,7 @@ class TaskRepository:
             status: Initial status
             details: Optional detailed description
             feature_name: Feature this task belongs to
+            tests_required: Whether tests are required for this task
 
         Returns:
             TaskResponse model with the created task data
@@ -133,10 +155,26 @@ class TaskRepository:
             try:
                 cursor.execute(
                     """
-                    INSERT INTO tasks (name, description, details, feature_name, priority, status)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO tasks (
+                        name,
+                        description,
+                        details,
+                        feature_name,
+                        tests_required,
+                        priority,
+                        status
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (name, description, details, feature_name, priority, status),
+                    (
+                        name,
+                        description,
+                        details,
+                        feature_name,
+                        int(tests_required),
+                        priority,
+                        status,
+                    ),
                 )
                 conn.commit()
 
@@ -159,6 +197,7 @@ class TaskRepository:
         status: Optional[str] = None,
         priority: Optional[int] = None,
         details: Optional[str] = None,
+        tests_required: Optional[bool] = None,
     ) -> Optional[TaskResponse]:
         """Update an existing task."""
         if not name or not name.strip():
@@ -186,6 +225,9 @@ class TaskRepository:
             if details is not None:
                 updates.append("details = ?")
                 params.append(details)
+            if tests_required is not None:
+                updates.append("tests_required = ?")
+                params.append(int(tests_required))
 
             if not updates:
                 return TaskRepository.get_task(name)

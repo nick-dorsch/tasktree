@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   description TEXT NOT NULL,
   details TEXT,
   feature_name VARCHAR(55) NOT NULL DEFAULT 'default',
+  tests_required INTEGER NOT NULL DEFAULT 1 CHECK (tests_required IN (0, 1)),
 
   priority INTEGER DEFAULT 0 CHECK(priority >= 0 AND priority <= 10),
   status TEXT DEFAULT 'pending' CHECK(

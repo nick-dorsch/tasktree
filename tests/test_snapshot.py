@@ -65,6 +65,10 @@ def test_export_snapshot_writes_ordered_jsonl(test_db: Path, tmp_path: Path) -> 
     task_names = [r["name"] for r in records if r["record_type"] == "task"]
     assert task_names == sorted(task_names)
 
+    task_records = [r for r in records if r["record_type"] == "task"]
+    assert all("tests_required" in record for record in task_records)
+    assert all(record["tests_required"] is True for record in task_records)
+
     dependency_pairs = [
         (r["task_name"], r["depends_on_task_name"])
         for r in records
@@ -155,6 +159,7 @@ def test_import_snapshot_overwrite_restores_data(test_db: Path, tmp_path: Path) 
                 description,
                 details,
                 feature_name,
+                tests_required,
                 priority,
                 status,
                 created_at,
@@ -169,6 +174,9 @@ def test_import_snapshot_overwrite_restores_data(test_db: Path, tmp_path: Path) 
             assert row["description"] == record["description"]
             assert row["details"] == record["details"]
             assert row["feature_name"] == record["feature_name"]
+            assert bool(row["tests_required"]) == bool(
+                record.get("tests_required", True)
+            )
             assert row["priority"] == record["priority"]
             assert row["status"] == record["status"]
             assert row["created_at"] == record["created_at"]

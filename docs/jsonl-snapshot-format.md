@@ -45,6 +45,7 @@ Required fields:
 - `description`: string
 - `details`: string or null
 - `feature_name`: string or null
+- `tests_required`: boolean
 - `priority`: integer
 - `status`: string
 - `created_at`: timestamp string

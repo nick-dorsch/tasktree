@@ -27,6 +27,7 @@ class Task(BaseModel):
         description="Optional field for more detailed implementation details of the task",
     )
     feature_name: str = Field(default="default", min_length=1, max_length=55)
+    tests_required: bool = Field(default=True)
     priority: int = Field(default=0, ge=0, le=10)
     status: TaskStatus = Field(default=TaskStatus.PENDING)
     created_at: Optional[str] = None
@@ -114,6 +115,10 @@ class AddTaskRequest(BaseModel):
         max_length=55,
         description="Feature this task belongs to",
     )
+    tests_required: bool = Field(
+        default=True,
+        description="Whether tests are required for this task",
+    )
     priority: int = Field(
         default=0,
         ge=0,
@@ -150,6 +155,9 @@ class UpdateTaskRequest(BaseModel):
     details: Optional[str] = Field(None, description="New details")
     status: Optional[str] = Field(None, description="New status")
     priority: Optional[int] = Field(None, ge=0, le=10, description="New priority")
+    tests_required: Optional[bool] = Field(
+        None, description="Whether tests are required for this task"
+    )
 
     @field_validator("status", mode="before")
     @classmethod
@@ -261,6 +269,7 @@ class TaskResponse(BaseModel):
     description: str = Field(..., description="Task description")
     details: Optional[str] = Field(None, description="Task details")
     feature_name: str = Field(..., description="Feature this task belongs to")
+    tests_required: bool = Field(..., description="Whether tests are required")
     priority: int = Field(..., ge=0, le=10, description="Task priority")
     status: str = Field(..., description="Task status")
     created_at: Optional[str] = Field(None, description="Creation timestamp")

@@ -28,6 +28,7 @@ class TestTaskResponse:
             "description": "Test description",
             "details": None,
             "feature_name": "default",
+            "tests_required": True,
             "priority": 5,
             "status": "pending",
             "created_at": "2026-01-26 08:00:00",
@@ -42,6 +43,7 @@ class TestTaskResponse:
         assert response.description == "Test description"
         assert response.details is None
         assert response.feature_name == "default"
+        assert response.tests_required is True
         assert response.priority == 5
         assert response.status == "pending"
         assert response.created_at == "2026-01-26 08:00:00"
@@ -56,6 +58,7 @@ class TestTaskResponse:
             "description": "A completed task",
             "details": "Implementation details",
             "feature_name": "feature-a",
+            "tests_required": False,
             "priority": 8,
             "status": "completed",
             "created_at": "2026-01-26 07:00:00",
@@ -70,6 +73,7 @@ class TestTaskResponse:
         assert response.description == "A completed task"
         assert response.details == "Implementation details"
         assert response.feature_name == "feature-a"
+        assert response.tests_required is False
         assert response.priority == 8
         assert response.status == "completed"
         assert response.created_at == "2026-01-26 07:00:00"
@@ -84,6 +88,7 @@ class TestTaskResponse:
             "description": "Test description",
             "details": None,
             "feature_name": "default",
+            "tests_required": True,
             "priority": 5,
             "status": "pending",
             "created_at": "2026-01-26 08:00:00",
@@ -98,6 +103,7 @@ class TestTaskResponse:
         assert serialized["name"] == "test-task"
         assert serialized["description"] == "Test description"
         assert serialized["priority"] == 5
+        assert serialized["tests_required"] is True
 
     def test_task_response_validation_priority_bounds(self):
         """Test that TaskResponse validates priority bounds."""
@@ -106,6 +112,7 @@ class TestTaskResponse:
             "name": "task",
             "description": "Test",
             "feature_name": "default",
+            "tests_required": True,
             "priority": 10,
             "status": "pending",
             "created_at": None,
@@ -148,6 +155,7 @@ class TestTaskListResponse:
                 "description": "First task",
                 "details": None,
                 "feature_name": "default",
+                "tests_required": True,
                 "priority": 5,
                 "status": "pending",
                 "created_at": "2026-01-26 08:00:00",
@@ -171,6 +179,7 @@ class TestTaskListResponse:
                 "description": "First task",
                 "details": None,
                 "feature_name": "default",
+                "tests_required": True,
                 "priority": 5,
                 "status": "pending",
                 "created_at": "2026-01-26 08:00:00",
@@ -183,6 +192,7 @@ class TestTaskListResponse:
                 "description": "Second task",
                 "details": "Details",
                 "feature_name": "feature-a",
+                "tests_required": False,
                 "priority": 8,
                 "status": "in_progress",
                 "created_at": "2026-01-26 08:00:00",
@@ -210,6 +220,7 @@ class TestTaskUpdateResponse:
             "description": "Updated description",
             "details": None,
             "feature_name": "default",
+            "tests_required": True,
             "priority": 7,
             "status": "in_progress",
             "created_at": "2026-01-26 08:00:00",

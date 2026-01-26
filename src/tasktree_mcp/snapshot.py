@@ -149,6 +149,7 @@ def _fetch_tasks(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
             description,
             details,
             feature_name,
+            tests_required,
             priority,
             status,
             created_at,
@@ -169,6 +170,7 @@ def _fetch_tasks(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                 "description": row["description"],
                 "details": row["details"],
                 "feature_name": row["feature_name"],
+                "tests_required": bool(row["tests_required"]),
                 "priority": row["priority"],
                 "status": row["status"],
                 "created_at": row["created_at"],
@@ -286,6 +288,8 @@ def _validate_task(record: Dict[str, Any], line_number: int) -> None:
     _require_str_field(record, "description", line_number)
     _require_nullable_str_field(record, "details", line_number)
     _require_str_field(record, "feature_name", line_number)
+    if "tests_required" in record:
+        _require_bool_field(record, "tests_required", line_number)
     _require_int_field(record, "priority", line_number)
     _require_str_field(record, "status", line_number)
     _require_str_field(record, "created_at", line_number)
@@ -377,12 +381,14 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
         return
     rows = []
     for record in tasks:
+        tests_required = record.get("tests_required", True)
         rows.append(
             (
                 record["name"],
                 record["description"],
                 record.get("details"),
                 record["feature_name"],
+                int(bool(tests_required)),
                 record["priority"],
                 record["status"],
                 record["created_at"],
@@ -398,6 +404,7 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
             description,
             details,
             feature_name,
+            tests_required,
             priority,
             status,
             created_at,
@@ -405,7 +412,7 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
             started_at,
             completed_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         rows,
     )
