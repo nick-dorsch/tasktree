@@ -502,7 +502,7 @@ def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
 
 
 def test_root_endpoint_task_panel_overall_times(mock_db_path, server_thread):
-    """Test that task panel header shows overall started_at and completed_at."""
+    """Test that task panel header does not show overall started_at and completed_at."""
     port = server_thread
 
     # Add tasks with started_at and completed_at times
@@ -520,10 +520,11 @@ def test_root_endpoint_task_panel_overall_times(mock_db_path, server_thread):
 
         html = response.read().decode()
 
-        # Check for time metadata in panel header
-        assert "Started:" in html
-        # Should show a timestamp since we have started tasks
-        assert "2026-" in html or "202" in html  # Year prefix
+        # Verify panel header does NOT contain overall started/completed metadata
+        # The panel-meta div should not exist in the header
+        assert 'class="panel-meta"' not in html
+        # Header should still have the title
+        assert 'class="panel-title">Tasks</div>' in html
     finally:
         conn.close()
 

@@ -65,16 +65,6 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         """)
         tasks = cursor.fetchall()
 
-        # Get overall started_at and completed_at from node data
-        cursor.execute("""
-            SELECT MIN(started_at), MAX(completed_at)
-            FROM tasks
-            WHERE started_at IS NOT NULL OR completed_at IS NOT NULL
-        """)
-        overall_times = cursor.fetchone()
-        overall_started = overall_times[0] if overall_times else None
-        overall_completed = overall_times[1] if overall_times else None
-
         conn.close()
 
         # Build task list HTML
@@ -452,10 +442,6 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     <div class="task-panel">
         <div class="panel-header">
             <div class="panel-title">Tasks</div>
-            <div class="panel-meta">
-                {f"Started: {overall_started}" if overall_started else "Not started"}<br>
-                {f"Completed: {overall_completed}" if overall_completed else "Not completed"}
-            </div>
         </div>
         <div class="task-list">
             {task_items_html if task_items_html else '<div style="padding: 12px; color: #999; font-size: 12px;">No tasks available</div>'}
