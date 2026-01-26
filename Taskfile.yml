@@ -63,8 +63,9 @@ tasks:
       - ./scripts/draw-graph.sh .tasktree/tasktree.db
     silent: true
 
-  graph:
+  web-graph:
     desc: Launch graph server and open browser visualization
+    aliases: [web]
     cmds:
       - echo "Starting graph server and opening browser..."
       - |
