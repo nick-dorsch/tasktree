@@ -15,6 +15,8 @@ def get_db_connection():
     """Get a connection to the SQLite database with proper cleanup."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    # Enable foreign key constraints
+    conn.execute("PRAGMA foreign_keys = ON")
     try:
         yield conn
     finally:
@@ -71,6 +73,7 @@ class TaskRepository:
         priority: int = 0,
         status: str = "pending",
         details: Optional[str] = None,
+        feature_name: str = "default",
     ) -> Dict[str, Any]:
         """Add a new task to the database."""
         with get_db_connection() as conn:
@@ -79,10 +82,10 @@ class TaskRepository:
             try:
                 cursor.execute(
                     """
-                    INSERT INTO tasks (name, description, details, priority, status)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO tasks (name, description, details, feature_name, priority, status)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                    (name, description, details, priority, status),
+                    (name, description, details, feature_name, priority, status),
                 )
                 conn.commit()
 
@@ -93,6 +96,8 @@ class TaskRepository:
                 return {}
 
             except sqlite3.IntegrityError as e:
+                if "FOREIGN KEY" in str(e):
+                    raise ValueError(f"Feature '{feature_name}' does not exist") from e
                 raise ValueError(f"Task with name '{name}' already exists") from e
 
     @staticmethod

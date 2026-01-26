@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   name VARCHAR(55) PRIMARY KEY,
   description TEXT NOT NULL,
   details TEXT,
+  feature_name VARCHAR(55) NOT NULL DEFAULT 'default',
 
   priority INTEGER DEFAULT 0 CHECK(priority >= 0 AND priority <= 10),
   status TEXT DEFAULT 'pending' CHECK(
@@ -16,7 +17,9 @@ CREATE TABLE IF NOT EXISTS tasks (
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   started_at TIMESTAMP,
-  completed_at TIMESTAMP
+  completed_at TIMESTAMP,
+
+  FOREIGN KEY (feature_name) REFERENCES features(name)
 );
 
 -- Triggers to automatically set timestamps based on status changes

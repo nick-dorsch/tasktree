@@ -76,6 +76,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         status: str = "pending",
         dependencies: Optional[List[str]] = None,
         details: Optional[str] = None,
+        feature_name: str = "default",
     ) -> Dict[str, Any]:
         """
         Add a new task to the database.
@@ -87,6 +88,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status: Initial status ('pending', 'in_progress', 'completed')
             dependencies: List of task names this task depends on (optional)
             details: Optional field for more detailed implementation details of the task
+            feature_name: Feature this task belongs to (defaults to 'default')
 
         Returns:
             The created task dictionary
@@ -98,6 +100,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             status=status,
             dependencies=dependencies,
             details=details,
+            feature_name=feature_name,
         )
 
         # Validate dependencies exist before creating task
@@ -114,6 +117,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority=request.priority,
             status=task_status,
             details=request.details,
+            feature_name=request.feature_name,
         )
 
         # Create the task
@@ -123,6 +127,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority=task.priority,
             status=task.status.value,
             details=task.details,
+            feature_name=task.feature_name,
         )
 
         # Add dependencies if provided
