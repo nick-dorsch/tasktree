@@ -498,8 +498,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             .attr('viewBox', '0 -5 10 10')
             .attr('refX', 20)
             .attr('refY', 0)
-            .attr('markerWidth', 6)
-            .attr('markerHeight', 6)
+            .attr('markerWidth', 4.5)
+            .attr('markerHeight', 4.5)
             .attr('orient', 'auto')
             .append('path')
             .attr('d', 'M0,-5L10,0L0,5')
@@ -575,7 +575,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         }}
 
         function getNodeRadius(d) {{
-            // Scale radius based on priority (0-10) -> (8-30)
+            if (d.status === 'completed') return 10;
             return 8 + (d.priority / 10) * 22;
         }}
 

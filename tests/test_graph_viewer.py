@@ -595,3 +595,83 @@ def test_graph_viewer_legend_has_title(graph_viewer_path):
     assert "legend-title" in content.lower() or (
         "legend" in content.lower() and "title" in content.lower()
     )
+
+
+def test_graph_viewer_completed_nodes_fixed_size(graph_viewer_path):
+    """Test that completed task nodes use fixed small size regardless of priority."""
+    content = graph_viewer_path.read_text()
+
+    # Find the getNodeRadius function
+    lines = content.split("\n")
+    found_function = False
+    for i, line in enumerate(lines):
+        if "function getNodeRadius" in line or "getNodeRadius(d)" in line:
+            # Get the function body (next ~10 lines)
+            function_body = "\n".join(lines[i : i + 10])
+
+            # Should check for completed status
+            assert (
+                "d.status === 'completed'" in function_body
+                or 'd.status === "completed"' in function_body
+            ), "getNodeRadius should check if status is completed"
+
+            # Should return fixed size (10) for completed tasks
+            assert "return 10;" in function_body, (
+                "Completed tasks should return fixed radius of 10"
+            )
+
+            found_function = True
+            break
+
+    assert found_function, "Could not find getNodeRadius function"
+
+
+def test_graph_viewer_non_completed_nodes_priority_scaling(graph_viewer_path):
+    """Test that pending/in_progress nodes still use priority-based scaling."""
+    content = graph_viewer_path.read_text()
+
+    # Find the getNodeRadius function
+    lines = content.split("\n")
+    found_function = False
+    for i, line in enumerate(lines):
+        if "function getNodeRadius" in line or "getNodeRadius(d)" in line:
+            # Get the function body (next ~10 lines)
+            function_body = "\n".join(lines[i : i + 10])
+
+            # Should still have priority-based scaling for non-completed tasks
+            assert "8 + (d.priority / 10) * 22" in function_body, (
+                "Non-completed tasks should still use priority-based scaling (8 + (priority/10) * 22)"
+            )
+
+            # Should have both the completed check AND the priority scaling
+            has_completed_check = (
+                "d.status === 'completed'" in function_body
+                or 'd.status === "completed"' in function_body
+            )
+            has_priority_scaling = "d.priority" in function_body
+
+            assert has_completed_check and has_priority_scaling, (
+                "Function should have both completed check and priority scaling logic"
+            )
+
+            found_function = True
+            break
+
+    assert found_function, "Could not find getNodeRadius function"
+
+
+def test_graph_viewer_legend_shows_completed_fixed_size(graph_viewer_path):
+    """Test that the legend indicates completed tasks have fixed small size."""
+    content = graph_viewer_path.read_text()
+
+    # Legend should mention completed tasks have fixed size
+    content_lower = content.lower()
+
+    # Check for "completed" and "fixed" or "small" in close proximity
+    assert "completed" in content_lower, "Legend should mention completed tasks"
+
+    # The legend should show completed as fixed small size
+    # Looking for "Completed (fixed small)" or similar
+    assert "fixed" in content_lower or "small" in content_lower, (
+        "Legend should indicate completed tasks have fixed or small size"
+    )
