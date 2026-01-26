@@ -624,7 +624,9 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 <div><span class="tooltip-label">Status:</span> ${{d.status}}</div>
                 <div><span class="tooltip-label">Priority:</span> ${{d.priority}}</div>
                 <div><span class="tooltip-label">Available:</span> ${{d.is_available ? 'Yes' : 'No'}}</div>
+                ${{d.started_at ? `<div><span class="tooltip-label">Started:</span> ${{d.started_at}}</div>` : ''}}
                 ${{d.completed_at ? `<div><span class="tooltip-label">Completed:</span> ${{d.completed_at}}</div>` : ''}}
+                ${{d.completion_minutes !== null && d.completion_minutes !== undefined ? `<div><span class="tooltip-label">Duration:</span> ${{d.completion_minutes}} min</div>` : ''}}
             `;
             
             tooltip.html(content)

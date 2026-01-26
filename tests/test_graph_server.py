@@ -812,3 +812,47 @@ def test_root_endpoint_task_header_clickable(mock_db_path, server_thread):
         assert "onclick=" in html or 'onclick="toggleTaskDetails' in html
     finally:
         conn.close()
+
+
+def test_root_endpoint_tooltip_shows_started_at_conditionally(server_thread):
+    """Test that tooltip shows started_at only when non-null."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that tooltip function conditionally shows started_at
+        assert "d.started_at" in html
+        assert "Started:" in html
+
+        # Should use conditional rendering (ternary or template literal)
+        # Pattern: ${d.started_at ? `<div>...Started:...</div>` : ''}
+        assert "d.started_at ?" in html or "started_at?" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_tooltip_shows_completion_minutes(server_thread):
+    """Test that tooltip shows completion_minutes when available."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that tooltip function shows completion_minutes
+        assert "d.completion_minutes" in html
+        assert "Duration:" in html or "completion_minutes" in html
+
+        # Should use conditional rendering for completion_minutes
+        # Pattern: ${d.completion_minutes !== null ? `<div>...Duration:...</div>` : ''}
+        assert "completion_minutes !== null" in html or "completion_minutes !==" in html
+    finally:
+        conn.close()
