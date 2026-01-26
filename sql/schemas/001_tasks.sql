@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     status IN (
       'pending',
       'in_progress',
-      'complete',
+      'completed',
       'blocked'
     )
   ),
@@ -29,10 +29,10 @@ BEGIN
     UPDATE tasks SET started_at = CURRENT_TIMESTAMP WHERE name = NEW.name;
 END;
 
--- Trigger to set completed_at when status becomes 'complete'
+-- Trigger to set completed_at when status becomes 'completed'
 CREATE TRIGGER IF NOT EXISTS set_completed_at
 AFTER UPDATE ON tasks
-WHEN NEW.status = 'complete' AND OLD.status != 'complete'
+WHEN NEW.status = 'completed' AND OLD.status != 'completed'
 BEGIN
     UPDATE tasks SET completed_at = CURRENT_TIMESTAMP WHERE name = NEW.name;
 END;
@@ -45,10 +45,10 @@ BEGIN
     UPDATE tasks SET started_at = NULL WHERE name = NEW.name;
 END;
 
--- Trigger to clear completed_at when status changes from 'complete' to something else
+-- Trigger to clear completed_at when status changes from 'completed' to something else
 CREATE TRIGGER IF NOT EXISTS clear_completed_at
 AFTER UPDATE ON tasks
-WHEN NEW.status != 'complete' AND OLD.status = 'complete'
+WHEN NEW.status != 'completed' AND OLD.status = 'completed'
 BEGIN
     UPDATE tasks SET completed_at = NULL WHERE name = NEW.name;
 END;

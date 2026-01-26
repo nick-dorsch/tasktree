@@ -11,6 +11,6 @@ WHERE t.status = 'pending'  -- Only pending tasks
     FROM dependencies d
     JOIN tasks dep_task ON d.depends_on_task_name = dep_task.name
     WHERE d.task_name = t.name
-      AND dep_task.status != 'complete'
+      AND dep_task.status != 'completed'
   )
 ORDER BY t.priority DESC, t.created_at ASC;

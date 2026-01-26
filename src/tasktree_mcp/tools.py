@@ -12,19 +12,12 @@ from .models import (
     AddTaskRequest,
     DeleteTaskRequest,
     Dependency,
-    DependencyCreateResponse,
-    DependencyListResponse,
-    DependencyRemoveResponse,
     GetTaskRequest,
     ListDependenciesRequest,
     ListTasksRequest,
     RemoveDependencyRequest,
     Task,
-    TaskCreateResponse,
-    TaskDeleteResponse,
-    TaskListResponse,
     TaskStatus,
-    TaskUpdateResponse,
     UpdateTaskRequest,
 )
 from .validators import (
@@ -271,7 +264,11 @@ def register_dependency_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     def get_available_tasks() -> List[Dict[str, Any]]:
         """
-        Get tasks that can be started (no uncompleted dependencies).
+        Get tasks that can be started NOW.
+
+        They are available because all their dependencies are fulfilled.
+
+        They are ordered by priority, favour high priority tasks.
 
         Returns:
             List of available tasks with their dependencies resolved
