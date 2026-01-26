@@ -112,7 +112,9 @@
             .attr('height', HEIGHT);
 
         // Define arrowhead marker for directed edges
-        svg.append('defs').append('marker')
+        const defs = svg.append('defs');
+        
+        defs.append('marker')
             .attr('id', 'arrowhead')
             .attr('viewBox', '0 -5 10 10')
             .attr('refX', 20)
@@ -123,6 +125,22 @@
             .append('path')
             .attr('d', 'M0,-5L10,0L0,5')
             .attr('fill', '#666');
+
+        // Define glow filter for available tasks
+        const filter = defs.append('filter')
+            .attr('id', 'glow')
+            .attr('x', '-50%')
+            .attr('y', '-50%')
+            .attr('width', '200%')
+            .attr('height', '200%');
+
+        filter.append('feGaussianBlur')
+            .attr('stdDeviation', '3')
+            .attr('result', 'coloredBlur');
+
+        const feMerge = filter.append('feMerge');
+        feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+        feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
         // Create container for zoom/pan
         const container = svg.append('g');
@@ -273,7 +291,8 @@
             node.attr('r', getNodeRadius)
                 .attr('fill', getNodeColor)
                 .attr('stroke', getNodeStroke)
-                .attr('stroke-width', getNodeStrokeWidth);
+                .attr('stroke-width', getNodeStrokeWidth)
+                .attr('filter', d => d.is_available ? 'url(#glow)' : null);
 
             // Update labels
             label = labelGroup.selectAll('.node-label')

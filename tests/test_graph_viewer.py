@@ -203,6 +203,34 @@ def test_graph_viewer_has_available_task_highlighting(graph_viewer_path):
     assert "is_available" in content or "available" in content.lower()
 
 
+def test_graph_viewer_has_glow_filter(graph_viewer_path):
+    """Test that a glow filter is defined for highlighting available tasks."""
+    content = graph_viewer_path.read_text()
+
+    # Check for filter definition in SVG defs (via D3.js)
+    assert "filter" in content.lower()
+    assert ".attr('id', 'glow')" in content or '.attr("id", "glow")' in content
+
+    # Check for Gaussian blur effect (creates the glow)
+    assert "feGaussianBlur" in content
+
+    # Check for merge nodes (combines blur with original graphic)
+    assert "feMerge" in content
+
+
+def test_graph_viewer_applies_glow_to_available_tasks(graph_viewer_path):
+    """Test that the glow filter is applied to available tasks."""
+    content = graph_viewer_path.read_text()
+
+    # Check that nodes have filter attribute based on is_available
+    assert "filter" in content.lower()
+    assert "url(#glow)" in content
+
+    # Should conditionally apply filter based on is_available
+    # Look for pattern: d.is_available ? 'url(#glow)' : null
+    assert "is_available" in content and "url(#glow)" in content
+
+
 def test_graph_viewer_has_position_caching(graph_viewer_path):
     """Test that position caching is implemented to preserve node positions."""
     content = graph_viewer_path.read_text()
