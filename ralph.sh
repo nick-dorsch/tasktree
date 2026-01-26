@@ -13,7 +13,8 @@ if [ -f "PROMPT.md" ]; then
                 opencode run \
                 # --model opencode/big-pickle 
                 # --model google/gemini-3-pro-preview
-                --model anthropic/claude-sonnet-4-5\
+                # --model anthropic/claude-sonnet-4-5
+                --model openai/gpt-5.2-codex \
                 2>&1 | tee /dev/tty)
         
         # Check for the stop condition promise

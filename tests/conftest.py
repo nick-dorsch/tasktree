@@ -10,8 +10,6 @@ from typing import Generator
 
 import pytest
 
-from tasktree_mcp import session
-
 
 @pytest.fixture(scope="function")
 def test_db() -> Generator[Path, None, None]:
@@ -113,10 +111,3 @@ def get_test_db_connection(db_path: Path):
         yield conn
     finally:
         conn.close()
-
-
-@pytest.fixture(autouse=True)
-def reset_session_counter():
-    """Reset session counter before each test."""
-    session.reset_counter()
-    yield
