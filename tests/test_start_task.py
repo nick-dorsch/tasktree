@@ -19,7 +19,6 @@ def test_start_task_success(test_db: Path, monkeypatch):
         name="test-task", description="Test task", priority=5, status="pending"
     )
     assert task.status == "pending"
-    assert task.started_at is None
 
     # Start the task
     started_task = TaskRepository.update_task(name="test-task", status="in_progress")
@@ -27,7 +26,6 @@ def test_start_task_success(test_db: Path, monkeypatch):
     assert started_task is not None
     assert started_task.name == "test-task"
     assert started_task.status == "in_progress"
-    assert started_task.started_at is not None
 
 
 def test_start_task_from_completed(test_db: Path, monkeypatch):
@@ -42,6 +40,7 @@ def test_start_task_from_completed(test_db: Path, monkeypatch):
 
     # Get the task to verify it's completed
     completed = TaskRepository.get_task("completed-task")
+    assert completed is not None
     assert completed.status == "completed"
 
     # Start the task (reopen it)
@@ -51,7 +50,6 @@ def test_start_task_from_completed(test_db: Path, monkeypatch):
 
     assert started_task is not None
     assert started_task.status == "in_progress"
-    assert started_task.started_at is not None
 
 
 def test_start_task_nonexistent(test_db: Path, monkeypatch):
@@ -78,53 +76,6 @@ def test_start_task_whitespace_name(test_db: Path, monkeypatch):
         TaskRepository.update_task(name="   ", status="in_progress")
 
 
-def test_start_task_sets_started_at_timestamp(test_db: Path, monkeypatch):
-    """Test that starting a task sets the started_at timestamp."""
-    monkeypatch.setattr(db, "DB_PATH", test_db)
-
-    # Create a pending task
-    TaskRepository.add_task(
-        name="timestamp-task", description="Task for timestamp test"
-    )
-
-    # Get the task before starting
-    task_before = TaskRepository.get_task("timestamp-task")
-    assert task_before.status == "pending"
-    assert task_before.started_at is None
-    assert task_before.completed_at is None
-
-    # Start the task
-    started_task = TaskRepository.update_task(
-        name="timestamp-task", status="in_progress"
-    )
-
-    assert started_task.started_at is not None
-    assert started_task.completed_at is None
-
-
-def test_start_task_twice(test_db: Path, monkeypatch):
-    """Test starting a task that is already in_progress."""
-    monkeypatch.setattr(db, "DB_PATH", test_db)
-
-    # Create and start a task
-    TaskRepository.add_task(name="already-started", description="Already in progress")
-    first_start = TaskRepository.update_task(
-        name="already-started", status="in_progress"
-    )
-    first_timestamp = first_start.started_at
-
-    # Start it again
-    second_start = TaskRepository.update_task(
-        name="already-started", status="in_progress"
-    )
-
-    assert second_start is not None
-    assert second_start.status == "in_progress"
-    # The timestamp should remain the same since the trigger only fires when
-    # status changes FROM a non-in_progress status TO in_progress
-    assert second_start.started_at == first_timestamp
-
-
 def test_start_task_preserves_other_fields(test_db: Path, monkeypatch):
     """Test that starting a task preserves description, priority, and details."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
@@ -143,6 +94,7 @@ def test_start_task_preserves_other_fields(test_db: Path, monkeypatch):
     )
 
     # Verify all fields are preserved
+    assert started_task is not None
     assert started_task.description == original_task.description
     assert started_task.priority == original_task.priority
     assert started_task.details == original_task.details

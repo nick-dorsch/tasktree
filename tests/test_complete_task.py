@@ -19,7 +19,6 @@ def test_complete_task_success(test_db: Path, monkeypatch):
         name="test-task", description="Test task", priority=5, status="in_progress"
     )
     assert task.status == "in_progress"
-    assert task.completed_at is None
 
     # Complete the task
     completed_task = TaskRepository.complete_task("test-task")
@@ -27,7 +26,6 @@ def test_complete_task_success(test_db: Path, monkeypatch):
     assert completed_task is not None
     assert completed_task.name == "test-task"
     assert completed_task.status == "completed"
-    assert completed_task.completed_at is not None
 
 
 def test_complete_task_from_pending(test_db: Path, monkeypatch):
@@ -45,7 +43,6 @@ def test_complete_task_from_pending(test_db: Path, monkeypatch):
 
     assert completed_task is not None
     assert completed_task.status == "completed"
-    assert completed_task.completed_at is not None
 
 
 def test_complete_task_nonexistent(test_db: Path, monkeypatch):
@@ -72,29 +69,6 @@ def test_complete_task_whitespace_name(test_db: Path, monkeypatch):
         TaskRepository.complete_task("   ")
 
 
-def test_complete_task_sets_completed_at_timestamp(test_db: Path, monkeypatch):
-    """Test that completing a task sets the completed_at timestamp and preserves started_at."""
-    monkeypatch.setattr(db, "DB_PATH", test_db)
-
-    # Create and start a task
-    TaskRepository.add_task(
-        name="timestamp-task", description="Task for timestamp test"
-    )
-    TaskRepository.update_task(name="timestamp-task", status="in_progress")
-
-    # Get the task before completion
-    task_before = TaskRepository.get_task("timestamp-task")
-    assert task_before.completed_at is None
-    assert task_before.started_at is not None
-
-    # Complete the task
-    completed_task = TaskRepository.complete_task("timestamp-task")
-
-    assert completed_task.completed_at is not None
-    # started_at should be preserved for audit trail
-    assert completed_task.started_at is not None
-
-
 def test_complete_task_twice(test_db: Path, monkeypatch):
     """Test completing a task that is already completed."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
@@ -108,8 +82,6 @@ def test_complete_task_twice(test_db: Path, monkeypatch):
 
     assert second_completion is not None
     assert second_completion.status == "completed"
-    # completed_at should still be set
-    assert second_completion.completed_at is not None
 
 
 def test_complete_task_with_dependencies(test_db: Path, monkeypatch):

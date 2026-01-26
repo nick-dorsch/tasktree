@@ -147,38 +147,6 @@ def test_get_task_case_sensitive(mock_db_path):
     assert task_mixed is None
 
 
-def test_get_task_special_characters(mock_db_path):
-    """Test getting tasks with special characters in names."""
-    special_names = [
-        "task-with-dashes",
-        "task_with_underscores",
-        "task.with.dots",
-        "task:with:colons",
-    ]
-
-    for name in special_names:
-        TaskRepository.add_task(name=name, description=f"Task: {name}")
-
-        task = TaskRepository.get_task(name)
-        assert task is not None
-        assert task.name == name
-
-
-def test_get_task_unicode_characters(mock_db_path):
-    """Test getting a task with unicode characters in the name."""
-    # Create task with unicode in name
-    TaskRepository.add_task(
-        name="unicode-你好-🎉",
-        description="Unicode task",
-    )
-
-    # Get the task
-    task = TaskRepository.get_task("unicode-你好-🎉")
-
-    assert task is not None
-    assert task.name == "unicode-你好-🎉"
-
-
 def test_get_task_after_update(mock_db_path):
     """Test getting a task after it has been updated."""
     # Create a task

@@ -300,58 +300,33 @@ def test_list_tasks_with_different_statuses(mock_db_path):
     assert statuses == {"blocked", "pending", "in_progress", "completed"}
 
 
-def test_list_tasks_large_dataset(mock_db_path):
-    """Test listing tasks with a large number of tasks."""
-    # Create 100 tasks
-    for i in range(100):
+@pytest.mark.parametrize(
+    ("status_filter", "priority_min", "expected_count"),
+    [
+        ("pending", None, 7),
+        ("in_progress", None, 7),
+        ("completed", None, 6),
+        (None, 7, 6),
+    ],
+)
+def test_list_tasks_medium_dataset_filters(
+    mock_db_path, status_filter, priority_min, expected_count
+):
+    """Test ordering and filtering against a medium-sized dataset."""
+    statuses = ["pending", "in_progress", "completed"]
+    for i in range(20):
         TaskRepository.add_task(
-            name=f"task-{i:03d}",
-            description=f"Task number {i}",
-            priority=i % 11,  # Priority from 0 to 10
-            status="pending" if i % 2 == 0 else "in_progress",
+            name=f"task-{i:02d}",
+            description=f"Task {i}",
+            priority=i % 10,
+            status=statuses[i % 3],
         )
 
-    tasks = TaskRepository.list_tasks()
+    tasks = TaskRepository.list_tasks(status=status_filter, priority_min=priority_min)
 
-    assert len(tasks) == 100
-
-    # Verify ordering (priority descending)
+    assert len(tasks) == expected_count
     for i in range(len(tasks) - 1):
         assert tasks[i].priority >= tasks[i + 1].priority
-
-
-def test_list_tasks_filter_large_dataset_by_status(mock_db_path):
-    """Test filtering a large dataset by status."""
-    for i in range(100):
-        status = ["pending", "in_progress", "completed"][i % 3]
-        TaskRepository.add_task(
-            name=f"task-{i:03d}", description=f"Task {i}", status=status
-        )
-
-    pending_tasks = TaskRepository.list_tasks(status="pending")
-    in_progress_tasks = TaskRepository.list_tasks(status="in_progress")
-    completed_tasks = TaskRepository.list_tasks(status="completed")
-
-    # Should have roughly equal distribution
-    assert len(pending_tasks) + len(in_progress_tasks) + len(completed_tasks) == 100
-    assert 30 <= len(pending_tasks) <= 35
-    assert 30 <= len(in_progress_tasks) <= 35
-    assert 30 <= len(completed_tasks) <= 35
-
-
-def test_list_tasks_filter_large_dataset_by_priority(mock_db_path):
-    """Test filtering a large dataset by priority."""
-    for i in range(100):
-        TaskRepository.add_task(
-            name=f"task-{i:03d}", description=f"Task {i}", priority=i % 11
-        )
-
-    high_priority_tasks = TaskRepository.list_tasks(priority_min=7)
-
-    # Should include tasks with priority 7, 8, 9, 10
-    expected_count = sum(1 for i in range(100) if (i % 11) >= 7)
-    assert len(high_priority_tasks) == expected_count
-    assert all(task.priority >= 7 for task in high_priority_tasks)
 
 
 def test_list_tasks_none_parameters(mock_db_path):

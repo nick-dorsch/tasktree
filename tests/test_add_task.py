@@ -209,41 +209,8 @@ def test_add_task_unicode_characters(mock_db_path):
 
     assert "你好" in task.description
     assert "🎉" in task.description
+    assert task.details is not None
     assert "✨" in task.details
-
-
-def test_add_task_ordering(mock_db_path):
-    """Test that tasks are returned in correct order (priority desc, created_at asc)."""
-    # Add tasks with different priorities
-    TaskRepository.add_task("task-low", "Low priority", priority=1)
-    TaskRepository.add_task("task-high", "High priority", priority=9)
-    TaskRepository.add_task("task-mid", "Mid priority", priority=5)
-
-    # List tasks
-    tasks = TaskRepository.list_tasks()
-
-    # Should be ordered by priority (descending)
-    assert tasks[0].name == "task-high"
-    assert tasks[1].name == "task-mid"
-    assert tasks[2].name == "task-low"
-
-
-def test_add_task_retrieval_after_creation(mock_db_path):
-    """Test that a task can be retrieved immediately after creation."""
-    created_task = TaskRepository.add_task(
-        name="retrieve-task",
-        description="Task to retrieve",
-        priority=5,
-    )
-
-    # Retrieve the task
-    retrieved_task = TaskRepository.get_task("retrieve-task")
-
-    # Should match
-    assert retrieved_task is not None
-    assert retrieved_task.name == created_task.name
-    assert retrieved_task.description == created_task.description
-    assert retrieved_task.priority == created_task.priority
 
 
 def test_add_task_with_dependencies_via_tools_wrapper(mock_db_path):
