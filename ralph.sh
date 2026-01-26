@@ -6,9 +6,9 @@ MODEL="openai/gpt-5.2-codex"
 # Run agent in a loop with stop condition
 if [ -f "PROMPT.md" ]; then
     for i in {1..50}; do
-        echo "=========================="
+        echo "======================================================"
         echo "=== Iteration $i ($MODEL) ==="
-        echo "=========================="
+        echo "======================================================"
         echo ""
         
         # Run opencode with prompt
@@ -19,9 +19,9 @@ if [ -f "PROMPT.md" ]; then
         
         # Check for the stop condition promise
         if echo "$output" | grep -q "<promise>COMPLETE</promise>"; then
-            echo "======================================="
+            echo "======================================================"
             echo "=== All implementations complete!!! ==="
-            echo "======================================="
+            echo "======================================================"
             exit 0
         fi
         
@@ -29,7 +29,9 @@ if [ -f "PROMPT.md" ]; then
         echo ""
     done
     
+    echo "======================================================"
     echo "=== Maximum iterations (50) reached ==="
+    echo "======================================================"
 else
     echo "Error: PROMPT.md not found in current directory"
     exit 1
