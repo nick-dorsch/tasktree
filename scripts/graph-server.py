@@ -180,6 +180,14 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             "</div>"
         )
 
+        template_path = self.assets_dir / "index.html"
+        template_html = template_path.read_text()
+        html = template_html.replace("{{FEATURE_OPTIONS}}", feature_options).replace(
+            "{{TASK_ITEMS}}", task_items_rendered
+        )
+        self._send_html_response(200, html)
+        return
+
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>

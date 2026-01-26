@@ -64,8 +64,8 @@ def server_thread(test_db: Path, request):
         int: port number the server is listening on
     """
     # Use unique port for each test to avoid conflicts
-    # Base port 8765 + hash of test name
-    base_port = 8765
+    # Base port 8965 + hash of test name
+    base_port = 8965
     port_offset = abs(hash(request.node.name)) % 100
     port = base_port + port_offset
 
