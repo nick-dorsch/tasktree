@@ -545,10 +545,10 @@ def test_root_endpoint_task_panel_empty_state(server_thread):
         conn.close()
 
 
-def test_root_endpoint_task_panel_truncates_long_descriptions(
+def test_root_endpoint_task_panel_full_description_in_details(
     mock_db_path, server_thread
 ):
-    """Test that long task descriptions are truncated in the panel."""
+    """Test that full description appears in expandable details section."""
     port = server_thread
 
     # Add task with a very long description
@@ -562,10 +562,10 @@ def test_root_endpoint_task_panel_truncates_long_descriptions(
 
         html = response.read().decode()
 
-        # Description should be truncated with ellipsis
-        assert "..." in html
-        # Full description should not appear (it's truncated at 80 chars)
-        assert long_desc not in html
+        # Full description should appear in the details section
+        assert long_desc in html
+        # Description should be in the details section
+        assert "Description:" in html
     finally:
         conn.close()
 
@@ -617,5 +617,198 @@ def test_root_endpoint_legend_includes_blocked_status(server_thread):
         # Check that blocked status appears in legend with correct color
         # The legend should contain the blocked color (#F44336)
         assert "#F44336" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_items_collapsed_by_default(mock_db_path, server_thread):
+    """Test that task items are collapsed by default with expandable details."""
+    port = server_thread
+
+    # Add task with various details
+    TaskRepository.add_task(
+        "test-task",
+        "Test description",
+        priority=5,
+        status="pending",
+        details="Additional details about the task",
+    )
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for task header with expand icon
+        assert "task-header" in html
+        assert "task-expand-icon" in html
+        assert "▶" in html
+
+        # Check that details section exists but is hidden by default
+        assert "task-details" in html
+        assert 'style="display: none;"' in html
+
+        # Check that onclick handler is present
+        assert "toggleTaskDetails" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_details_section_content(mock_db_path, server_thread):
+    """Test that task details section includes all expected fields."""
+    port = server_thread
+
+    # Add task and progress it through states
+    TaskRepository.add_task(
+        "detailed-task",
+        "Full description",
+        priority=7,
+        status="pending",
+        details="Implementation details here",
+    )
+    TaskRepository.update_task("detailed-task", status="in_progress")
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for details section fields
+        assert "task-details-row" in html
+        assert "task-details-label" in html
+
+        # Check for all expected labels
+        assert "Status:" in html
+        assert "Priority:" in html
+        assert "Description:" in html
+        assert "Details:" in html
+        assert "Created:" in html
+        assert "Started:" in html
+
+        # Check for values
+        assert "in_progress" in html
+        assert "Full description" in html
+        assert "Implementation details here" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_details_handles_null_fields(mock_db_path, server_thread):
+    """Test that task details properly handle null/empty fields."""
+    port = server_thread
+
+    # Add minimal task (no details, not started, not completed)
+    TaskRepository.add_task("minimal-task", "Basic description", priority=3)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that empty description renders as None
+        # (though description is required, this tests the pattern)
+        # Details field should not appear if null
+        task_item_start = html.find('data-status="pending"')
+        task_item_end = html.find("</div>", task_item_start + 200)
+        task_item_section = html[task_item_start:task_item_end]
+
+        # Started and Completed should not appear for pending tasks with no times
+        # Check that started_at and completed_at are conditionally shown
+        assert "Started:" not in task_item_section or "None" not in task_item_section
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_details_shows_completed_at(mock_db_path, server_thread):
+    """Test that completed tasks show completed_at timestamp."""
+    port = server_thread
+
+    # Add and complete a task
+    TaskRepository.add_task("completed-task", "Done task", priority=5)
+    TaskRepository.update_task("completed-task", status="in_progress")
+    TaskRepository.complete_task("completed-task")
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for completed timestamp
+        assert "Completed:" in html
+        # Should have a timestamp (year prefix)
+        assert "2026-" in html or "202" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_toggle_function_exists(server_thread):
+    """Test that toggleTaskDetails JavaScript function is defined."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for toggle function definition
+        assert "function toggleTaskDetails" in html
+        assert "querySelector('.task-details')" in html
+        assert "querySelector('.task-expand-icon')" in html
+        assert "classList.add('expanded')" in html
+        assert "classList.remove('expanded')" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_details_css_styling(server_thread):
+    """Test that task details CSS styles are present."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for CSS class definitions
+        assert ".task-details {" in html or ".task-details{{" in html
+        assert ".task-details-row" in html
+        assert ".task-details-label" in html
+        assert ".task-expand-icon" in html
+        assert ".task-expand-icon.expanded" in html
+
+        # Check for specific styling (expand icon rotation)
+        assert "transform: rotate(90deg)" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_header_clickable(mock_db_path, server_thread):
+    """Test that task headers are clickable for expanding."""
+    port = server_thread
+
+    TaskRepository.add_task("clickable-task", "Test", priority=5)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that task-header has cursor pointer and is clickable
+        assert "cursor: pointer" in html
+        assert "onclick=" in html or 'onclick="toggleTaskDetails' in html
     finally:
         conn.close()

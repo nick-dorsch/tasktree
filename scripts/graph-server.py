@@ -52,7 +52,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 
         # Get all tasks sorted by status, priority (descending), then name
         cursor.execute("""
-            SELECT name, description, status, priority, created_at, started_at, completed_at
+            SELECT name, description, status, priority, created_at, started_at, completed_at, details
             FROM tasks
             ORDER BY CASE status 
                          WHEN 'blocked' THEN 1 
@@ -88,6 +88,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 created_at,
                 started_at,
                 completed_at,
+                details,
             ) = task
 
             # Status color coding
@@ -99,14 +100,37 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             }
             status_color = status_colors.get(status, "#999")
 
+            # Format details section with conditional rendering
+            details_html = f"""
+                <div class="task-details-row"><span class="task-details-label">Status:</span> {status}</div>
+                <div class="task-details-row"><span class="task-details-label">Priority:</span> {priority}</div>
+                <div class="task-details-row"><span class="task-details-label">Description:</span> {description if description else "None"}</div>"""
+
+            if details:
+                details_html += f"""
+                <div class="task-details-row"><span class="task-details-label">Details:</span> {details}</div>"""
+
+            details_html += f"""
+                <div class="task-details-row"><span class="task-details-label">Created:</span> {created_at if created_at else "None"}</div>"""
+
+            if started_at:
+                details_html += f"""
+                <div class="task-details-row"><span class="task-details-label">Started:</span> {started_at}</div>"""
+
+            if completed_at:
+                details_html += f"""
+                <div class="task-details-row"><span class="task-details-label">Completed:</span> {completed_at}</div>"""
+
             task_items_html += f"""
             <div class="task-item" data-status="{status}">
-                <div class="task-header">
+                <div class="task-header" onclick="toggleTaskDetails(this)">
                     <span class="task-status-dot" style="background: {status_color};"></span>
                     <span class="task-name" title="{name}">{name}</span>
-                    <span class="task-priority">P{priority}</span>
+                    <span class="task-expand-icon">▶</span>
                 </div>
-                <div class="task-description">{description[:80] + "..." if len(description) > 80 else description}</div>
+                <div class="task-details" style="display: none;">
+                    {details_html}
+                </div>
             </div>"""
 
         html = f"""<!DOCTYPE html>
@@ -193,25 +217,31 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         }}
 
         .task-item {{
-            padding: 12px;
+            padding: 0;
             margin-bottom: 8px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             transition: all 0.2s;
+            overflow: hidden;
         }}
 
         .task-item:hover {{
             background: rgba(255, 255, 255, 0.08);
             border-color: rgba(255, 255, 255, 0.2);
-            transform: translateX(4px);
         }}
 
         .task-header {{
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 6px;
+            padding: 12px;
+            cursor: pointer;
+            user-select: none;
+        }}
+
+        .task-header:hover {{
+            background: rgba(255, 255, 255, 0.03);
         }}
 
         .task-status-dot {{
@@ -231,21 +261,36 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             text-overflow: ellipsis;
         }}
 
-        .task-priority {{
+        .task-expand-icon {{
             font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
             color: #aaa;
             flex-shrink: 0;
+            transition: transform 0.2s;
         }}
 
-        .task-description {{
+        .task-expand-icon.expanded {{
+            transform: rotate(90deg);
+        }}
+
+        .task-details {{
+            padding: 0 12px 12px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.2);
+        }}
+
+        .task-details-row {{
             font-size: 11px;
             color: #999;
-            line-height: 1.4;
-            margin-left: 16px;
+            line-height: 1.6;
+            margin: 6px 0;
+            padding-left: 16px;
+        }}
+
+        .task-details-label {{
+            font-weight: 600;
+            color: #aaa;
+            display: inline-block;
+            min-width: 80px;
         }}
 
         .node {{
@@ -478,6 +523,21 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     </div>
 
     <script>
+        // Task list toggle functionality
+        function toggleTaskDetails(headerElement) {{
+            const taskItem = headerElement.parentElement;
+            const detailsDiv = taskItem.querySelector('.task-details');
+            const expandIcon = headerElement.querySelector('.task-expand-icon');
+            
+            if (detailsDiv.style.display === 'none') {{
+                detailsDiv.style.display = 'block';
+                expandIcon.classList.add('expanded');
+            }} else {{
+                detailsDiv.style.display = 'none';
+                expandIcon.classList.remove('expanded');
+            }}
+        }}
+
         // Configuration
         const API_ENDPOINT = '/api/graph';
         const WIDTH = window.innerWidth;
