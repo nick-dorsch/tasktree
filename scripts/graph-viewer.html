@@ -85,12 +85,148 @@
             color: #e0e0e0;
             font-size: 18px;
         }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #666;
+            border-radius: 5px;
+            padding: 15px;
+            color: #e0e0e0;
+            font-size: 12px;
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #4fc3f7;
+        }
+
+        .legend-section {
+            margin-bottom: 12px;
+        }
+
+        .legend-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+
+        .legend-color-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid #333;
+        }
+
+        .legend-color-box.available {
+            border: 2px solid #00FF00;
+            box-shadow: 0 0 5px #00FF00;
+        }
+
+        .legend-size-example {
+            display: inline-block;
+            border-radius: 50%;
+            background: #666;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .legend-arrow {
+            width: 30px;
+            height: 2px;
+            background: #666;
+            margin-right: 8px;
+            position: relative;
+        }
+
+        .legend-arrow::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -3px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid #666;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+        }
     </style>
 </head>
 <body>
     <div id="graph"></div>
     <div class="tooltip" id="tooltip"></div>
     <div class="loading" id="loading">Loading graph data...</div>
+    
+    <div class="legend">
+        <div class="legend-title">Legend</div>
+        
+        <div class="legend-section">
+            <div class="legend-section-title">Status</div>
+            <div class="legend-item">
+                <div class="legend-color-box" style="background: #2196F3;"></div>
+                <span>Pending</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color-box" style="background: #FFC107;"></div>
+                <span>In Progress</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color-box" style="background: #4CAF50;"></div>
+                <span>Completed</span>
+            </div>
+        </div>
+        
+        <div class="legend-section">
+            <div class="legend-section-title">Available Tasks</div>
+            <div class="legend-item">
+                <div class="legend-color-box available" style="background: #2196F3;"></div>
+                <span>Green border + glow</span>
+            </div>
+        </div>
+        
+        <div class="legend-section">
+            <div class="legend-section-title">Node Size</div>
+            <div class="legend-item">
+                <span class="legend-size-example" style="width: 8px; height: 8px;"></span>
+                <span>Priority 0 (lowest)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-size-example" style="width: 19px; height: 19px;"></span>
+                <span>Priority 5 (medium)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-size-example" style="width: 30px; height: 30px;"></span>
+                <span>Priority 10 (highest)</span>
+            </div>
+        </div>
+        
+        <div class="legend-section">
+            <div class="legend-section-title">Dependencies</div>
+            <div class="legend-item">
+                <div class="legend-arrow"></div>
+                <span>Points to dependent</span>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Configuration

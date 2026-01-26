@@ -469,3 +469,129 @@ def test_graph_viewer_has_stable_link_key_function(graph_viewer_path):
         "Link data join should use a stable key function that handles both "
         "string IDs (initial) and object references (after D3 mutation)"
     )
+
+
+def test_graph_viewer_has_legend(graph_viewer_path):
+    """Test that the graph viewer includes a legend."""
+    content = graph_viewer_path.read_text()
+
+    # Check for legend element
+    assert "legend" in content.lower()
+    # Check for legend div with class
+    assert 'class="legend"' in content or "class='legend'" in content
+
+
+def test_graph_viewer_legend_shows_status_colors(graph_viewer_path):
+    """Test that the legend shows status color meanings."""
+    content = graph_viewer_path.read_text()
+
+    # Legend should show all three status states
+    content_lower = content.lower()
+    assert "pending" in content_lower
+    assert "in progress" in content_lower or "in_progress" in content_lower
+    assert "completed" in content_lower
+
+    # Should show the actual colors in the legend
+    assert "#2196F3" in content  # Blue for pending
+    assert "#FFC107" in content  # Yellow for in_progress
+    assert "#4CAF50" in content  # Green for completed
+
+
+def test_graph_viewer_legend_shows_node_size_meaning(graph_viewer_path):
+    """Test that the legend explains node size (priority-based)."""
+    content = graph_viewer_path.read_text()
+
+    # Legend should mention node size or priority
+    content_lower = content.lower()
+    assert "node size" in content_lower or "priority" in content_lower
+
+    # Should show examples of different priorities
+    # Looking for references to priority levels (0, 5, 10) or min/max
+    has_priority_examples = (
+        "priority 0" in content_lower
+        or "priority 5" in content_lower
+        or "priority 10" in content_lower
+        or "lowest" in content_lower
+        or "highest" in content_lower
+    )
+    assert has_priority_examples, "Legend should show priority examples"
+
+
+def test_graph_viewer_legend_shows_available_task_indicator(graph_viewer_path):
+    """Test that the legend explains the available task highlighting."""
+    content = graph_viewer_path.read_text()
+
+    # Legend should explain available tasks
+    content_lower = content.lower()
+    assert "available" in content_lower
+
+    # Should mention the green border
+    assert "#00FF00" in content or "00FF00" in content  # Green border color
+    assert "border" in content_lower or "glow" in content_lower
+
+
+def test_graph_viewer_legend_shows_dependency_arrows(graph_viewer_path):
+    """Test that the legend explains what arrows/dependencies mean."""
+    content = graph_viewer_path.read_text()
+
+    # Legend should explain dependencies
+    content_lower = content.lower()
+    assert "dependenc" in content_lower or "arrow" in content_lower
+
+    # Should show visual representation of an arrow
+    # Looking for CSS classes like legend-arrow or arrow styling
+    assert "legend-arrow" in content or "arrow" in content_lower
+
+
+def test_graph_viewer_legend_has_styling(graph_viewer_path):
+    """Test that the legend has CSS styling."""
+    content = graph_viewer_path.read_text()
+
+    # Check for legend CSS class
+    assert ".legend" in content
+    # Legend should be positioned (absolutely or fixed)
+    assert "position:" in content.lower() or "position :" in content.lower()
+
+
+def test_graph_viewer_legend_positioned_correctly(graph_viewer_path):
+    """Test that the legend is positioned in a non-intrusive location."""
+    content = graph_viewer_path.read_text()
+
+    # Find the legend CSS block
+    lines = content.split("\n")
+    found_legend_css = False
+    for i, line in enumerate(lines):
+        if ".legend {" in line or ".legend{" in line:
+            # Get the CSS block (next ~15 lines)
+            css_block = "\n".join(lines[i : i + 15])
+
+            # Should be absolutely positioned
+            assert (
+                "position: absolute" in css_block or "position:absolute" in css_block
+            ), "Legend should be absolutely positioned"
+
+            # Should be positioned at top/bottom and left/right
+            has_positioning = (
+                "top:" in css_block
+                or "bottom:" in css_block
+                or "right:" in css_block
+                or "left:" in css_block
+            )
+            assert has_positioning, (
+                "Legend should have top/bottom/left/right positioning"
+            )
+
+            found_legend_css = True
+            break
+
+    assert found_legend_css, "Could not find .legend CSS definition"
+
+
+def test_graph_viewer_legend_has_title(graph_viewer_path):
+    """Test that the legend has a title."""
+    content = graph_viewer_path.read_text()
+
+    # Legend should have a title section
+    assert "legend-title" in content.lower() or (
+        "legend" in content.lower() and "title" in content.lower()
+    )
