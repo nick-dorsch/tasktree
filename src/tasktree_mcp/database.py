@@ -4,10 +4,11 @@ Database operations for TaskTree.
 
 import sqlite3
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-DB_PATH = Path(__file__).parent.parent.parent / "data" / "tasktree.db"
+from .paths import get_db_path
+
+DB_PATH = get_db_path()
 
 
 @contextmanager
@@ -28,7 +29,9 @@ class TaskRepository:
 
     @staticmethod
     def list_tasks(
-        status: Optional[str] = None, priority_min: Optional[int] = None
+        status: Optional[str] = None,
+        priority_min: Optional[int] = None,
+        feature_name: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """List tasks from the database with optional filtering."""
         with get_db_connection() as conn:
@@ -37,7 +40,7 @@ class TaskRepository:
             query = "SELECT * FROM tasks"
             params = []
 
-            if status or priority_min is not None:
+            if status or priority_min is not None or feature_name:
                 conditions = []
                 if status:
                     conditions.append("status = ?")
@@ -45,6 +48,9 @@ class TaskRepository:
                 if priority_min is not None:
                     conditions.append("priority >= ?")
                     params.append(priority_min)
+                if feature_name:
+                    conditions.append("feature_name = ?")
+                    params.append(feature_name)
                 query += " WHERE " + " AND ".join(conditions)
 
             query += " ORDER BY priority DESC, created_at ASC"

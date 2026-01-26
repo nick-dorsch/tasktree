@@ -73,6 +73,9 @@ class ListTasksRequest(BaseModel):
     priority_min: Optional[int] = Field(
         None, ge=0, le=10, description="Minimum priority filter"
     )
+    feature_name: Optional[str] = Field(
+        None, min_length=1, max_length=55, description="Filter by feature name"
+    )
 
 
 class GetTaskRequest(BaseModel):

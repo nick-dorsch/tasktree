@@ -35,7 +35,9 @@ def register_task_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     def list_tasks(
-        status: Optional[str] = None, priority_min: Optional[int] = None
+        status: Optional[str] = None,
+        priority_min: Optional[int] = None,
+        feature_name: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         List tasks from the database with optional filtering.
@@ -43,15 +45,21 @@ def register_task_tools(mcp: FastMCP) -> None:
         Args:
             status: Filter by status ('pending', 'in_progress', 'completed')
             priority_min: Minimum priority filter (0-10, higher is more important)
+            feature_name: Filter by feature name
 
         Returns:
             List of task dictionaries with name, description, status, priority, and timestamps
         """
-        request = ListTasksRequest(status=status, priority_min=priority_min)
+        request = ListTasksRequest(
+            status=status, priority_min=priority_min, feature_name=feature_name
+        )
         validate_status(request.status)
         validate_priority(request.priority_min)
+        validate_feature_name(request.feature_name)
         return TaskRepository.list_tasks(
-            status=request.status, priority_min=request.priority_min
+            status=request.status,
+            priority_min=request.priority_min,
+            feature_name=request.feature_name,
         )
 
     @mcp.tool()
