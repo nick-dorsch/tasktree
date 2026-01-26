@@ -857,3 +857,352 @@ def test_root_endpoint_tooltip_shows_completion_minutes(server_thread):
         assert "completion_minutes !== null" in html or "completion_minutes !==" in html
     finally:
         conn.close()
+
+
+def test_root_endpoint_accordion_behavior(mock_db_path, server_thread):
+    """Test that toggleTaskDetails function implements accordion behavior (only one expanded at a time)."""
+    port = server_thread
+
+    # Add multiple tasks
+    TaskRepository.add_task("task-1", "First task", priority=5)
+    TaskRepository.add_task("task-2", "Second task", priority=4)
+    TaskRepository.add_task("task-3", "Third task", priority=3)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that toggleTaskDetails closes all other tasks before opening
+        assert "querySelectorAll('.task-details')" in html
+        assert "querySelectorAll('.task-expand-icon')" in html
+
+        # Should iterate through all task details and close them
+        assert "forEach" in html
+
+        # Should set display to none for all details
+        assert (
+            "details.style.display = 'none'" in html or "style.display='none'" in html
+        )
+
+        # Should remove expanded class from all icons
+        assert "classList.remove('expanded')" in html
+
+        # Should expand only the clicked task
+        assert (
+            "detailsDiv.style.display = 'block'" in html
+            or "style.display='block'" in html
+        )
+        assert "expandIcon.classList.add('expanded')" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_description_scrollable_container(mock_db_path, server_thread):
+    """Test that description and details fields use scrollable containers."""
+    port = server_thread
+
+    # Add task with long description and details
+    long_description = "This is a very long description. " * 20  # ~600 characters
+    long_details = "These are extensive details. " * 30  # ~900 characters
+
+    TaskRepository.add_task(
+        "long-content-task", long_description, priority=5, details=long_details
+    )
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for task-details-value CSS class
+        assert ".task-details-value" in html or ".task-details-value{" in html
+
+        # Check that description and details use the scrollable container class
+        assert 'class="task-details-value"' in html
+
+        # Check for scrollable container styles
+        assert "max-height:" in html  # Should have max-height constraint
+        assert "overflow-y: auto" in html  # Should be scrollable
+
+        # Check for word wrapping
+        assert "word-wrap: break-word" in html or "word-break:" in html
+
+        # Check for scrollbar styling
+        assert "::-webkit-scrollbar" in html
+
+        # Verify that description is on a new line (display: block)
+        assert "display: block" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_description_details_new_lines(mock_db_path, server_thread):
+    """Test that description and details start on new lines, not inline."""
+    port = server_thread
+
+    TaskRepository.add_task(
+        "test-task", "Task description text", priority=5, details="Task details text"
+    )
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that description has its own div container (not just inline span)
+        # Pattern should be:
+        # <div class="task-details-row">
+        #   <span class="task-details-label">Description:</span>
+        #   <div class="task-details-value">Task description text</div>
+        # </div>
+
+        # Find description section
+        desc_index = html.find('task-details-label">Description:</span>')
+        assert desc_index != -1, "Description label not found"
+
+        # Check that description value is in a div, not inline
+        after_desc_label = html[desc_index : desc_index + 200]
+        assert '<div class="task-details-value">' in after_desc_label
+
+        # Find details section
+        details_index = html.find('task-details-label">Details:</span>')
+        if details_index != -1:  # Only check if details exist
+            after_details_label = html[details_index : details_index + 200]
+            assert '<div class="task-details-value">' in after_details_label
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_scrollable_container_max_height(server_thread):
+    """Test that scrollable containers have appropriate max-height."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for max-height in task-details-value CSS
+        # Should be reasonable (e.g., 100px) to trigger scrolling
+        assert ".task-details-value" in html
+
+        # Extract the CSS section for task-details-value
+        value_css_start = html.find(".task-details-value")
+        value_css_end = html.find("}", value_css_start)
+        value_css = html[value_css_start:value_css_end]
+
+        # Check for max-height property
+        assert "max-height:" in value_css
+        # Should have overflow-y: auto for scrolling
+        assert "overflow-y: auto" in value_css or "overflow-y:auto" in value_css
+    finally:
+        conn.close()
+
+
+def test_api_tasks_endpoint_exists(server_thread):
+    """Test that the /api/tasks endpoint exists and returns JSON."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/api/tasks")
+        response = conn.getresponse()
+
+        assert response.status == 200
+        assert response.getheader("Content-type") == "application/json"
+    finally:
+        conn.close()
+
+
+def test_api_tasks_endpoint_empty_database(server_thread):
+    """Test /api/tasks with no tasks in the database."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/api/tasks")
+        response = conn.getresponse()
+
+        data = json.loads(response.read().decode())
+
+        assert "tasks" in data
+        assert isinstance(data["tasks"], list)
+        assert len(data["tasks"]) == 0
+    finally:
+        conn.close()
+
+
+def test_api_tasks_endpoint_with_tasks(mock_db_path, server_thread):
+    """Test /api/tasks returns all tasks with proper formatting."""
+    port = server_thread
+
+    # Add some tasks
+    TaskRepository.add_task("task-1", "First task", priority=5)
+    TaskRepository.add_task("task-2", "Second task", priority=3)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/api/tasks")
+        response = conn.getresponse()
+
+        data = json.loads(response.read().decode())
+
+        assert len(data["tasks"]) == 2
+
+        # Check first task structure
+        task = data["tasks"][0]
+        assert "name" in task
+        assert "description" in task
+        assert "status" in task
+        assert "priority" in task
+        assert "created_at" in task
+        assert "started_at" in task
+        assert "completed_at" in task
+        assert "details" in task
+        assert "feature_name" in task
+    finally:
+        conn.close()
+
+
+def test_api_tasks_endpoint_sorting(mock_db_path, server_thread):
+    """Test that /api/tasks returns tasks sorted by status, priority, name."""
+    port = server_thread
+
+    # Add tasks with different statuses and priorities
+    TaskRepository.add_task("completed-high", "Done", priority=10, status="completed")
+    TaskRepository.add_task("pending-high", "Pending", priority=9, status="pending")
+    TaskRepository.add_task(
+        "in-progress-low", "Working", priority=5, status="in_progress"
+    )
+    TaskRepository.add_task("blocked-medium", "Blocked", priority=7, status="blocked")
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/api/tasks")
+        response = conn.getresponse()
+
+        data = json.loads(response.read().decode())
+
+        task_names = [task["name"] for task in data["tasks"]]
+
+        # Order should be: blocked, in_progress, pending, completed
+        assert task_names.index("blocked-medium") < task_names.index("in-progress-low")
+        assert task_names.index("in-progress-low") < task_names.index("pending-high")
+        assert task_names.index("pending-high") < task_names.index("completed-high")
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_includes_tasks_endpoint(server_thread):
+    """Test that the root endpoint includes reference to /api/tasks."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Should include TASKS_ENDPOINT constant
+        assert "TASKS_ENDPOINT" in html
+        assert "/api/tasks" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_includes_fetch_tasks_function(server_thread):
+    """Test that fetchTasks function is defined in the HTML."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for fetchTasks function
+        assert "function fetchTasks()" in html or "async function fetchTasks()" in html
+        assert "fetch(TASKS_ENDPOINT)" in html
+        assert "updateTaskList" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_includes_update_task_list_function(server_thread):
+    """Test that updateTaskList function is defined."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for updateTaskList function
+        assert "function updateTaskList(tasks)" in html
+        assert "querySelector('.task-list')" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_auto_refresh_includes_tasks(server_thread):
+    """Test that auto-refresh interval calls both fetchGraph and fetchTasks."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that setInterval calls both functions
+        assert "setInterval" in html
+        assert "fetchGraph()" in html
+        assert "fetchTasks()" in html
+
+        # Should be in the same interval block
+        interval_start = html.find("setInterval")
+        interval_end = html.find("}", interval_start)
+        interval_block = html[interval_start:interval_end]
+
+        assert "fetchGraph" in interval_block
+        assert "fetchTasks" in interval_block
+    finally:
+        conn.close()
+
+
+def test_update_task_list_preserves_expanded_state(server_thread):
+    """Test that updateTaskList preserves which tasks are expanded."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check that updateTaskList stores expanded task names
+        assert "expandedTasks" in html
+        assert "new Set()" in html
+
+        # Should check which tasks are currently expanded
+        assert "style.display === 'block'" in html or "display==='block'" in html
+
+        # Should restore expanded state after rebuild
+        assert "shouldExpand" in html or "expandedTasks.has" in html
+    finally:
+        conn.close()

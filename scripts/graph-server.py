@@ -29,6 +29,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         """Handle GET requests."""
         if self.path == "/api/graph":
             self._handle_graph_request()
+        elif self.path == "/api/tasks":
+            self._handle_tasks_request()
         elif self.path == "/":
             self._handle_root_request()
         else:
@@ -44,15 +46,33 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self._send_error(500, f"Internal server error: {e}")
 
+    def _handle_tasks_request(self) -> None:
+        """Handle /api/tasks endpoint request."""
+        try:
+            tasks_data = self._get_tasks_json()
+            self._send_json_response(200, tasks_data)
+        except sqlite3.OperationalError as e:
+            self._send_error(500, f"Database error: {e}")
+        except Exception as e:
+            self._send_error(500, f"Internal server error: {e}")
+
     def _handle_root_request(self) -> None:
         """Handle root endpoint with task list panel and graph visualization."""
         # Get task data for the panel
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
+        # Get all distinct feature names for the dropdown
+        cursor.execute("""
+            SELECT DISTINCT feature_name 
+            FROM tasks 
+            ORDER BY feature_name
+        """)
+        features = [row[0] for row in cursor.fetchall()]
+
         # Get all tasks sorted by status, priority (descending), then name
         cursor.execute("""
-            SELECT name, description, status, priority, created_at, started_at, completed_at, details
+            SELECT name, description, status, priority, created_at, started_at, completed_at, details, feature_name
             FROM tasks
             ORDER BY CASE status 
                          WHEN 'blocked' THEN 1 
@@ -79,6 +99,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 started_at,
                 completed_at,
                 details,
+                feature_name,
             ) = task
 
             # Status color coding
@@ -94,11 +115,17 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             details_html = f"""
                 <div class="task-details-row"><span class="task-details-label">Status:</span> {status}</div>
                 <div class="task-details-row"><span class="task-details-label">Priority:</span> {priority}</div>
-                <div class="task-details-row"><span class="task-details-label">Description:</span> {description if description else "None"}</div>"""
+                <div class="task-details-row">
+                    <span class="task-details-label">Description:</span>
+                    <div class="task-details-value">{description if description else "None"}</div>
+                </div>"""
 
             if details:
                 details_html += f"""
-                <div class="task-details-row"><span class="task-details-label">Details:</span> {details}</div>"""
+                <div class="task-details-row">
+                    <span class="task-details-label">Details:</span>
+                    <div class="task-details-value">{details}</div>
+                </div>"""
 
             details_html += f"""
                 <div class="task-details-row"><span class="task-details-label">Created:</span> {created_at if created_at else "None"}</div>"""
@@ -112,7 +139,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 <div class="task-details-row"><span class="task-details-label">Completed:</span> {completed_at}</div>"""
 
             task_items_html += f"""
-            <div class="task-item" data-status="{status}">
+            <div class="task-item" data-status="{status}" data-feature="{feature_name}">
                 <div class="task-header" onclick="toggleTaskDetails(this)">
                     <span class="task-status-dot" style="background: {status_color};"></span>
                     <span class="task-name" title="{name}">{name}</span>
@@ -180,6 +207,39 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             font-size: 11px;
             color: #aaa;
             line-height: 1.4;
+        }}
+
+        .feature-filter {{
+            margin-top: 8px;
+        }}
+
+        .feature-filter select {{
+            width: 100%;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }}
+
+        .feature-filter select:hover {{
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }}
+
+        .feature-filter select:focus {{
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+        }}
+
+        .feature-filter option {{
+            background: #2a2a2a;
+            color: #e0e0e0;
         }}
 
         .task-list {{
@@ -281,6 +341,34 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             color: #aaa;
             display: inline-block;
             min-width: 80px;
+        }}
+
+        .task-details-value {{
+            display: block;
+            margin-top: 4px;
+            padding-left: 16px;
+            max-height: 100px;
+            overflow-y: auto;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }}
+
+        .task-details-value::-webkit-scrollbar {{
+            width: 4px;
+        }}
+
+        .task-details-value::-webkit-scrollbar-track {{
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }}
+
+        .task-details-value::-webkit-scrollbar-thumb {{
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }}
+
+        .task-details-value::-webkit-scrollbar-thumb:hover {{
+            background: rgba(255, 255, 255, 0.3);
         }}
 
         .node {{
@@ -442,6 +530,12 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     <div class="task-panel">
         <div class="panel-header">
             <div class="panel-title">Tasks</div>
+            <div class="feature-filter">
+                <select id="feature-dropdown" onchange="filterTasksByFeature()">
+                    <option value="">All Features</option>
+                    {"".join([f'<option value="{feat}">{feat}</option>' for feat in features])}
+                </select>
+            </div>
         </div>
         <div class="task-list">
             {task_items_html if task_items_html else '<div style="padding: 12px; color: #999; font-size: 12px;">No tasks available</div>'}
@@ -515,17 +609,48 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             const detailsDiv = taskItem.querySelector('.task-details');
             const expandIcon = headerElement.querySelector('.task-expand-icon');
             
-            if (detailsDiv.style.display === 'none') {{
+            // Check if this task is currently expanded
+            const isExpanding = detailsDiv.style.display === 'none';
+            
+            if (isExpanding) {{
+                // Close all other expanded tasks first
+                document.querySelectorAll('.task-details').forEach(details => {{
+                    details.style.display = 'none';
+                }});
+                document.querySelectorAll('.task-expand-icon').forEach(icon => {{
+                    icon.classList.remove('expanded');
+                }});
+                
+                // Now expand this task
                 detailsDiv.style.display = 'block';
                 expandIcon.classList.add('expanded');
             }} else {{
+                // Collapse this task
                 detailsDiv.style.display = 'none';
                 expandIcon.classList.remove('expanded');
             }}
         }}
 
+        // Feature filter functionality
+        function filterTasksByFeature() {{
+            const selectedFeature = document.getElementById('feature-dropdown').value;
+            const taskItems = document.querySelectorAll('.task-item');
+            
+            taskItems.forEach(item => {{
+                const taskFeature = item.getAttribute('data-feature');
+                
+                // Show all if no feature selected, otherwise only show matching feature
+                if (selectedFeature === '' || taskFeature === selectedFeature) {{
+                    item.style.display = 'block';
+                }} else {{
+                    item.style.display = 'none';
+                }}
+            }});
+        }}
+
         // Configuration
         const API_ENDPOINT = '/api/graph';
+        const TASKS_ENDPOINT = '/api/tasks';
         const WIDTH = window.innerWidth;
         const HEIGHT = window.innerHeight;
         
@@ -834,11 +959,103 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             }}
         }}
 
+        async function fetchTasks() {{
+            try {{
+                const response = await fetch(TASKS_ENDPOINT);
+                
+                if (!response.ok) {{
+                    throw new Error(`HTTP ${{response.status}}: ${{response.statusText}}`);
+                }}
+                
+                const data = await response.json();
+                updateTaskList(data.tasks);
+            }} catch (error) {{
+                console.error('Error fetching tasks:', error);
+            }}
+        }}
+
+        function updateTaskList(tasks) {{
+            const taskListDiv = document.querySelector('.task-list');
+            
+            if (!tasks || tasks.length === 0) {{
+                taskListDiv.innerHTML = '<div style="padding: 12px; color: #999; font-size: 12px;">No tasks available</div>';
+                return;
+            }}
+
+            // Store currently expanded task names
+            const expandedTasks = new Set();
+            document.querySelectorAll('.task-details').forEach((details) => {{
+                if (details.style.display === 'block') {{
+                    const taskItem = details.parentElement;
+                    const taskName = taskItem.querySelector('.task-name').textContent;
+                    expandedTasks.add(taskName);
+                }}
+            }});
+
+            // Status colors
+            const statusColors = {{
+                'pending': '#2196F3',
+                'in_progress': '#FFC107',
+                'completed': '#4CAF50',
+                'blocked': '#F44336'
+            }};
+
+            // Build task items HTML
+            let taskItemsHtml = '';
+            
+            tasks.forEach(task => {{
+                const statusColor = statusColors[task.status] || '#999';
+                
+                let detailsHtml = '<div class="task-details-row"><span class="task-details-label">Status:</span> ' + task.status + '</div>' +
+                    '<div class="task-details-row"><span class="task-details-label">Priority:</span> ' + task.priority + '</div>' +
+                    '<div class="task-details-row"><span class="task-details-label">Description:</span>' +
+                    '<div class="task-details-value">' + (task.description || 'None') + '</div></div>';
+                
+                if (task.details) {{
+                    detailsHtml += '<div class="task-details-row"><span class="task-details-label">Details:</span>' +
+                        '<div class="task-details-value">' + task.details + '</div></div>';
+                }}
+                
+                detailsHtml += '<div class="task-details-row"><span class="task-details-label">Created:</span> ' + (task.created_at || 'None') + '</div>';
+                
+                if (task.started_at) {{
+                    detailsHtml += '<div class="task-details-row"><span class="task-details-label">Started:</span> ' + task.started_at + '</div>';
+                }}
+                
+                if (task.completed_at) {{
+                    detailsHtml += '<div class="task-details-row"><span class="task-details-label">Completed:</span> ' + task.completed_at + '</div>';
+                }}
+
+                // Check if this task should be expanded
+                const shouldExpand = expandedTasks.has(task.name);
+                const expandIcon = '▶';
+                const expandClass = shouldExpand ? 'expanded' : '';
+                const displayStyle = shouldExpand ? 'block' : 'none';
+                
+                taskItemsHtml += '<div class="task-item" data-status="' + task.status + '" data-feature="' + task.feature_name + '">' +
+                    '<div class="task-header" onclick="toggleTaskDetails(this)">' +
+                    '<span class="task-status-dot" style="background: ' + statusColor + ';"></span>' +
+                    '<span class="task-name" title="' + task.name + '">' + task.name + '</span>' +
+                    '<span class="task-expand-icon ' + expandClass + '">' + expandIcon + '</span>' +
+                    '</div>' +
+                    '<div class="task-details" style="display: ' + displayStyle + ';">' +
+                    detailsHtml +
+                    '</div>' +
+                    '</div>';
+            }});
+            
+            taskListDiv.innerHTML = taskItemsHtml;
+        }}
+
         // Initial fetch
         fetchGraph();
+        fetchTasks();
 
         // Auto-refresh every 3 seconds
-        setInterval(fetchGraph, 3000);
+        setInterval(() => {{
+            fetchGraph();
+            fetchTasks();
+        }}, 3000);
 
         // Handle window resize
         window.addEventListener('resize', () => {{
@@ -875,6 +1092,54 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             if result and result[0]:
                 return json.loads(result[0])
             return {"nodes": [], "edges": []}
+        finally:
+            conn.close()
+
+    def _get_tasks_json(self) -> dict:
+        """
+        Fetch all tasks from the database.
+
+        Returns:
+            Dictionary containing list of tasks with their details
+
+        Raises:
+            sqlite3.OperationalError: If database doesn't exist
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                SELECT name, description, status, priority, created_at, started_at, completed_at, details, feature_name
+                FROM tasks
+                ORDER BY CASE status 
+                             WHEN 'blocked' THEN 1 
+                             WHEN 'in_progress' THEN 2 
+                             WHEN 'pending' THEN 3 
+                             WHEN 'completed' THEN 4 
+                         END,
+                         priority DESC,
+                         name
+            """)
+            rows = cursor.fetchall()
+
+            tasks = []
+            for row in rows:
+                tasks.append(
+                    {
+                        "name": row[0],
+                        "description": row[1],
+                        "status": row[2],
+                        "priority": row[3],
+                        "created_at": row[4],
+                        "started_at": row[5],
+                        "completed_at": row[6],
+                        "details": row[7],
+                        "feature_name": row[8],
+                    }
+                )
+
+            return {"tasks": tasks}
         finally:
             conn.close()
 
