@@ -1,10 +1,10 @@
 """
-Test that verifies the untyped returns inventory is accurate.
+Test that verifies repository methods return Pydantic models.
 
 This test ensures that:
-1. All methods returning Dict[str, Any] are documented
-2. The count of untyped returns matches the inventory
-3. No new untyped returns have been added without updating the inventory
+1. All repository methods return properly typed Pydantic models
+2. No methods return untyped Dict[str, Any]
+3. Response models are used consistently
 """
 
 import inspect
@@ -16,17 +16,18 @@ from tasktree_mcp.database import (
     FeatureRepository,
     TaskRepository,
 )
+from tasktree_mcp.models import TaskResponse
 
 
-def check_return_type(func) -> bool:
+def check_return_type_is_pydantic(func) -> bool:
     """
-    Check if a function returns Dict[str, Any] or Optional[Dict[str, Any]] or List[Dict[str, Any]].
+    Check if a function returns a Pydantic model or list of Pydantic models.
 
     Args:
         func: Function to check
 
     Returns:
-        True if function returns untyped dict-like structure
+        True if function returns Pydantic model structure
     """
     try:
         # Get the signature and check return annotation
@@ -39,15 +40,18 @@ def check_return_type(func) -> bool:
         # Convert to string for easier checking
         type_str = str(return_annotation)
 
-        # Check for Dict[str, Any] patterns (with or without typing. prefix)
-        patterns = [
-            "Dict[str, Any]",
-            "dict[str, Any]",
-            "typing.Dict[str, typing.Any]",
-            "typing.dict[str, typing.Any]",
+        # Check for Pydantic model patterns
+        pydantic_patterns = [
+            "TaskResponse",
+            "DependencyResponse",
+            "FeatureResponse",
+            "List[TaskResponse]",
+            "List[DependencyResponse]",
+            "List[FeatureResponse]",
+            "Optional[TaskResponse]",
         ]
 
-        for pattern in patterns:
+        for pattern in pydantic_patterns:
             if pattern in type_str:
                 return True
 
@@ -57,12 +61,12 @@ def check_return_type(func) -> bool:
         return False
 
 
-class TestUntypedReturnsInventory:
-    """Tests to validate the untyped returns inventory document."""
+class TestTypedReturnsValidation:
+    """Tests to validate that repository methods return Pydantic models."""
 
-    def test_task_repository_untyped_methods(self):
-        """Verify all TaskRepository methods with untyped returns are documented."""
-        expected_untyped = {
+    def test_task_repository_typed_methods(self):
+        """Verify all TaskRepository methods return Pydantic models."""
+        expected_typed = {
             "list_tasks",
             "get_task",
             "add_task",
@@ -70,70 +74,68 @@ class TestUntypedReturnsInventory:
             "complete_task",
         }
 
-        actual_untyped = set()
+        actual_typed = set()
         for name, method in inspect.getmembers(
             TaskRepository, predicate=inspect.isfunction
         ):
-            if not name.startswith("_") and check_return_type(method):
-                actual_untyped.add(name)
+            if not name.startswith("_") and check_return_type_is_pydantic(method):
+                actual_typed.add(name)
 
-        assert actual_untyped == expected_untyped, (
-            f"TaskRepository untyped methods mismatch.\n"
-            f"Expected: {expected_untyped}\n"
-            f"Actual: {actual_untyped}\n"
-            f"Missing from inventory: {actual_untyped - expected_untyped}\n"
-            f"Extra in inventory: {expected_untyped - actual_untyped}"
+        assert actual_typed == expected_typed, (
+            f"TaskRepository typed methods mismatch.\n"
+            f"Expected: {expected_typed}\n"
+            f"Actual: {actual_typed}\n"
+            f"Missing from expected: {expected_typed - actual_typed}\n"
+            f"Extra found: {actual_typed - expected_typed}"
         )
 
-    def test_feature_repository_untyped_methods(self):
-        """Verify all FeatureRepository methods with untyped returns are documented."""
-        expected_untyped = {
+    def test_feature_repository_typed_methods(self):
+        """Verify all FeatureRepository methods return Pydantic models."""
+        expected_typed = {
             "add_feature",
             "list_features",
         }
 
-        actual_untyped = set()
+        actual_typed = set()
         for name, method in inspect.getmembers(
             FeatureRepository, predicate=inspect.isfunction
         ):
-            if not name.startswith("_") and check_return_type(method):
-                actual_untyped.add(name)
+            if not name.startswith("_") and check_return_type_is_pydantic(method):
+                actual_typed.add(name)
 
-        assert actual_untyped == expected_untyped, (
-            f"FeatureRepository untyped methods mismatch.\n"
-            f"Expected: {expected_untyped}\n"
-            f"Actual: {actual_untyped}\n"
-            f"Missing from inventory: {actual_untyped - expected_untyped}\n"
-            f"Extra in inventory: {expected_untyped - actual_untyped}"
+        assert actual_typed == expected_typed, (
+            f"FeatureRepository typed methods mismatch.\n"
+            f"Expected: {expected_typed}\n"
+            f"Actual: {actual_typed}\n"
+            f"Missing from expected: {expected_typed - actual_typed}\n"
+            f"Extra found: {actual_typed - expected_typed}"
         )
 
-    def test_dependency_repository_untyped_methods(self):
-        """Verify all DependencyRepository methods with untyped returns are documented."""
-        expected_untyped = {
+    def test_dependency_repository_typed_methods(self):
+        """Verify all DependencyRepository methods return Pydantic models."""
+        expected_typed = {
             "list_dependencies",
             "add_dependency",
             "get_available_tasks",
         }
 
-        actual_untyped = set()
+        actual_typed = set()
         for name, method in inspect.getmembers(
             DependencyRepository, predicate=inspect.isfunction
         ):
-            if not name.startswith("_") and check_return_type(method):
-                actual_untyped.add(name)
+            if not name.startswith("_") and check_return_type_is_pydantic(method):
+                actual_typed.add(name)
 
-        assert actual_untyped == expected_untyped, (
-            f"DependencyRepository untyped methods mismatch.\n"
-            f"Expected: {expected_untyped}\n"
-            f"Actual: {actual_untyped}\n"
-            f"Missing from inventory: {actual_untyped - expected_untyped}\n"
-            f"Extra in inventory: {expected_untyped - actual_untyped}"
+        assert actual_typed == expected_typed, (
+            f"DependencyRepository typed methods mismatch.\n"
+            f"Expected: {expected_typed}\n"
+            f"Actual: {actual_typed}\n"
+            f"Missing from expected: {expected_typed - actual_typed}\n"
+            f"Extra found: {actual_typed - expected_typed}"
         )
 
-    def test_total_repository_untyped_count(self):
-        """Verify the total count of repository methods with untyped returns."""
-        # From inventory: 6 TaskRepository + 2 FeatureRepository + 3 DependencyRepository = 11 total
-        # But inventory lists 10, let me recount:
+    def test_total_repository_typed_count(self):
+        """Verify the total count of repository methods with Pydantic returns."""
         # Task: list_tasks, get_task, add_task, update_task, complete_task = 5
         # Feature: add_feature, list_features = 2
         # Dependency: list_dependencies, add_dependency, get_available_tasks = 3
@@ -145,36 +147,16 @@ class TestUntypedReturnsInventory:
             for name, method in inspect.getmembers(
                 repo_class, predicate=inspect.isfunction
             ):
-                if not name.startswith("_") and check_return_type(method):
+                if not name.startswith("_") and check_return_type_is_pydantic(method):
                     total += 1
 
         assert total == expected_total, (
-            f"Expected {expected_total} repository methods with untyped returns, "
+            f"Expected {expected_total} repository methods with Pydantic returns, "
             f"but found {total}"
         )
 
-    def test_mcp_tools_inventory_completeness(self):
-        """
-        Verify MCP tools inventory matches implementation.
-
-        Note: This test checks against the documented tool count.
-        A more thorough check would require parsing tools.py dynamically,
-        but that's complex due to decorator registration pattern.
-        """
-        # From inventory document:
-        # Single return: get_task, add_task, update_task, start_task, complete_task, add_dependency, add_feature = 7
-        # List return: list_tasks, list_dependencies, get_available_tasks, list_features = 4
-        # Total = 11 MCP tools
-        expected_single_tools = 7
-        expected_list_tools = 4
-        expected_total = 11
-
-        # This is a documentation test - if someone adds a new tool,
-        # they need to update the inventory
-        assert expected_total == expected_single_tools + expected_list_tools
-
-    def test_existing_response_models_not_used(self):
-        """Verify that response models exist but are not yet used."""
+    def test_response_models_are_used(self):
+        """Verify that response models exist and are used."""
         from tasktree_mcp.models import (
             DependencyListResponse,
             DependencyResponse,
@@ -192,32 +174,34 @@ class TestUntypedReturnsInventory:
         assert FeatureResponse is not None
         assert FeatureListResponse is not None
 
-        # But they're not used in repository returns (which still return Dict[str, Any])
-        # This test documents the current state for future migration
+        # Verify they are used in repository returns
+        # This is validated by actual runtime tests below
 
-    def test_repository_methods_return_dict_structure(self, mock_db_path):
+    def test_repository_methods_return_pydantic_models(self, mock_db_path):
         """
-        Verify that repository methods actually return dict structures.
+        Verify that repository methods return Pydantic models, not dicts.
 
-        This test ensures the inventory is accurate by checking actual return values.
+        This test ensures the migration to typed returns is complete.
         """
         # Add a test task
         task = TaskRepository.add_task("test-task", "Test description")
 
-        # Verify it returns a dict, not a Pydantic model
-        assert isinstance(task, dict)
-        assert "name" in task
-        assert "description" in task
+        # Verify it returns a Pydantic model, not a dict
+        assert isinstance(task, TaskResponse)
+        assert not isinstance(task, dict)
+        assert task.name == "test-task"
+        assert task.description == "Test description"
 
         # Get task
         retrieved_task = TaskRepository.get_task("test-task")
-        assert isinstance(retrieved_task, dict) or retrieved_task is None
+        assert retrieved_task is None or isinstance(retrieved_task, TaskResponse)
 
         # List tasks
         tasks = TaskRepository.list_tasks()
         assert isinstance(tasks, list)
         if len(tasks) > 0:
-            assert isinstance(tasks[0], dict)
+            assert isinstance(tasks[0], TaskResponse)
+            assert not isinstance(tasks[0], dict)
 
 
 @pytest.fixture

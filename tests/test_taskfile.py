@@ -83,7 +83,7 @@ def test_graph_task_has_description(taskfile_config: dict):
 
 
 def test_graph_task_has_commands(taskfile_config: dict):
-    """Test that the graph task has commands defined."""
+    """Test that the graph task defines commands."""
     graph_task = taskfile_config["tasks"]["web-graph"]
     assert "cmds" in graph_task
     assert isinstance(graph_task["cmds"], list)

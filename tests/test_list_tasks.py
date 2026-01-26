@@ -36,9 +36,9 @@ def test_list_tasks_single_task(mock_db_path):
 
     tasks = TaskRepository.list_tasks()
     assert len(tasks) == 1
-    assert tasks[0]["name"] == "single-task"
-    assert tasks[0]["description"] == "A single task"
-    assert tasks[0]["priority"] == 5
+    assert tasks[0].name == "single-task"
+    assert tasks[0].description == "A single task"
+    assert tasks[0].priority == 5
 
 
 def test_list_tasks_multiple_tasks(mock_db_path):
@@ -60,12 +60,12 @@ def test_list_tasks_ordering_by_priority_descending(mock_db_path):
     tasks = TaskRepository.list_tasks()
 
     # Should be ordered by priority descending
-    assert tasks[0]["name"] == "high"
-    assert tasks[0]["priority"] == 10
-    assert tasks[1]["name"] == "mid"
-    assert tasks[1]["priority"] == 5
-    assert tasks[2]["name"] == "low"
-    assert tasks[2]["priority"] == 1
+    assert tasks[0].name == "high"
+    assert tasks[0].priority == 10
+    assert tasks[1].name == "mid"
+    assert tasks[1].priority == 5
+    assert tasks[2].name == "low"
+    assert tasks[2].priority == 1
 
 
 def test_list_tasks_ordering_by_created_at_when_priority_same(mock_db_path):
@@ -78,9 +78,9 @@ def test_list_tasks_ordering_by_created_at_when_priority_same(mock_db_path):
     tasks = TaskRepository.list_tasks()
 
     # Should be ordered by created_at ascending when priority is same
-    assert tasks[0]["name"] == "first"
-    assert tasks[1]["name"] == "second"
-    assert tasks[2]["name"] == "third"
+    assert tasks[0].name == "first"
+    assert tasks[1].name == "second"
+    assert tasks[2].name == "third"
 
 
 def test_list_tasks_filter_by_status_pending(mock_db_path):
@@ -93,8 +93,8 @@ def test_list_tasks_filter_by_status_pending(mock_db_path):
     tasks = TaskRepository.list_tasks(status="pending")
 
     assert len(tasks) == 2
-    assert all(task["status"] == "pending" for task in tasks)
-    assert {task["name"] for task in tasks} == {"pending-1", "pending-2"}
+    assert all(task.status == "pending" for task in tasks)
+    assert {task.name for task in tasks} == {"pending-1", "pending-2"}
 
 
 def test_list_tasks_filter_by_status_in_progress(mock_db_path):
@@ -107,7 +107,7 @@ def test_list_tasks_filter_by_status_in_progress(mock_db_path):
     tasks = TaskRepository.list_tasks(status="in_progress")
 
     assert len(tasks) == 2
-    assert all(task["status"] == "in_progress" for task in tasks)
+    assert all(task.status == "in_progress" for task in tasks)
 
 
 def test_list_tasks_filter_by_status_completed(mock_db_path):
@@ -120,7 +120,7 @@ def test_list_tasks_filter_by_status_completed(mock_db_path):
     tasks = TaskRepository.list_tasks(status="completed")
 
     assert len(tasks) == 3
-    assert all(task["status"] == "completed" for task in tasks)
+    assert all(task.status == "completed" for task in tasks)
 
 
 def test_list_tasks_filter_by_priority_min(mock_db_path):
@@ -133,8 +133,8 @@ def test_list_tasks_filter_by_priority_min(mock_db_path):
     tasks = TaskRepository.list_tasks(priority_min=5)
 
     assert len(tasks) == 3
-    assert all(task["priority"] >= 5 for task in tasks)
-    assert {task["name"] for task in tasks} == {"mid", "high", "max"}
+    assert all(task.priority >= 5 for task in tasks)
+    assert {task.name for task in tasks} == {"mid", "high", "max"}
 
 
 def test_list_tasks_filter_by_priority_min_zero(mock_db_path):
@@ -146,7 +146,7 @@ def test_list_tasks_filter_by_priority_min_zero(mock_db_path):
     tasks = TaskRepository.list_tasks(priority_min=0)
 
     assert len(tasks) == 3
-    assert all(task["priority"] >= 0 for task in tasks)
+    assert all(task.priority >= 0 for task in tasks)
 
 
 def test_list_tasks_filter_by_priority_min_boundary(mock_db_path):
@@ -158,8 +158,8 @@ def test_list_tasks_filter_by_priority_min_boundary(mock_db_path):
     tasks = TaskRepository.list_tasks(priority_min=5)
 
     assert len(tasks) == 2
-    assert all(task["priority"] >= 5 for task in tasks)
-    assert {task["name"] for task in tasks} == {"exactly", "above"}
+    assert all(task.priority >= 5 for task in tasks)
+    assert {task.name for task in tasks} == {"exactly", "above"}
 
 
 def test_list_tasks_filter_by_status_and_priority(mock_db_path):
@@ -178,9 +178,9 @@ def test_list_tasks_filter_by_status_and_priority(mock_db_path):
     tasks = TaskRepository.list_tasks(status="pending", priority_min=5)
 
     assert len(tasks) == 1
-    assert tasks[0]["name"] == "pending-high"
-    assert tasks[0]["status"] == "pending"
-    assert tasks[0]["priority"] == 8
+    assert tasks[0].name == "pending-high"
+    assert tasks[0].status == "pending"
+    assert tasks[0].priority == 8
 
 
 def test_list_tasks_filter_status_no_matches(mock_db_path):
@@ -232,9 +232,9 @@ def test_list_tasks_ordering_with_status_filter(mock_db_path):
 
     # Should be ordered by priority descending
     assert len(tasks) == 3
-    assert tasks[0]["name"] == "pending-high"
-    assert tasks[1]["name"] == "pending-mid"
-    assert tasks[2]["name"] == "pending-low"
+    assert tasks[0].name == "pending-high"
+    assert tasks[1].name == "pending-mid"
+    assert tasks[2].name == "pending-low"
 
 
 def test_list_tasks_ordering_with_priority_filter(mock_db_path):
@@ -248,9 +248,9 @@ def test_list_tasks_ordering_with_priority_filter(mock_db_path):
 
     # Should be ordered by priority descending
     assert len(tasks) == 3
-    assert tasks[0]["priority"] == 10
-    assert tasks[1]["priority"] == 8
-    assert tasks[2]["priority"] == 5
+    assert tasks[0].priority == 10
+    assert tasks[1].priority == 8
+    assert tasks[2].priority == 5
 
 
 def test_list_tasks_all_fields_present(mock_db_path):
@@ -268,22 +268,22 @@ def test_list_tasks_all_fields_present(mock_db_path):
     assert len(tasks) == 1
     task = tasks[0]
 
-    # Verify all expected fields are present
-    assert "name" in task
-    assert "description" in task
-    assert "details" in task
-    assert "priority" in task
-    assert "status" in task
-    assert "created_at" in task
-    assert "started_at" in task
-    assert "completed_at" in task
+    # Verify all expected fields are present (using hasattr for Pydantic models)
+    assert hasattr(task, "name")
+    assert hasattr(task, "description")
+    assert hasattr(task, "details")
+    assert hasattr(task, "priority")
+    assert hasattr(task, "status")
+    assert hasattr(task, "created_at")
+    assert hasattr(task, "started_at")
+    assert hasattr(task, "completed_at")
 
     # Verify field values
-    assert task["name"] == "full-task"
-    assert task["description"] == "Full description"
-    assert task["details"] == "Implementation details"
-    assert task["priority"] == 7
-    assert task["status"] == "in_progress"
+    assert task.name == "full-task"
+    assert task.description == "Full description"
+    assert task.details == "Implementation details"
+    assert task.priority == 7
+    assert task.status == "in_progress"
 
 
 def test_list_tasks_with_different_statuses(mock_db_path):
@@ -296,7 +296,7 @@ def test_list_tasks_with_different_statuses(mock_db_path):
     tasks = TaskRepository.list_tasks()
 
     assert len(tasks) == 4
-    statuses = {task["status"] for task in tasks}
+    statuses = {task.status for task in tasks}
     assert statuses == {"blocked", "pending", "in_progress", "completed"}
 
 
@@ -317,7 +317,7 @@ def test_list_tasks_large_dataset(mock_db_path):
 
     # Verify ordering (priority descending)
     for i in range(len(tasks) - 1):
-        assert tasks[i]["priority"] >= tasks[i + 1]["priority"]
+        assert tasks[i].priority >= tasks[i + 1].priority
 
 
 def test_list_tasks_filter_large_dataset_by_status(mock_db_path):
@@ -351,7 +351,7 @@ def test_list_tasks_filter_large_dataset_by_priority(mock_db_path):
     # Should include tasks with priority 7, 8, 9, 10
     expected_count = sum(1 for i in range(100) if (i % 11) >= 7)
     assert len(high_priority_tasks) == expected_count
-    assert all(task["priority"] >= 7 for task in high_priority_tasks)
+    assert all(task.priority >= 7 for task in high_priority_tasks)
 
 
 def test_list_tasks_none_parameters(mock_db_path):
@@ -364,8 +364,8 @@ def test_list_tasks_none_parameters(mock_db_path):
 
     assert len(tasks) == 2
     # Should return all tasks ordered by priority
-    assert tasks[0]["name"] == "task-1"
-    assert tasks[1]["name"] == "task-2"
+    assert tasks[0].name == "task-1"
+    assert tasks[1].name == "task-2"
 
 
 def test_list_tasks_filter_by_feature_name(mock_db_path):
@@ -393,8 +393,8 @@ def test_list_tasks_filter_by_feature_name(mock_db_path):
     tasks = TaskRepository.list_tasks(feature_name="feature-a")
 
     assert len(tasks) == 2
-    assert all(task["feature_name"] == "feature-a" for task in tasks)
-    assert {task["name"] for task in tasks} == {"task-2", "task-4"}
+    assert all(task.feature_name == "feature-a" for task in tasks)
+    assert {task.name for task in tasks} == {"task-2", "task-4"}
 
 
 def test_list_tasks_filter_by_feature_name_no_matches(mock_db_path):
@@ -452,9 +452,9 @@ def test_list_tasks_filter_by_feature_and_status(mock_db_path):
     tasks = TaskRepository.list_tasks(feature_name="feature-a", status="pending")
 
     assert len(tasks) == 2
-    assert all(task["feature_name"] == "feature-a" for task in tasks)
-    assert all(task["status"] == "pending" for task in tasks)
-    assert {task["name"] for task in tasks} == {"task-1", "task-4"}
+    assert all(task.feature_name == "feature-a" for task in tasks)
+    assert all(task.status == "pending" for task in tasks)
+    assert {task.name for task in tasks} == {"task-1", "task-4"}
 
 
 def test_list_tasks_filter_by_feature_priority_and_status(mock_db_path):
@@ -492,10 +492,10 @@ def test_list_tasks_filter_by_feature_priority_and_status(mock_db_path):
     )
 
     assert len(tasks) == 1
-    assert tasks[0]["name"] == "task-2"
-    assert tasks[0]["feature_name"] == "feature-a"
-    assert tasks[0]["status"] == "pending"
-    assert tasks[0]["priority"] == 8
+    assert tasks[0].name == "task-2"
+    assert tasks[0].feature_name == "feature-a"
+    assert tasks[0].status == "pending"
+    assert tasks[0].priority == 8
 
 
 def test_list_tasks_filter_by_default_feature(mock_db_path):
@@ -518,5 +518,5 @@ def test_list_tasks_filter_by_default_feature(mock_db_path):
     tasks = TaskRepository.list_tasks(feature_name="default")
 
     assert len(tasks) == 2
-    assert all(task["feature_name"] == "default" for task in tasks)
-    assert {task["name"] for task in tasks} == {"task-1", "task-3"}
+    assert all(task.feature_name == "default" for task in tasks)
+    assert {task.name for task in tasks} == {"task-1", "task-3"}

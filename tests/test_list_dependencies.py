@@ -52,8 +52,8 @@ def test_list_dependencies_all_basic(mock_db_path):
     deps = DependencyRepository.list_dependencies()
 
     assert len(deps) == 1
-    assert deps[0]["task_name"] == "task-b"
-    assert deps[0]["depends_on_task_name"] == "task-a"
+    assert deps[0].task_name == "task-b"
+    assert deps[0].depends_on_task_name == "task-a"
 
 
 def test_list_dependencies_all_multiple(mock_db_path):
@@ -73,12 +73,12 @@ def test_list_dependencies_all_multiple(mock_db_path):
 
     assert len(deps) == 3
     # Verify ordering by task_name, depends_on_task_name
-    assert deps[0]["task_name"] == "task-b"
-    assert deps[0]["depends_on_task_name"] == "task-a"
-    assert deps[1]["task_name"] == "task-c"
-    assert deps[1]["depends_on_task_name"] == "task-a"
-    assert deps[2]["task_name"] == "task-c"
-    assert deps[2]["depends_on_task_name"] == "task-b"
+    assert deps[0].task_name == "task-b"
+    assert deps[0].depends_on_task_name == "task-a"
+    assert deps[1].task_name == "task-c"
+    assert deps[1].depends_on_task_name == "task-a"
+    assert deps[2].task_name == "task-c"
+    assert deps[2].depends_on_task_name == "task-b"
 
 
 def test_list_dependencies_all_ordering(mock_db_path):
@@ -100,12 +100,12 @@ def test_list_dependencies_all_ordering(mock_db_path):
 
     # Should be ordered by task_name, depends_on_task_name
     assert len(deps) == 4
-    assert deps[0]["task_name"] == "task-b"
-    assert deps[1]["task_name"] == "task-c"
-    assert deps[2]["task_name"] == "task-d"
-    assert deps[2]["depends_on_task_name"] == "task-b"
-    assert deps[3]["task_name"] == "task-d"
-    assert deps[3]["depends_on_task_name"] == "task-c"
+    assert deps[0].task_name == "task-b"
+    assert deps[1].task_name == "task-c"
+    assert deps[2].task_name == "task-d"
+    assert deps[2].depends_on_task_name == "task-b"
+    assert deps[3].task_name == "task-d"
+    assert deps[3].depends_on_task_name == "task-c"
 
 
 def test_list_dependencies_filtered_task_as_dependent(mock_db_path):
@@ -123,8 +123,8 @@ def test_list_dependencies_filtered_task_as_dependent(mock_db_path):
     deps = DependencyRepository.list_dependencies("task-c")
 
     assert len(deps) == 2
-    assert all(dep["task_name"] == "task-c" for dep in deps)
-    assert {dep["depends_on_task_name"] for dep in deps} == {"task-a", "task-b"}
+    assert all(dep.task_name == "task-c" for dep in deps)
+    assert {dep.depends_on_task_name for dep in deps} == {"task-a", "task-b"}
 
 
 def test_list_dependencies_filtered_task_as_dependency(mock_db_path):
@@ -142,8 +142,8 @@ def test_list_dependencies_filtered_task_as_dependency(mock_db_path):
     deps = DependencyRepository.list_dependencies("task-a")
 
     assert len(deps) == 2
-    assert all(dep["depends_on_task_name"] == "task-a" for dep in deps)
-    assert {dep["task_name"] for dep in deps} == {"task-b", "task-c"}
+    assert all(dep.depends_on_task_name == "task-a" for dep in deps)
+    assert {dep.task_name for dep in deps} == {"task-b", "task-c"}
 
 
 def test_list_dependencies_filtered_task_both_roles(mock_db_path):
@@ -162,8 +162,8 @@ def test_list_dependencies_filtered_task_both_roles(mock_db_path):
 
     assert len(deps) == 2
     # Should include both: where task-b is the dependent and where it's the dependency
-    task_names = {dep["task_name"] for dep in deps}
-    depends_on_names = {dep["depends_on_task_name"] for dep in deps}
+    task_names = {dep.task_name for dep in deps}
+    depends_on_names = {dep.depends_on_task_name for dep in deps}
 
     assert "task-b" in task_names
     assert "task-b" in depends_on_names
@@ -221,12 +221,12 @@ def test_list_dependencies_filtered_complex_graph(mock_db_path):
     # List dependencies for task-a (should be depended on by task-b and task-c)
     deps_a = DependencyRepository.list_dependencies("task-a")
     assert len(deps_a) == 2
-    assert all(dep["depends_on_task_name"] == "task-a" for dep in deps_a)
+    assert all(dep.depends_on_task_name == "task-a" for dep in deps_a)
 
     # List dependencies for task-d (should depend on task-b and task-c)
     deps_d = DependencyRepository.list_dependencies("task-d")
     assert len(deps_d) == 2
-    assert all(dep["task_name"] == "task-d" for dep in deps_d)
+    assert all(dep.task_name == "task-d" for dep in deps_d)
 
 
 def test_list_dependencies_all_diamond_pattern(mock_db_path):
@@ -250,7 +250,7 @@ def test_list_dependencies_all_diamond_pattern(mock_db_path):
 
     assert len(deps) == 4
     # Verify all dependencies are present
-    dep_pairs = {(d["task_name"], d["depends_on_task_name"]) for d in deps}
+    dep_pairs = {(d.task_name, d.depends_on_task_name) for d in deps}
     expected_pairs = {
         ("task-b", "task-a"),
         ("task-c", "task-a"),
@@ -279,13 +279,13 @@ def test_list_dependencies_filtered_ordering(mock_db_path):
     # Should be ordered by task_name, depends_on_task_name
     assert len(deps) == 3
     # First two should be where task-c is the dependent (task_name = task-c)
-    assert deps[0]["task_name"] == "task-c"
-    assert deps[0]["depends_on_task_name"] == "task-a"
-    assert deps[1]["task_name"] == "task-c"
-    assert deps[1]["depends_on_task_name"] == "task-b"
+    assert deps[0].task_name == "task-c"
+    assert deps[0].depends_on_task_name == "task-a"
+    assert deps[1].task_name == "task-c"
+    assert deps[1].depends_on_task_name == "task-b"
     # Last one should be where task-c is the dependency (depends_on_task_name = task-c)
-    assert deps[2]["task_name"] == "task-d"
-    assert deps[2]["depends_on_task_name"] == "task-c"
+    assert deps[2].task_name == "task-d"
+    assert deps[2].depends_on_task_name == "task-c"
 
 
 def test_list_dependencies_long_chain(mock_db_path):
@@ -328,4 +328,4 @@ def test_list_dependencies_multiple_independents(mock_db_path):
     # List dependencies for tree1-a (only tree 1 should appear)
     deps_tree1 = DependencyRepository.list_dependencies("tree1-a")
     assert len(deps_tree1) == 1
-    assert deps_tree1[0]["task_name"] == "tree1-b"
+    assert deps_tree1[0].task_name == "tree1-b"

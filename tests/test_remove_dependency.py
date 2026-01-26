@@ -89,8 +89,8 @@ def test_remove_dependency_one_of_multiple(mock_db_path):
     # Verify only one dependency remains
     deps = DependencyRepository.list_dependencies("task-c")
     assert len(deps) == 1
-    assert deps[0]["task_name"] == "task-c"
-    assert deps[0]["depends_on_task_name"] == "task-b"
+    assert deps[0].task_name == "task-c"
+    assert deps[0].depends_on_task_name == "task-b"
 
 
 def test_remove_dependency_from_chain(mock_db_path):
@@ -115,8 +115,8 @@ def test_remove_dependency_from_chain(mock_db_path):
     # Verify only one dependency remains (C -> B)
     all_deps = DependencyRepository.list_dependencies()
     assert len(all_deps) == 1
-    assert all_deps[0]["task_name"] == "task-c"
-    assert all_deps[0]["depends_on_task_name"] == "task-b"
+    assert all_deps[0].task_name == "task-c"
+    assert all_deps[0].depends_on_task_name == "task-b"
 
 
 def test_remove_dependency_affects_available_tasks(mock_db_path):
@@ -131,7 +131,7 @@ def test_remove_dependency_affects_available_tasks(mock_db_path):
     # Only task-a should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-a"
+    assert available[0].name == "task-a"
 
     # Remove the dependency
     DependencyRepository.remove_dependency("task-b", "task-a")
@@ -139,7 +139,7 @@ def test_remove_dependency_affects_available_tasks(mock_db_path):
     # Now both tasks should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 2
-    task_names = {task["name"] for task in available}
+    task_names = {task.name for task in available}
     assert task_names == {"task-a", "task-b"}
 
 
@@ -165,8 +165,8 @@ def test_remove_dependency_wrong_direction(mock_db_path):
     # Original dependency should still exist
     deps = DependencyRepository.list_dependencies()
     assert len(deps) == 1
-    assert deps[0]["task_name"] == "task-b"
-    assert deps[0]["depends_on_task_name"] == "task-a"
+    assert deps[0].task_name == "task-b"
+    assert deps[0].depends_on_task_name == "task-a"
 
 
 def test_remove_dependency_diamond_pattern(mock_db_path):
@@ -198,7 +198,7 @@ def test_remove_dependency_diamond_pattern(mock_db_path):
     assert len(all_deps) == 3
 
     # Verify the correct dependency was removed
-    dep_pairs = {(d["task_name"], d["depends_on_task_name"]) for d in all_deps}
+    dep_pairs = {(d.task_name, d.depends_on_task_name) for d in all_deps}
     expected_pairs = {
         ("task-b", "task-a"),
         ("task-c", "task-a"),
@@ -288,7 +288,7 @@ def test_remove_dependency_complex_graph(mock_db_path):
     all_deps = DependencyRepository.list_dependencies()
     assert len(all_deps) == 4
 
-    dep_pairs = {(d["task_name"], d["depends_on_task_name"]) for d in all_deps}
+    dep_pairs = {(d.task_name, d.depends_on_task_name) for d in all_deps}
     expected_pairs = {
         ("task-b", "task-a"),
         ("task-d", "task-b"),
@@ -316,8 +316,8 @@ def test_remove_dependency_allows_circular_after_removal(mock_db_path):
 
     # Now adding the reverse dependency should work (no longer circular)
     dep = DependencyRepository.add_dependency("task-a", "task-b")
-    assert dep["task_name"] == "task-a"
-    assert dep["depends_on_task_name"] == "task-b"
+    assert dep.task_name == "task-a"
+    assert dep.depends_on_task_name == "task-b"
 
 
 def test_remove_dependency_tasks_remain(mock_db_path):
@@ -335,9 +335,9 @@ def test_remove_dependency_tasks_remain(mock_db_path):
     task_b = TaskRepository.get_task("task-b")
 
     assert task_a is not None
-    assert task_a["name"] == "task-a"
+    assert task_a.name == "task-a"
     assert task_b is not None
-    assert task_b["name"] == "task-b"
+    assert task_b.name == "task-b"
 
 
 def test_remove_dependency_long_chain(mock_db_path):
@@ -364,7 +364,7 @@ def test_remove_dependency_long_chain(mock_db_path):
     assert len(all_deps) == chain_length - 2
 
     # Verify the correct dependency was removed
-    deps_task4 = [d for d in all_deps if d["task_name"] == "task-4"]
+    deps_task4 = [d for d in all_deps if d.task_name == "task-4"]
     assert len(deps_task4) == 0
 
 
@@ -412,5 +412,5 @@ def test_remove_dependency_multiple_independents(mock_db_path):
     # Verify only tree 2 dependency remains
     all_deps = DependencyRepository.list_dependencies()
     assert len(all_deps) == 1
-    assert all_deps[0]["task_name"] == "tree2-d"
-    assert all_deps[0]["depends_on_task_name"] == "tree2-c"
+    assert all_deps[0].task_name == "tree2-d"
+    assert all_deps[0].depends_on_task_name == "tree2-c"

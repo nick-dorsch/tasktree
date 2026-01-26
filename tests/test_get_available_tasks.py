@@ -52,12 +52,12 @@ def test_get_available_tasks_no_dependencies(mock_db_path):
     assert len(available) == 3
 
     # Should be ordered by priority (descending)
-    assert available[0]["name"] == "high-priority"
-    assert available[0]["priority"] == 10
-    assert available[1]["name"] == "medium-priority"
-    assert available[1]["priority"] == 5
-    assert available[2]["name"] == "low-priority"
-    assert available[2]["priority"] == 1
+    assert available[0].name == "high-priority"
+    assert available[0].priority == 10
+    assert available[1].name == "medium-priority"
+    assert available[1].priority == 5
+    assert available[2].name == "low-priority"
+    assert available[2].priority == 1
 
 
 def test_get_available_tasks_excludes_completed(mock_db_path):
@@ -72,7 +72,7 @@ def test_get_available_tasks_excludes_completed(mock_db_path):
 
     # Only pending tasks should be available
     assert len(available) == 1
-    task_names = {task["name"] for task in available}
+    task_names = {task.name for task in available}
     assert "pending-task" in task_names
     assert "completed-task" not in task_names
     assert "in-progress-task" not in task_names
@@ -92,7 +92,7 @@ def test_get_available_tasks_simple_dependency_chain(mock_db_path):
     # Only task-a should be available (no dependencies)
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-a"
+    assert available[0].name == "task-a"
 
     # Complete task-a
     TaskRepository.update_task("task-a", status="completed")
@@ -100,7 +100,7 @@ def test_get_available_tasks_simple_dependency_chain(mock_db_path):
     # Now task-b should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-b"
+    assert available[0].name == "task-b"
 
     # Complete task-b
     TaskRepository.update_task("task-b", status="completed")
@@ -108,7 +108,7 @@ def test_get_available_tasks_simple_dependency_chain(mock_db_path):
     # Now task-c should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-c"
+    assert available[0].name == "task-c"
 
 
 def test_get_available_tasks_multiple_dependencies(mock_db_path):
@@ -129,7 +129,7 @@ def test_get_available_tasks_multiple_dependencies(mock_db_path):
     # Initially, only the dependencies should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 3
-    task_names = {task["name"] for task in available}
+    task_names = {task.name for task in available}
     assert "dep-1" in task_names
     assert "dep-2" in task_names
     assert "dep-3" in task_names
@@ -142,7 +142,7 @@ def test_get_available_tasks_multiple_dependencies(mock_db_path):
     # main-task should still not be available (dep-3 is not completed)
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "dep-3"
+    assert available[0].name == "dep-3"
 
     # Complete the last dependency
     TaskRepository.update_task("dep-3", status="completed")
@@ -150,7 +150,7 @@ def test_get_available_tasks_multiple_dependencies(mock_db_path):
     # Now main-task should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "main-task"
+    assert available[0].name == "main-task"
 
 
 def test_get_available_tasks_priority_ordering(mock_db_path):
@@ -166,11 +166,11 @@ def test_get_available_tasks_priority_ordering(mock_db_path):
 
     # Check they're ordered by priority descending
     assert len(available) == 5
-    assert available[0]["priority"] == 10
-    assert available[1]["priority"] == 7
-    assert available[2]["priority"] == 5
-    assert available[3]["priority"] == 3
-    assert available[4]["priority"] == 1
+    assert available[0].priority == 10
+    assert available[1].priority == 7
+    assert available[2].priority == 5
+    assert available[3].priority == 3
+    assert available[4].priority == 1
 
 
 def test_get_available_tasks_created_at_secondary_sort(mock_db_path):
@@ -184,9 +184,9 @@ def test_get_available_tasks_created_at_secondary_sort(mock_db_path):
 
     # Should be ordered by created_at (ascending) when priority is the same
     assert len(available) == 3
-    assert available[0]["name"] == "task-1"
-    assert available[1]["name"] == "task-2"
-    assert available[2]["name"] == "task-3"
+    assert available[0].name == "task-1"
+    assert available[1].name == "task-2"
+    assert available[2].name == "task-3"
 
 
 def test_get_available_tasks_complex_dependency_graph(mock_db_path):
@@ -212,8 +212,8 @@ def test_get_available_tasks_complex_dependency_graph(mock_db_path):
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 2
     # Should be ordered by priority: left (10) before right (8)
-    assert available[0]["name"] == "left"
-    assert available[1]["name"] == "right"
+    assert available[0].name == "left"
+    assert available[1].name == "right"
 
     # Complete left branch
     TaskRepository.update_task("left", status="completed")
@@ -221,7 +221,7 @@ def test_get_available_tasks_complex_dependency_graph(mock_db_path):
     # Only right should be available now
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "right"
+    assert available[0].name == "right"
 
     # Complete right branch
     TaskRepository.update_task("right", status="completed")
@@ -229,7 +229,7 @@ def test_get_available_tasks_complex_dependency_graph(mock_db_path):
     # Now top should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "top"
+    assert available[0].name == "top"
 
 
 def test_get_available_tasks_in_progress_dependencies(mock_db_path):
@@ -255,7 +255,7 @@ def test_get_available_tasks_no_uncompleted_dependencies_only(mock_db_path):
 
     # main-task should not be available (pending-dep is not completed)
     available = DependencyRepository.get_available_tasks()
-    task_names = {task["name"] for task in available}
+    task_names = {task.name for task in available}
     assert "pending-dep" in task_names
     assert "main-task" not in task_names
 
@@ -276,7 +276,7 @@ def test_get_available_tasks_handles_orphaned_tasks(mock_db_path):
     # Only pending orphans and dep should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 2
-    task_names = {task["name"] for task in available}
+    task_names = {task.name for task in available}
     assert "orphan-1" in task_names
     assert "dep" in task_names
     assert "with-deps" not in task_names

@@ -33,11 +33,11 @@ def test_add_task_with_details(mock_db_path):
         details="These are detailed implementation notes for the task",
     )
 
-    assert task["name"] == "task-with-details"
-    assert task["description"] == "A test task"
-    assert task["details"] == "These are detailed implementation notes for the task"
-    assert task["priority"] == 5
-    assert task["status"] == "pending"
+    assert task.name == "task-with-details"
+    assert task.description == "A test task"
+    assert task.details == "These are detailed implementation notes for the task"
+    assert task.priority == 5
+    assert task.status == "pending"
 
 
 def test_add_task_without_details(mock_db_path):
@@ -49,10 +49,10 @@ def test_add_task_without_details(mock_db_path):
         status="pending",
     )
 
-    assert task["name"] == "task-without-details"
-    assert task["description"] == "A test task"
-    assert task["details"] is None
-    assert task["priority"] == 3
+    assert task.name == "task-without-details"
+    assert task.description == "A test task"
+    assert task.details is None
+    assert task.priority == 3
 
 
 def test_add_task_with_empty_details(mock_db_path):
@@ -63,8 +63,8 @@ def test_add_task_with_empty_details(mock_db_path):
         details="",
     )
 
-    assert task["name"] == "task-empty-details"
-    assert task["details"] == ""
+    assert task.name == "task-empty-details"
+    assert task.details == ""
 
 
 def test_update_task_add_details(mock_db_path):
@@ -82,8 +82,8 @@ def test_update_task_add_details(mock_db_path):
     )
 
     assert updated is not None
-    assert updated["details"] == "New detailed implementation notes"
-    assert updated["description"] == "Original description"
+    assert updated.details == "New detailed implementation notes"
+    assert updated.description == "Original description"
 
 
 def test_update_task_modify_details(mock_db_path):
@@ -102,7 +102,7 @@ def test_update_task_modify_details(mock_db_path):
     )
 
     assert updated is not None
-    assert updated["details"] == "Updated details"
+    assert updated.details == "Updated details"
 
 
 def test_update_task_clear_details(mock_db_path):
@@ -121,7 +121,7 @@ def test_update_task_clear_details(mock_db_path):
     )
 
     assert updated is not None
-    assert updated["details"] == ""
+    assert updated.details == ""
 
 
 def test_update_task_multiple_fields_including_details(mock_db_path):
@@ -144,11 +144,11 @@ def test_update_task_multiple_fields_including_details(mock_db_path):
     )
 
     assert updated is not None
-    assert updated["description"] == "New description"
-    assert updated["priority"] == 8
-    assert updated["status"] == "in_progress"
-    assert updated["details"] == "New details"
-    assert updated["started_at"] is not None  # Trigger should set this
+    assert updated.description == "New description"
+    assert updated.priority == 8
+    assert updated.status == "in_progress"
+    assert updated.details == "New details"
+    assert updated.started_at is not None  # Trigger should set this
 
 
 def test_update_task_without_details_preserves_existing(mock_db_path):
@@ -168,9 +168,9 @@ def test_update_task_without_details_preserves_existing(mock_db_path):
     )
 
     assert updated is not None
-    assert updated["description"] == "New description"
-    assert updated["priority"] == 7
-    assert updated["details"] == "Important details"  # Should be preserved
+    assert updated.description == "New description"
+    assert updated.priority == 7
+    assert updated.details == "Important details"  # Should be preserved
 
 
 def test_get_task_returns_details(mock_db_path):
@@ -186,7 +186,7 @@ def test_get_task_returns_details(mock_db_path):
     task = TaskRepository.get_task("get-with-details")
 
     assert task is not None
-    assert task["details"] == "Task details"
+    assert task.details == "Task details"
 
 
 def test_list_tasks_includes_details(mock_db_path):
@@ -214,11 +214,11 @@ def test_list_tasks_includes_details(mock_db_path):
     assert len(tasks) == 3
 
     # Find each task and verify details
-    task1 = next(t for t in tasks if t["name"] == "task1")
-    assert task1["details"] == "Details for task 1"
+    task1 = next(t for t in tasks if t.name == "task1")
+    assert task1.details == "Details for task 1"
 
-    task2 = next(t for t in tasks if t["name"] == "task2")
-    assert task2["details"] is None
+    task2 = next(t for t in tasks if t.name == "task2")
+    assert task2.details is None
 
-    task3 = next(t for t in tasks if t["name"] == "task3")
-    assert task3["details"] == ""
+    task3 = next(t for t in tasks if t.name == "task3")
+    assert task3.details == ""

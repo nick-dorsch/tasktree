@@ -30,12 +30,12 @@ def test_add_task_basic(mock_db_path):
         description="A basic test task",
     )
 
-    assert task["name"] == "basic-task"
-    assert task["description"] == "A basic test task"
-    assert task["priority"] == 0
-    assert task["status"] == "pending"
-    assert task["details"] is None
-    assert task["created_at"] is not None
+    assert task.name == "basic-task"
+    assert task.description == "A basic test task"
+    assert task.priority == 0
+    assert task.status == "pending"
+    assert task.details is None
+    assert task.created_at is not None
 
 
 def test_add_task_with_all_parameters(mock_db_path):
@@ -48,11 +48,11 @@ def test_add_task_with_all_parameters(mock_db_path):
         details="Detailed implementation notes",
     )
 
-    assert task["name"] == "full-task"
-    assert task["description"] == "A task with all parameters"
-    assert task["priority"] == 8
-    assert task["status"] == "in_progress"
-    assert task["details"] == "Detailed implementation notes"
+    assert task.name == "full-task"
+    assert task.description == "A task with all parameters"
+    assert task.priority == 8
+    assert task.status == "in_progress"
+    assert task.details == "Detailed implementation notes"
 
 
 def test_add_task_with_priority_bounds(mock_db_path):
@@ -63,7 +63,7 @@ def test_add_task_with_priority_bounds(mock_db_path):
         description="Task with minimum priority",
         priority=0,
     )
-    assert task_min["priority"] == 0
+    assert task_min.priority == 0
 
     # Maximum priority
     task_max = TaskRepository.add_task(
@@ -71,7 +71,7 @@ def test_add_task_with_priority_bounds(mock_db_path):
         description="Task with maximum priority",
         priority=10,
     )
-    assert task_max["priority"] == 10
+    assert task_max.priority == 10
 
 
 def test_add_task_with_different_statuses(mock_db_path):
@@ -84,7 +84,7 @@ def test_add_task_with_different_statuses(mock_db_path):
             description=f"Task with {status} status",
             status=status,
         )
-        assert task["status"] == status
+        assert task.status == status
 
 
 def test_add_task_with_details(mock_db_path):
@@ -95,7 +95,7 @@ def test_add_task_with_details(mock_db_path):
         details="These are implementation details",
     )
 
-    assert task["details"] == "These are implementation details"
+    assert task.details == "These are implementation details"
 
 
 def test_add_task_with_empty_details(mock_db_path):
@@ -106,7 +106,7 @@ def test_add_task_with_empty_details(mock_db_path):
         details="",
     )
 
-    assert task["details"] == ""
+    assert task.details == ""
 
 
 def test_add_task_duplicate_name(mock_db_path):
@@ -133,9 +133,9 @@ def test_add_task_creates_timestamps(mock_db_path):
         description="A pending task",
         status="pending",
     )
-    assert task_pending["created_at"] is not None
-    assert task_pending["started_at"] is None
-    assert task_pending["completed_at"] is None
+    assert task_pending.created_at is not None
+    assert task_pending.started_at is None
+    assert task_pending.completed_at is None
 
     # Task with in_progress status
     task_in_progress = TaskRepository.add_task(
@@ -143,7 +143,7 @@ def test_add_task_creates_timestamps(mock_db_path):
         description="An in-progress task",
         status="in_progress",
     )
-    assert task_in_progress["created_at"] is not None
+    assert task_in_progress.created_at is not None
     # Note: started_at is set by trigger when status changes to in_progress
     # Since we're inserting with that status, we may need to test separately
 
@@ -153,7 +153,7 @@ def test_add_task_creates_timestamps(mock_db_path):
         description="A completed task",
         status="completed",
     )
-    assert task_completed["created_at"] is not None
+    assert task_completed.created_at is not None
 
 
 def test_add_task_special_characters_in_name(mock_db_path):
@@ -170,7 +170,7 @@ def test_add_task_special_characters_in_name(mock_db_path):
             name=name,
             description=f"Task with name: {name}",
         )
-        assert task["name"] == name
+        assert task.name == name
 
 
 def test_add_task_long_description(mock_db_path):
@@ -182,7 +182,7 @@ def test_add_task_long_description(mock_db_path):
         description=long_desc,
     )
 
-    assert task["description"] == long_desc
+    assert task.description == long_desc
 
 
 def test_add_task_unicode_characters(mock_db_path):
@@ -193,9 +193,9 @@ def test_add_task_unicode_characters(mock_db_path):
         details="Details with emoji: ✨🚀",
     )
 
-    assert "你好" in task["description"]
-    assert "🎉" in task["description"]
-    assert "✨" in task["details"]
+    assert "你好" in task.description
+    assert "🎉" in task.description
+    assert "✨" in task.details
 
 
 def test_add_task_ordering(mock_db_path):
@@ -209,9 +209,9 @@ def test_add_task_ordering(mock_db_path):
     tasks = TaskRepository.list_tasks()
 
     # Should be ordered by priority (descending)
-    assert tasks[0]["name"] == "task-high"
-    assert tasks[1]["name"] == "task-mid"
-    assert tasks[2]["name"] == "task-low"
+    assert tasks[0].name == "task-high"
+    assert tasks[1].name == "task-mid"
+    assert tasks[2].name == "task-low"
 
 
 def test_add_task_retrieval_after_creation(mock_db_path):
@@ -227,9 +227,9 @@ def test_add_task_retrieval_after_creation(mock_db_path):
 
     # Should match
     assert retrieved_task is not None
-    assert retrieved_task["name"] == created_task["name"]
-    assert retrieved_task["description"] == created_task["description"]
-    assert retrieved_task["priority"] == created_task["priority"]
+    assert retrieved_task.name == created_task.name
+    assert retrieved_task.description == created_task.description
+    assert retrieved_task.priority == created_task.priority
 
 
 def test_add_task_with_dependencies_via_tools_wrapper(mock_db_path):
@@ -253,7 +253,7 @@ def test_add_task_with_dependencies_via_tools_wrapper(mock_db_path):
     assert len(deps) == 2
 
     # Verify the task exists
-    assert task["name"] == "dependent-task"
+    assert task.name == "dependent-task"
 
 
 def test_add_task_nonexistent_dependency_validation(mock_db_path):
@@ -277,7 +277,7 @@ def test_add_task_multiple_tasks(mock_db_path):
             description=f"Description for {name}",
             priority=len(task_names) - int(name.split("-")[1]),
         )
-        assert task["name"] == name
+        assert task.name == name
 
     # Verify all tasks exist
     all_tasks = TaskRepository.list_tasks()

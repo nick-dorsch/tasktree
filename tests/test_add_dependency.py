@@ -32,8 +32,8 @@ def test_add_dependency_basic(mock_db_path):
     # Add dependency: task-b depends on task-a
     dep = DependencyRepository.add_dependency("task-b", "task-a")
 
-    assert dep["task_name"] == "task-b"
-    assert dep["depends_on_task_name"] == "task-a"
+    assert dep.task_name == "task-b"
+    assert dep.depends_on_task_name == "task-a"
 
 
 def test_add_dependency_multiple_dependencies_single_task(mock_db_path):
@@ -47,10 +47,10 @@ def test_add_dependency_multiple_dependencies_single_task(mock_db_path):
     dep1 = DependencyRepository.add_dependency("task-c", "task-a")
     dep2 = DependencyRepository.add_dependency("task-c", "task-b")
 
-    assert dep1["task_name"] == "task-c"
-    assert dep1["depends_on_task_name"] == "task-a"
-    assert dep2["task_name"] == "task-c"
-    assert dep2["depends_on_task_name"] == "task-b"
+    assert dep1.task_name == "task-c"
+    assert dep1.depends_on_task_name == "task-a"
+    assert dep2.task_name == "task-c"
+    assert dep2.depends_on_task_name == "task-b"
 
     # Verify both dependencies exist
     deps = DependencyRepository.list_dependencies("task-c")
@@ -197,7 +197,7 @@ def test_add_dependency_affects_available_tasks(mock_db_path):
     # Now only task-a should be available (task-b depends on it)
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-a"
+    assert available[0].name == "task-a"
 
 
 def test_add_dependency_with_completed_dependency(mock_db_path):
@@ -209,13 +209,13 @@ def test_add_dependency_with_completed_dependency(mock_db_path):
     # Add dependency: B depends on A (which is already completed)
     dep = DependencyRepository.add_dependency("task-b", "task-a")
 
-    assert dep["task_name"] == "task-b"
-    assert dep["depends_on_task_name"] == "task-a"
+    assert dep.task_name == "task-b"
+    assert dep.depends_on_task_name == "task-a"
 
     # task-b should be available since its dependency is completed
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-b"
+    assert available[0].name == "task-b"
 
 
 def test_add_dependency_list_by_task(mock_db_path):
@@ -258,9 +258,9 @@ def test_add_dependency_ordering(mock_db_path):
     deps = DependencyRepository.list_dependencies()
 
     # Should be ordered by task_name, depends_on_task_name
-    assert deps[0]["task_name"] == "task-b"
-    assert deps[1]["task_name"] == "task-c"
-    assert deps[2]["task_name"] == "task-c"
+    assert deps[0].task_name == "task-b"
+    assert deps[1].task_name == "task-c"
+    assert deps[2].task_name == "task-c"
 
 
 def test_add_dependency_self_dependency_prevented(mock_db_path):

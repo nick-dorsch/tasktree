@@ -29,9 +29,9 @@ def test_update_task_description_only(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["description"] == "Updated description"
-    assert updated["priority"] == 5  # Unchanged
-    assert updated["status"] == "pending"  # Unchanged
+    assert updated.description == "Updated description"
+    assert updated.priority == 5  # Unchanged
+    assert updated.status == "pending"  # Unchanged
 
 
 def test_update_task_priority_only(test_db: Path, monkeypatch):
@@ -52,8 +52,8 @@ def test_update_task_priority_only(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["priority"] == 8
-    assert updated["description"] == "Test task"  # Unchanged
+    assert updated.priority == 8
+    assert updated.description == "Test task"  # Unchanged
 
 
 def test_update_task_status_only(test_db: Path, monkeypatch):
@@ -74,8 +74,8 @@ def test_update_task_status_only(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["status"] == "in_progress"
-    assert updated["started_at"] is not None  # Trigger should set this
+    assert updated.status == "in_progress"
+    assert updated.started_at is not None  # Trigger should set this
 
 
 def test_update_task_details_only(test_db: Path, monkeypatch):
@@ -95,8 +95,8 @@ def test_update_task_details_only(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["details"] == "New implementation details"
-    assert updated["description"] == "Test task"  # Unchanged
+    assert updated.details == "New implementation details"
+    assert updated.description == "Test task"  # Unchanged
 
 
 def test_update_task_multiple_fields(test_db: Path, monkeypatch):
@@ -122,11 +122,11 @@ def test_update_task_multiple_fields(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["description"] == "New description"
-    assert updated["priority"] == 9
-    assert updated["status"] == "in_progress"
-    assert updated["details"] == "New details"
-    assert updated["started_at"] is not None
+    assert updated.description == "New description"
+    assert updated.priority == 9
+    assert updated.status == "in_progress"
+    assert updated.details == "New details"
+    assert updated.started_at is not None
 
 
 def test_update_task_add_details_to_task_without_details(test_db: Path, monkeypatch):
@@ -146,7 +146,7 @@ def test_update_task_add_details_to_task_without_details(test_db: Path, monkeypa
     )
 
     assert updated is not None
-    assert updated["details"] == "Newly added details"
+    assert updated.details == "Newly added details"
 
 
 def test_update_task_modify_existing_details(test_db: Path, monkeypatch):
@@ -167,7 +167,7 @@ def test_update_task_modify_existing_details(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["details"] == "Modified details"
+    assert updated.details == "Modified details"
 
 
 def test_update_task_clear_details(test_db: Path, monkeypatch):
@@ -188,7 +188,7 @@ def test_update_task_clear_details(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["details"] == ""
+    assert updated.details == ""
 
 
 def test_update_task_nonexistent_task(test_db: Path, monkeypatch):
@@ -240,8 +240,8 @@ def test_update_task_no_fields_specified(test_db: Path, monkeypatch):
     result = TaskRepository.update_task(name="no-update")
 
     assert result is not None
-    assert result["description"] == original["description"]
-    assert result["priority"] == original["priority"]
+    assert result.description == original.description
+    assert result.priority == original.priority
 
 
 def test_update_task_preserves_unspecified_fields(test_db: Path, monkeypatch):
@@ -264,10 +264,10 @@ def test_update_task_preserves_unspecified_fields(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["priority"] == 9  # Changed
-    assert updated["description"] == "Original description"  # Preserved
-    assert updated["status"] == "pending"  # Preserved
-    assert updated["details"] == "Original details"  # Preserved
+    assert updated.priority == 9  # Changed
+    assert updated.description == "Original description"  # Preserved
+    assert updated.status == "pending"  # Preserved
+    assert updated.details == "Original details"  # Preserved
 
 
 def test_update_task_status_transition_to_in_progress_sets_started_at(
@@ -285,7 +285,7 @@ def test_update_task_status_transition_to_in_progress_sets_started_at(
 
     # Verify started_at is None
     task_before = TaskRepository.get_task("start-task")
-    assert task_before["started_at"] is None
+    assert task_before.started_at is None
 
     # Update to in_progress
     updated = TaskRepository.update_task(
@@ -294,8 +294,8 @@ def test_update_task_status_transition_to_in_progress_sets_started_at(
     )
 
     assert updated is not None
-    assert updated["status"] == "in_progress"
-    assert updated["started_at"] is not None
+    assert updated.status == "in_progress"
+    assert updated.started_at is not None
 
 
 def test_update_task_status_transition_to_completed_sets_completed_at(
@@ -313,7 +313,7 @@ def test_update_task_status_transition_to_completed_sets_completed_at(
 
     # Verify completed_at is None
     task_before = TaskRepository.get_task("complete-task")
-    assert task_before["completed_at"] is None
+    assert task_before.completed_at is None
 
     # Update to completed
     updated = TaskRepository.update_task(
@@ -322,8 +322,8 @@ def test_update_task_status_transition_to_completed_sets_completed_at(
     )
 
     assert updated is not None
-    assert updated["status"] == "completed"
-    assert updated["completed_at"] is not None
+    assert updated.status == "completed"
+    assert updated.completed_at is not None
 
 
 def test_update_task_status_from_pending_to_completed(test_db: Path, monkeypatch):
@@ -344,8 +344,8 @@ def test_update_task_status_from_pending_to_completed(test_db: Path, monkeypatch
     )
 
     assert updated is not None
-    assert updated["status"] == "completed"
-    assert updated["completed_at"] is not None
+    assert updated.status == "completed"
+    assert updated.completed_at is not None
     # started_at might be None since we skipped in_progress
 
 
@@ -365,14 +365,14 @@ def test_update_task_priority_bounds(test_db: Path, monkeypatch):
         name="priority-bounds",
         priority=0,
     )
-    assert updated_min["priority"] == 0
+    assert updated_min.priority == 0
 
     # Update to maximum
     updated_max = TaskRepository.update_task(
         name="priority-bounds",
         priority=10,
     )
-    assert updated_max["priority"] == 10
+    assert updated_max.priority == 10
 
 
 def test_update_task_with_long_details(test_db: Path, monkeypatch):
@@ -393,8 +393,8 @@ def test_update_task_with_long_details(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert updated["details"] == long_details
-    assert len(updated["details"]) == 5000
+    assert updated.details == long_details
+    assert len(updated.details) == 5000
 
 
 def test_update_task_with_unicode_details(test_db: Path, monkeypatch):
@@ -414,9 +414,9 @@ def test_update_task_with_unicode_details(test_db: Path, monkeypatch):
     )
 
     assert updated is not None
-    assert "你好" in updated["details"]
-    assert "🚀" in updated["details"]
-    assert "✨" in updated["details"]
+    assert "你好" in updated.details
+    assert "🚀" in updated.details
+    assert "✨" in updated.details
 
 
 def test_update_task_status_preserves_timestamps(test_db: Path, monkeypatch):
@@ -433,15 +433,15 @@ def test_update_task_status_preserves_timestamps(test_db: Path, monkeypatch):
     # Start task
     TaskRepository.update_task(name="timestamp-preserve", status="in_progress")
     started = TaskRepository.get_task("timestamp-preserve")
-    started_at_original = started["started_at"]
+    started_at_original = started.started_at
 
     # Complete task
     TaskRepository.update_task(name="timestamp-preserve", status="completed")
     completed = TaskRepository.get_task("timestamp-preserve")
 
     # started_at should be preserved
-    assert completed["started_at"] == started_at_original
-    assert completed["completed_at"] is not None
+    assert completed.started_at == started_at_original
+    assert completed.completed_at is not None
 
 
 def test_update_task_different_status_values(test_db: Path, monkeypatch):
@@ -460,7 +460,7 @@ def test_update_task_different_status_values(test_db: Path, monkeypatch):
             status=status,
         )
         assert updated is not None
-        assert updated["status"] == status
+        assert updated.status == status
 
 
 def test_update_task_multiple_consecutive_updates(test_db: Path, monkeypatch):
@@ -479,21 +479,21 @@ def test_update_task_multiple_consecutive_updates(test_db: Path, monkeypatch):
         name="consecutive-updates",
         priority=5,
     )
-    assert updated1["priority"] == 5
+    assert updated1.priority == 5
 
     # Second update
     updated2 = TaskRepository.update_task(
         name="consecutive-updates",
         description="Updated description",
     )
-    assert updated2["description"] == "Updated description"
-    assert updated2["priority"] == 5  # Should be preserved
+    assert updated2.description == "Updated description"
+    assert updated2.priority == 5  # Should be preserved
 
     # Third update
     updated3 = TaskRepository.update_task(
         name="consecutive-updates",
         details="Added details",
     )
-    assert updated3["details"] == "Added details"
-    assert updated3["description"] == "Updated description"  # Should be preserved
-    assert updated3["priority"] == 5  # Should be preserved
+    assert updated3.details == "Added details"
+    assert updated3.description == "Updated description"  # Should be preserved
+    assert updated3.priority == 5  # Should be preserved

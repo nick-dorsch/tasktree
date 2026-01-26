@@ -268,7 +268,7 @@ def test_delete_task_affects_available_tasks(mock_db_path):
     # Only task-a should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-a"
+    assert available[0].name == "task-a"
 
     # Delete task-a
     TaskRepository.delete_task("task-a")
@@ -276,7 +276,7 @@ def test_delete_task_affects_available_tasks(mock_db_path):
     # Now task-b should be available (no more dependencies)
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "task-b"
+    assert available[0].name == "task-b"
 
 
 def test_delete_multiple_tasks_in_sequence(mock_db_path):
@@ -314,7 +314,7 @@ def test_delete_task_and_verify_list_count(mock_db_path):
     # Verify count decreased
     tasks = TaskRepository.list_tasks()
     assert len(tasks) == 2
-    assert all(task["name"] != "task-2" for task in tasks)
+    assert all(task.name != "task-2" for task in tasks)
 
 
 def test_delete_task_with_bidirectional_dependencies(mock_db_path):
@@ -383,8 +383,8 @@ def test_delete_task_preserves_other_dependencies(mock_db_path):
     # Verify task-d -> task-c dependency still exists
     deps = DependencyRepository.list_dependencies()
     assert len(deps) == 1
-    assert deps[0]["task_name"] == "task-d"
-    assert deps[0]["depends_on_task_name"] == "task-c"
+    assert deps[0].task_name == "task-d"
+    assert deps[0].depends_on_task_name == "task-c"
 
 
 def test_delete_task_special_characters(mock_db_path):

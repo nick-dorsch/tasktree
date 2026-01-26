@@ -37,9 +37,9 @@ def test_get_task_valid_task(mock_db_path):
 
     # Verify the task was retrieved
     assert task is not None
-    assert task["name"] == "existing-task"
-    assert task["description"] == "A task that exists"
-    assert task["priority"] == 5
+    assert task.name == "existing-task"
+    assert task.description == "A task that exists"
+    assert task.priority == 5
 
 
 def test_get_task_nonexistent_task(mock_db_path):
@@ -79,14 +79,14 @@ def test_get_task_with_all_fields(mock_db_path):
 
     # Verify all fields are present and correct
     assert task is not None
-    assert task["name"] == "full-task"
-    assert task["description"] == "Complete description"
-    assert task["priority"] == 8
-    assert task["status"] == "in_progress"
-    assert task["details"] == "Detailed implementation notes"
-    assert "created_at" in task
-    assert "started_at" in task
-    assert "completed_at" in task
+    assert task.name == "full-task"
+    assert task.description == "Complete description"
+    assert task.priority == 8
+    assert task.status == "in_progress"
+    assert task.details == "Detailed implementation notes"
+    assert hasattr(task, "created_at")
+    assert hasattr(task, "started_at")
+    assert hasattr(task, "completed_at")
 
 
 def test_get_task_with_minimal_fields(mock_db_path):
@@ -102,11 +102,11 @@ def test_get_task_with_minimal_fields(mock_db_path):
 
     # Verify defaults are applied
     assert task is not None
-    assert task["name"] == "minimal-task"
-    assert task["description"] == "Minimal description"
-    assert task["priority"] == 0
-    assert task["status"] == "pending"
-    assert task["details"] is None
+    assert task.name == "minimal-task"
+    assert task.description == "Minimal description"
+    assert task.priority == 0
+    assert task.status == "pending"
+    assert task.details is None
 
 
 def test_get_task_immediately_after_creation(mock_db_path):
@@ -122,10 +122,10 @@ def test_get_task_immediately_after_creation(mock_db_path):
 
     # Should match the created task
     assert retrieved is not None
-    assert retrieved["name"] == created["name"]
-    assert retrieved["description"] == created["description"]
-    assert retrieved["priority"] == created["priority"]
-    assert retrieved["created_at"] == created["created_at"]
+    assert retrieved.name == created.name
+    assert retrieved.description == created.description
+    assert retrieved.priority == created.priority
+    assert retrieved.created_at == created.created_at
 
 
 def test_get_task_case_sensitive(mock_db_path):
@@ -161,7 +161,7 @@ def test_get_task_special_characters(mock_db_path):
 
         task = TaskRepository.get_task(name)
         assert task is not None
-        assert task["name"] == name
+        assert task.name == name
 
 
 def test_get_task_unicode_characters(mock_db_path):
@@ -176,7 +176,7 @@ def test_get_task_unicode_characters(mock_db_path):
     task = TaskRepository.get_task("unicode-你好-🎉")
 
     assert task is not None
-    assert task["name"] == "unicode-你好-🎉"
+    assert task.name == "unicode-你好-🎉"
 
 
 def test_get_task_after_update(mock_db_path):
@@ -200,8 +200,8 @@ def test_get_task_after_update(mock_db_path):
 
     # Should have updated values
     assert task is not None
-    assert task["description"] == "Updated description"
-    assert task["priority"] == 7
+    assert task.description == "Updated description"
+    assert task.priority == 7
 
 
 def test_get_task_completed_task(mock_db_path):
@@ -218,8 +218,8 @@ def test_get_task_completed_task(mock_db_path):
 
     # Should be retrievable and marked as completed
     assert task is not None
-    assert task["status"] == "completed"
-    assert task["completed_at"] is not None
+    assert task.status == "completed"
+    assert task.completed_at is not None
 
 
 def test_get_task_multiple_tasks_exist(mock_db_path):
@@ -237,9 +237,9 @@ def test_get_task_multiple_tasks_exist(mock_db_path):
 
     # Should get the correct task
     assert task is not None
-    assert task["name"] == "task-2"
-    assert task["description"] == "Task number 2"
-    assert task["priority"] == 2
+    assert task.name == "task-2"
+    assert task.description == "Task number 2"
+    assert task.priority == 2
 
 
 def test_get_task_after_delete_returns_none(mock_db_path):
@@ -276,4 +276,4 @@ def test_get_task_with_long_name(mock_db_path):
     task = TaskRepository.get_task(long_name)
 
     assert task is not None
-    assert task["name"] == long_name
+    assert task.name == long_name

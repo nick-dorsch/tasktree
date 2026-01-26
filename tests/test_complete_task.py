@@ -18,16 +18,16 @@ def test_complete_task_success(test_db: Path, monkeypatch):
     task = TaskRepository.add_task(
         name="test-task", description="Test task", priority=5, status="in_progress"
     )
-    assert task["status"] == "in_progress"
-    assert task["completed_at"] is None
+    assert task.status == "in_progress"
+    assert task.completed_at is None
 
     # Complete the task
     completed_task = TaskRepository.complete_task("test-task")
 
     assert completed_task is not None
-    assert completed_task["name"] == "test-task"
-    assert completed_task["status"] == "completed"
-    assert completed_task["completed_at"] is not None
+    assert completed_task.name == "test-task"
+    assert completed_task.status == "completed"
+    assert completed_task.completed_at is not None
 
 
 def test_complete_task_from_pending(test_db: Path, monkeypatch):
@@ -38,14 +38,14 @@ def test_complete_task_from_pending(test_db: Path, monkeypatch):
     task = TaskRepository.add_task(
         name="pending-task", description="Pending task", status="pending"
     )
-    assert task["status"] == "pending"
+    assert task.status == "pending"
 
     # Complete the task
     completed_task = TaskRepository.complete_task("pending-task")
 
     assert completed_task is not None
-    assert completed_task["status"] == "completed"
-    assert completed_task["completed_at"] is not None
+    assert completed_task.status == "completed"
+    assert completed_task.completed_at is not None
 
 
 def test_complete_task_nonexistent(test_db: Path, monkeypatch):
@@ -84,15 +84,15 @@ def test_complete_task_sets_completed_at_timestamp(test_db: Path, monkeypatch):
 
     # Get the task before completion
     task_before = TaskRepository.get_task("timestamp-task")
-    assert task_before["completed_at"] is None
-    assert task_before["started_at"] is not None
+    assert task_before.completed_at is None
+    assert task_before.started_at is not None
 
     # Complete the task
     completed_task = TaskRepository.complete_task("timestamp-task")
 
-    assert completed_task["completed_at"] is not None
+    assert completed_task.completed_at is not None
     # started_at should be preserved for audit trail
-    assert completed_task["started_at"] is not None
+    assert completed_task.started_at is not None
 
 
 def test_complete_task_twice(test_db: Path, monkeypatch):
@@ -107,9 +107,9 @@ def test_complete_task_twice(test_db: Path, monkeypatch):
     second_completion = TaskRepository.complete_task("already-done")
 
     assert second_completion is not None
-    assert second_completion["status"] == "completed"
-    # The timestamp might be the same or different depending on trigger behavior
-    assert second_completion["completed_at"] is not None
+    assert second_completion.status == "completed"
+    # completed_at should still be set
+    assert second_completion.completed_at is not None
 
 
 def test_complete_task_with_dependencies(test_db: Path, monkeypatch):
@@ -135,9 +135,9 @@ def test_complete_task_with_dependencies(test_db: Path, monkeypatch):
     completed = TaskRepository.complete_task("dependency-task")
 
     assert completed is not None
-    assert completed["status"] == "completed"
+    assert completed.status == "completed"
 
     # Verify the dependent task is now available
     available = DependencyRepository.get_available_tasks()
-    available_names = [t["name"] for t in available]
+    available_names = [t.name for t in available]
     assert "dependent-task" in available_names
