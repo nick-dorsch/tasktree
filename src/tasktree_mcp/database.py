@@ -4,8 +4,9 @@ Database operations for TaskTree.
 
 import sqlite3
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
+from .models import DependencyResponse, FeatureResponse, TaskResponse
 from .paths import get_db_path
 
 DB_PATH = get_db_path()
@@ -32,7 +33,7 @@ class TaskRepository:
         status: Optional[str] = None,
         priority_min: Optional[int] = None,
         feature_name: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[TaskResponse]:
         """List tasks from the database with optional filtering."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -58,10 +59,13 @@ class TaskRepository:
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
-            return [{key: row[key] for key in row.keys()} for row in rows]
+            return [
+                TaskResponse.from_dict({key: row[key] for key in row.keys()})
+                for row in rows
+            ]
 
     @staticmethod
-    def get_task(name: str) -> Optional[Dict[str, Any]]:
+    def get_task(name: str) -> Optional[TaskResponse]:
         """Get a specific task by name."""
         if not name or not name.strip():
             raise ValueError("Task name cannot be empty")
@@ -70,7 +74,11 @@ class TaskRepository:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM tasks WHERE name = ?", (name,))
             row = cursor.fetchone()
-            return {key: row[key] for key in row.keys()} if row else None
+            return (
+                TaskResponse.from_dict({key: row[key] for key in row.keys()})
+                if row
+                else None
+            )
 
     @staticmethod
     def add_task(
@@ -80,7 +88,7 @@ class TaskRepository:
         status: str = "pending",
         details: Optional[str] = None,
         feature_name: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> TaskResponse:
         """Add a new task to the database."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -98,8 +106,9 @@ class TaskRepository:
                 cursor.execute("SELECT * FROM tasks WHERE name = ?", (name,))
                 row = cursor.fetchone()
                 if row:
-                    return {key: row[key] for key in row.keys()}
-                return {}
+                    return TaskResponse.from_dict({key: row[key] for key in row.keys()})
+                # This should never happen, but for type safety
+                raise RuntimeError("Failed to retrieve newly created task")
 
             except sqlite3.IntegrityError as e:
                 if "FOREIGN KEY" in str(e):
@@ -113,7 +122,7 @@ class TaskRepository:
         status: Optional[str] = None,
         priority: Optional[int] = None,
         details: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[TaskResponse]:
         """Update an existing task."""
         if not name or not name.strip():
             raise ValueError("Task name cannot be empty")
@@ -183,7 +192,7 @@ class TaskRepository:
             return deleted
 
     @staticmethod
-    def complete_task(name: str) -> Optional[Dict[str, Any]]:
+    def complete_task(name: str) -> Optional[TaskResponse]:
         """Mark a task as completed."""
         if not name or not name.strip():
             raise ValueError("Task name cannot be empty")
@@ -199,7 +208,7 @@ class FeatureRepository:
         name: str,
         description: Optional[str] = None,
         enabled: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> FeatureResponse:
         """Add a new feature to the database."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -217,20 +226,23 @@ class FeatureRepository:
                 cursor.execute("SELECT * FROM features WHERE name = ?", (name,))
                 row = cursor.fetchone()
                 if row:
-                    return {key: row[key] for key in row.keys()}
-                return {}
+                    return FeatureResponse.from_dict(
+                        {key: row[key] for key in row.keys()}
+                    )
+                # This should never happen, but for type safety
+                raise RuntimeError("Failed to retrieve newly created feature")
 
             except sqlite3.IntegrityError as e:
                 raise ValueError(f"Feature with name '{name}' already exists") from e
 
     @staticmethod
-    def list_features(enabled: Optional[bool] = None) -> List[Dict[str, Any]]:
+    def list_features(enabled: Optional[bool] = None) -> List[FeatureResponse]:
         """List features from the database with optional filtering."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
             query = "SELECT * FROM features"
-            params: List[Any] = []
+            params = []
 
             if enabled is not None:
                 query += " WHERE enabled = ?"
@@ -241,14 +253,17 @@ class FeatureRepository:
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
-            return [{key: row[key] for key in row.keys()} for row in rows]
+            return [
+                FeatureResponse.from_dict({key: row[key] for key in row.keys()})
+                for row in rows
+            ]
 
 
 class DependencyRepository:
     """Repository class for dependency operations."""
 
     @staticmethod
-    def list_dependencies(task_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_dependencies(task_name: Optional[str] = None) -> List[DependencyResponse]:
         """List task dependencies."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -273,10 +288,13 @@ class DependencyRepository:
                 )
 
             rows = cursor.fetchall()
-            return [{key: row[key] for key in row.keys()} for row in rows]
+            return [
+                DependencyResponse.from_dict({key: row[key] for key in row.keys()})
+                for row in rows
+            ]
 
     @staticmethod
-    def add_dependency(task_name: str, depends_on_task_name: str) -> Dict[str, Any]:
+    def add_dependency(task_name: str, depends_on_task_name: str) -> DependencyResponse:
         """Add a dependency relationship between tasks."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -295,10 +313,10 @@ class DependencyRepository:
                 )
                 conn.commit()
 
-                return {
-                    "task_name": task_name,
-                    "depends_on_task_name": depends_on_task_name,
-                }
+                return DependencyResponse(
+                    task_name=task_name,
+                    depends_on_task_name=depends_on_task_name,
+                )
 
             except sqlite3.IntegrityError as e:
                 if "circular" in str(e).lower():
@@ -319,7 +337,7 @@ class DependencyRepository:
             return deleted
 
     @staticmethod
-    def get_available_tasks() -> List[Dict[str, Any]]:
+    def get_available_tasks() -> List[TaskResponse]:
         """Get pending tasks that can be started (no uncompleted dependencies)."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -333,4 +351,7 @@ class DependencyRepository:
             )
 
             rows = cursor.fetchall()
-            return [{key: row[key] for key in row.keys()} for row in rows]
+            return [
+                TaskResponse.from_dict({key: row[key] for key in row.keys()})
+                for row in rows
+            ]

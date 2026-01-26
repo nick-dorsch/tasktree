@@ -2,7 +2,7 @@
 MCP tools for TaskTree server.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastmcp import FastMCP
 
@@ -14,13 +14,16 @@ from .models import (
     CompleteTaskRequest,
     DeleteTaskRequest,
     Dependency,
+    DependencyResponse,
     Feature,
+    FeatureResponse,
     GetTaskRequest,
     ListDependenciesRequest,
     ListFeaturesRequest,
     ListTasksRequest,
     RemoveDependencyRequest,
     Task,
+    TaskResponse,
     TaskStatus,
     UpdateTaskRequest,
 )
@@ -41,7 +44,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         status: Optional[str] = None,
         priority_min: Optional[int] = None,
         feature_name: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[TaskResponse]:
         """
         List tasks from the database with optional filtering.
 
@@ -66,7 +69,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         )
 
     @mcp.tool()
-    def get_task(name: str) -> Optional[Dict[str, Any]]:
+    def get_task(name: str) -> Optional[TaskResponse]:
         """
         Get a specific task by name.
 
@@ -89,7 +92,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         dependencies: Optional[List[str]] = None,
         details: Optional[str] = None,
         feature_name: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> TaskResponse:
         """
         Add a new task to the database.
 
@@ -160,7 +163,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         status: Optional[str] = None,
         priority: Optional[int] = None,
         details: Optional[str] = None,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[TaskResponse]:
         """
         Update an existing task.
 
@@ -210,7 +213,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         return TaskRepository.delete_task(request.name)
 
     @mcp.tool()
-    def start_task(name: str) -> Optional[Dict[str, Any]]:
+    def start_task(name: str) -> Optional[TaskResponse]:
         """
         Start a task by setting its status to 'in_progress'.
 
@@ -224,7 +227,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         return TaskRepository.update_task(name=name, status="in_progress")
 
     @mcp.tool()
-    def complete_task(name: str) -> Optional[Dict[str, Any]]:
+    def complete_task(name: str) -> Optional[TaskResponse]:
         """
         Complete a task by setting its status to 'completed'.
 
@@ -243,7 +246,7 @@ def register_dependency_tools(mcp: FastMCP) -> None:
     """Register all dependency-related tools with the MCP server."""
 
     @mcp.tool()
-    def list_dependencies(task_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_dependencies(task_name: Optional[str] = None) -> List[DependencyResponse]:
         """
         List task dependencies.
 
@@ -257,7 +260,7 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         return DependencyRepository.list_dependencies(task_name=request.task_name)
 
     @mcp.tool()
-    def add_dependency(task_name: str, depends_on_task_name: str) -> Dict[str, Any]:
+    def add_dependency(task_name: str, depends_on_task_name: str) -> DependencyResponse:
         """
         Add a dependency relationship between tasks.
 
@@ -305,7 +308,7 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         )
 
     @mcp.tool()
-    def get_available_tasks() -> List[Dict[str, Any]]:
+    def get_available_tasks() -> List[TaskResponse]:
         """
         Get tasks that can be started NOW.
 
@@ -327,7 +330,7 @@ def register_feature_tools(mcp: FastMCP) -> None:
         name: str,
         description: Optional[str] = None,
         enabled: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> FeatureResponse:
         """
         Add a new feature to the database.
 
@@ -360,7 +363,7 @@ def register_feature_tools(mcp: FastMCP) -> None:
         )
 
     @mcp.tool()
-    def list_features(enabled: Optional[bool] = None) -> List[Dict[str, Any]]:
+    def list_features(enabled: Optional[bool] = None) -> List[FeatureResponse]:
         """
         List features from the database with optional filtering.
 

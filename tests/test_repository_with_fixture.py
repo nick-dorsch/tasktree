@@ -29,11 +29,11 @@ def test_task_repository_add_task(mock_db_path):
         name="test-task", description="A test task", priority=5, status="pending"
     )
 
-    assert task["name"] == "test-task"
-    assert task["description"] == "A test task"
-    assert task["priority"] == 5
-    assert task["status"] == "pending"
-    assert task["created_at"] is not None
+    assert task.name == "test-task"
+    assert task.description == "A test task"
+    assert task.priority == 5
+    assert task.status == "pending"
+    assert task.created_at is not None
 
 
 def test_task_repository_list_tasks(mock_db_path):
@@ -48,9 +48,9 @@ def test_task_repository_list_tasks(mock_db_path):
     assert len(tasks) == 3
 
     # Tasks should be ordered by priority (descending)
-    assert tasks[0]["name"] == "task3"
-    assert tasks[1]["name"] == "task2"
-    assert tasks[2]["name"] == "task1"
+    assert tasks[0].name == "task3"
+    assert tasks[1].name == "task2"
+    assert tasks[2].name == "task1"
 
 
 def test_task_repository_get_task(mock_db_path):
@@ -61,8 +61,8 @@ def test_task_repository_get_task(mock_db_path):
     # Retrieve it
     task = TaskRepository.get_task("my-task")
     assert task is not None
-    assert task["name"] == "my-task"
-    assert task["description"] == "My test task"
+    assert task.name == "my-task"
+    assert task.description == "My test task"
 
     # Try to get non-existent task
     non_existent = TaskRepository.get_task("does-not-exist")
@@ -79,10 +79,11 @@ def test_task_repository_update_task(mock_db_path):
         "update-me", description="Updated description", priority=5, status="in_progress"
     )
 
-    assert updated["description"] == "Updated description"
-    assert updated["priority"] == 5
-    assert updated["status"] == "in_progress"
-    assert updated["started_at"] is not None  # Trigger should set this
+    assert updated is not None
+    assert updated.description == "Updated description"
+    assert updated.priority == 5
+    assert updated.status == "in_progress"
+    assert updated.started_at is not None  # Trigger should set this
 
 
 def test_task_repository_delete_task(mock_db_path):
@@ -110,8 +111,8 @@ def test_dependency_repository_add_dependency(mock_db_path):
     # Create dependency: task-b depends on task-a
     dep = DependencyRepository.add_dependency("task-b", "task-a")
 
-    assert dep["task_name"] == "task-b"
-    assert dep["depends_on_task_name"] == "task-a"
+    assert dep.task_name == "task-b"
+    assert dep.depends_on_task_name == "task-a"
 
 
 def test_dependency_repository_list_dependencies(mock_db_path):
@@ -144,7 +145,7 @@ def test_dependency_repository_get_available_tasks(mock_db_path):
     # Only 'middle' should be available (base is completed, top depends on middle)
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "middle"
+    assert available[0].name == "middle"
 
     # Complete middle task
     TaskRepository.update_task("middle", status="completed")
@@ -152,7 +153,7 @@ def test_dependency_repository_get_available_tasks(mock_db_path):
     # Now 'top' should be available
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 1
-    assert available[0]["name"] == "top"
+    assert available[0].name == "top"
 
 
 def test_database_isolation_between_tests(mock_db_path):
