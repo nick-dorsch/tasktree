@@ -234,11 +234,58 @@ def test_graph_viewer_has_smart_simulation_restart(graph_viewer_path):
     assert "if" in content and "restart()" in content
 
 
-def test_graph_viewer_differentiates_alpha_values(graph_viewer_path):
-    """Test that different alpha values are used for structural vs property changes."""
+def test_graph_viewer_only_restarts_on_structure_change(graph_viewer_path):
+    """Test that simulation only restarts when structure changes, not for property updates."""
     content = graph_viewer_path.read_text()
 
-    # Should have at least two different alpha values
-    # One for structural changes (higher) and one for property updates (lower)
+    # Should detect structural changes
+    assert "structureChanged" in content
+
+    # Should restart simulation with alpha for structural changes
     assert "alpha(0.3)" in content or "alpha(0.5)" in content
-    assert "alpha(0.05)" in content or "alpha(0.1)" in content or "alpha(0)" in content
+
+    # Should have conditional restart (only if structureChanged)
+    # This prevents drift during property-only updates
+    lines = content.split("\n")
+    found_conditional_restart = False
+    for i, line in enumerate(lines):
+        if "if (structureChanged)" in line or "if(structureChanged)" in line:
+            # Check the next few lines for alpha restart
+            next_lines = "\n".join(lines[i : i + 5])
+            if "alpha(" in next_lines and "restart()" in next_lines:
+                found_conditional_restart = True
+                break
+
+    assert found_conditional_restart, (
+        "Simulation restart should only occur when structureChanged is true"
+    )
+
+
+def test_graph_viewer_no_simulation_restart_for_property_updates(graph_viewer_path):
+    """Test that simulation does NOT restart for property-only updates (fixes drift bug)."""
+    content = graph_viewer_path.read_text()
+
+    # Find the structureChanged conditional block
+    lines = content.split("\n")
+    for i, line in enumerate(lines):
+        if "if (structureChanged)" in line or "if(structureChanged)" in line:
+            # Look for the closing brace and check there's no else block with restart
+            # The else block would cause drift on property updates
+            next_lines = lines[i : i + 10]
+
+            # Should NOT have an else block that restarts the simulation
+            # This was the cause of the drift bug
+            has_problematic_else = False
+            in_else_block = False
+            for j, next_line in enumerate(next_lines):
+                if "} else {" in next_line or "}else{" in next_line:
+                    in_else_block = True
+                if in_else_block and "alpha(" in next_line and "restart()" in next_line:
+                    has_problematic_else = True
+                    break
+
+            assert not has_problematic_else, (
+                "Found else block that restarts simulation for property updates - "
+                "this causes graph drift bug. Only structural changes should restart simulation."
+            )
+            break

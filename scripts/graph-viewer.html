@@ -298,9 +298,6 @@
             // Only reheat simulation if structure changed
             if (structureChanged) {
                 simulation.alpha(0.3).restart();
-            } else {
-                // Just a gentle nudge for property updates
-                simulation.alpha(0.05).restart();
             }
         }
 
