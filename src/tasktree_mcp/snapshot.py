@@ -35,26 +35,15 @@ def export_snapshot(db_path: Path, snapshot_path: Path) -> None:
     conn.execute("PRAGMA foreign_keys = ON")
 
     try:
-        generated_at = _get_current_timestamp(conn)
-        meta_record = {
-            "record_type": "meta",
-            "schema_version": SNAPSHOT_SCHEMA_VERSION,
-            "generated_at": generated_at,
-            "source": "sqlite",
-        }
-
-        features = _fetch_features(conn)
-        tasks = _fetch_tasks(conn)
-        dependencies = _fetch_dependencies(conn)
-
         with snapshot_path.open("w", encoding="utf-8", newline="\n") as handle:
-            _write_record(handle, meta_record)
-            for record in features:
-                _write_record(handle, record)
-            for record in tasks:
-                _write_record(handle, record)
-            for record in dependencies:
-                _write_record(handle, record)
+            if _json1_available(conn):
+                try:
+                    _write_snapshot_from_view(conn, handle)
+                    return
+                except sqlite3.OperationalError as exc:
+                    if "v_snapshot_jsonl_lines" not in str(exc):
+                        raise
+            _write_snapshot_fallback(conn, handle)
     finally:
         conn.close()
 
@@ -108,6 +97,50 @@ def _get_current_timestamp(conn: sqlite3.Connection) -> str:
     if row is None or row[0] is None:
         raise RuntimeError("Failed to retrieve current timestamp")
     return str(row[0])
+
+
+def _json1_available(conn: sqlite3.Connection) -> bool:
+    try:
+        conn.execute("SELECT json('null')")
+    except sqlite3.OperationalError:
+        return False
+    return True
+
+
+def _write_snapshot_from_view(conn: sqlite3.Connection, handle) -> None:
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT json_line
+        FROM v_snapshot_jsonl_lines
+        ORDER BY record_order, sort_name, sort_secondary
+        """
+    )
+    for row in cursor:
+        json_line = row["json_line"]
+        handle.write(f"{json_line}\n")
+
+
+def _write_snapshot_fallback(conn: sqlite3.Connection, handle) -> None:
+    generated_at = _get_current_timestamp(conn)
+    meta_record = {
+        "record_type": "meta",
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "generated_at": generated_at,
+        "source": "sqlite",
+    }
+
+    features = _fetch_features(conn)
+    tasks = _fetch_tasks(conn)
+    dependencies = _fetch_dependencies(conn)
+
+    _write_record(handle, meta_record)
+    for record in features:
+        _write_record(handle, record)
+    for record in tasks:
+        _write_record(handle, record)
+    for record in dependencies:
+        _write_record(handle, record)
 
 
 def _write_record(handle, record: Dict[str, Any]) -> None:

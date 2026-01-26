@@ -6,6 +6,7 @@ import json
 import sqlite3
 from pathlib import Path
 
+from tasktree_mcp import snapshot as snapshot_module
 from tasktree_mcp.snapshot import export_snapshot, import_snapshot
 
 
@@ -17,6 +18,24 @@ def _load_snapshot_records(snapshot_path: Path) -> list[dict]:
             continue
         records.append(json.loads(line))
     return records
+
+
+def _fetch_snapshot_view_lines(db_path: Path) -> list[str]:
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT json_line
+            FROM v_snapshot_jsonl_lines
+            ORDER BY record_order, sort_name, sort_secondary
+            """
+        )
+        return [row["json_line"] for row in cursor.fetchall()]
+    finally:
+        conn.close()
 
 
 def test_export_snapshot_writes_ordered_jsonl(test_db: Path, tmp_path: Path) -> None:
@@ -54,9 +73,13 @@ def test_export_snapshot_writes_ordered_jsonl(test_db: Path, tmp_path: Path) -> 
     snapshot_path = tmp_path / "snapshot.jsonl"
     export_snapshot(test_db, snapshot_path)
 
-    raw_lines = snapshot_path.read_text(encoding="utf-8").splitlines()
+    raw_lines = [
+        line for line in snapshot_path.read_text(encoding="utf-8").splitlines() if line
+    ]
+    expected_lines = _fetch_snapshot_view_lines(test_db)
     records = _load_snapshot_records(snapshot_path)
 
+    assert raw_lines == expected_lines
     assert records[0]["record_type"] == "meta"
 
     feature_names = [r["name"] for r in records if r["record_type"] == "feature"]
@@ -76,6 +99,35 @@ def test_export_snapshot_writes_ordered_jsonl(test_db: Path, tmp_path: Path) -> 
     ]
     assert dependency_pairs == sorted(dependency_pairs)
 
+
+def test_export_snapshot_falls_back_without_json1(
+    test_db: Path, tmp_path: Path, monkeypatch
+) -> None:
+    """Export falls back to Python serialization when JSON1 is unavailable."""
+    conn = sqlite3.connect(test_db)
+    conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO features (name, description, enabled) VALUES (?, ?, ?)",
+            ("gamma", "Gamma feature", True),
+        )
+        cursor.execute(
+            """
+            INSERT INTO tasks (name, description, feature_name, priority, status)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            ("delta", "Delta task", "gamma", 4, "pending"),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    snapshot_path = tmp_path / "snapshot.jsonl"
+    monkeypatch.setattr(snapshot_module, "_json1_available", lambda _: False)
+    export_snapshot(test_db, snapshot_path)
+
+    raw_lines = snapshot_path.read_text(encoding="utf-8").splitlines()
     for line in raw_lines:
         if not line.strip():
             continue

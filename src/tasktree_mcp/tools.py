@@ -97,13 +97,16 @@ def register_task_tools(mcp: FastMCP) -> None:
         """
         Add a new task to the database.
 
+        Note that if tests_required is true, tests are part of the task! Do not create
+        separate tasks to implement tests, each task requires its own tests.
+
         Args:
             name: Unique name for the task
             description: Description of what the task involves
             priority: Priority level (0-10, higher is more important)
             status: Initial status ('pending', 'in_progress', 'completed')
             dependencies: List of task names this task depends on (optional)
-            details: Optional field for more detailed implementation details of the task
+            details: Explanation of implementation details of the task, including code
             feature_name: Feature this task belongs to (defaults to 'default')
             tests_required: Whether tests are required for this task
 

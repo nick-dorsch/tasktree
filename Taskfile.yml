@@ -4,13 +4,14 @@ tasks:
 
   mcp:
     desc: Start the tasktree MCP Server
+    silent: true
     cmds:
       - echo "Starting MCP server..."
       - uv run server.py
-    silent: true
 
   init-db:
     desc: Recreate database (use SEED=true to seed with test data)
+    silent: true
     aliases: [init]
     vars:
       SEED: '{{.SEED | default "false"}}'
@@ -21,44 +22,44 @@ tasks:
       - '{{if eq .SEED "true"}}task seed-db{{end}}'
       - task refresh-views
       - echo "Complete!"
-    silent: true
 
   create-db:
     desc: Create SQLite database from SQL schemas
+    silent: true
     cmds:
       - echo "Creating SQLite database schemas..."
       - mkdir -p data
       - cat src/tasktree_mcp/sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
     generates:
       - data/tasktree.db
-    silent: true
 
   seed-db:
     desc: Seed database with test data
+    silent: true
     cmds:
       - echo "Seeding database..."
       - sqlite3 .tasktree/tasktree.db < sql/seed.sql
-    silent: true
 
   refresh-views:
     desc: Refresh all database views
+    silent: true
     aliases: [rv]
     cmds:
       - echo "Refreshing database views..."
       - cat src/tasktree_mcp/sql/views/*.sql | sqlite3 .tasktree/tasktree.db
-    silent: true
 
   snapshot-export:
     desc: Export database to JSONL snapshot
+    silent: true
     cmds:
       - echo "Exporting snapshot..."
       - |
           uv run python -c "from tasktree_mcp.paths import get_db_path, get_snapshot_path; from tasktree_mcp.snapshot import export_snapshot; export_snapshot(get_db_path(), get_snapshot_path())"
       - echo "Snapshot export complete."
-    silent: true
 
   snapshot-import:
     desc: Import JSONL snapshot into database
+    silent: true
     vars:
       OVERWRITE: '{{.OVERWRITE | default "true"}}'
     cmds:
@@ -66,25 +67,18 @@ tasks:
       - |
           uv run python -c "from tasktree_mcp.paths import get_db_path, get_snapshot_path; from tasktree_mcp.snapshot import import_snapshot; overwrite='{{.OVERWRITE}}'.lower()=='true'; import_snapshot(get_db_path(), get_snapshot_path(), overwrite=overwrite)"
       - echo "Snapshot import complete."
-    silent: true
 
   graph-json:
     desc: Output the task dependency graph as JSON
+    silent: true
     aliases: [json]
     cmds:
       - echo "Generating dependency graph JSON..."
       - sqlite3 .tasktree/tasktree.db "SELECT graph_json FROM v_graph_json" | jq .
-    silent: true
-
-  draw:
-    desc: Draw the task dependency graph in the terminal with colored highlighting
-    cmds:
-      - echo "Drawing dependency graph..."
-      - ./scripts/draw-graph.sh .tasktree/tasktree.db
-    silent: true
 
   web-graph:
     desc: Launch graph server and open browser visualization
+    silent: true
     aliases: [web]
     cmds:
       - echo "Starting graph server and opening browser..."
@@ -114,4 +108,3 @@ tasks:
         
         # Wait for the server process
         wait $SERVER_PID
-    silent: false

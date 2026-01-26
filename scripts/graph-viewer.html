@@ -1,320 +1,322 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskTree Graph Visualization</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            overflow: hidden;
-            background-color: #1a1a1a;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskTree</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      background-color: #1a1a1a;
+    }
 
-        #graph {
-            width: 100vw;
-            height: 100vh;
-        }
+    #graph {
+      width: 100vw;
+      height: 100vh;
+    }
 
-        .node {
-            cursor: pointer;
-            stroke-width: 2px;
-        }
+    .node {
+      cursor: pointer;
+      stroke-width: 2px;
+    }
 
-        .node-label {
-            font-size: 10px;
-            fill: #e0e0e0;
-            text-anchor: middle;
-            pointer-events: none;
-            user-select: none;
-        }
+    .node-label {
+      font-size: 10px;
+      fill: #e0e0e0;
+      text-anchor: middle;
+      pointer-events: none;
+      user-select: none;
+    }
 
-        .link {
-            stroke: #666;
-            stroke-opacity: 0.6;
-            stroke-width: 1.5px;
-            fill: none;
-            marker-end: url(#arrowhead);
-        }
+    .link {
+      stroke: #666;
+      stroke-opacity: 0.6;
+      stroke-width: 1.5px;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
 
-        .tooltip {
-            position: absolute;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.9);
-            color: #fff;
-            border: 1px solid #666;
-            border-radius: 5px;
-            pointer-events: none;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            max-width: 300px;
-            z-index: 1000;
-        }
+    .tooltip {
+      position: absolute;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.9);
+      color: #fff;
+      border: 1px solid #666;
+      border-radius: 5px;
+      pointer-events: none;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      max-width: 300px;
+      z-index: 1000;
+    }
 
-        .tooltip.visible {
-            opacity: 1;
-        }
+    .tooltip.visible {
+      opacity: 1;
+    }
 
-        .tooltip-label {
-            font-weight: bold;
-            color: #4fc3f7;
-        }
+    .tooltip-label {
+      font-weight: bold;
+      color: #4fc3f7;
+    }
 
-        .error-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(244, 67, 54, 0.9);
-            color: white;
-            padding: 20px 40px;
-            border-radius: 5px;
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
+    .error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(244, 67, 54, 0.9);
+      color: white;
+      padding: 20px 40px;
+      border-radius: 5px;
+      font-size: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
 
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #e0e0e0;
-            font-size: 18px;
-        }
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #e0e0e0;
+      font-size: 18px;
+    }
 
-        .legend {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            color: #e0e0e0;
-            font-size: 12px;
-            z-index: 100;
-            min-width: 200px;
-        }
+    .legend {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 15px;
+      color: #e0e0e0;
+      font-size: 12px;
+      z-index: 100;
+      min-width: 200px;
+    }
 
-        .legend-title {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 10px;
-            color: #4fc3f7;
-        }
+    .legend-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #4fc3f7;
+    }
 
-        .legend-section {
-            margin-bottom: 12px;
-        }
+    .legend-section {
+      margin-bottom: 12px;
+    }
 
-        .legend-section:last-child {
-            margin-bottom: 0;
-        }
+    .legend-section:last-child {
+      margin-bottom: 0;
+    }
 
-        .legend-section-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 11px;
-            color: #aaa;
-            text-transform: uppercase;
-        }
+    .legend-section-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 11px;
+      color: #aaa;
+      text-transform: uppercase;
+    }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 4px 0;
-        }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 4px 0;
+    }
 
-        .legend-color-box {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-right: 8px;
-            border: 2px solid #333;
-        }
+    .legend-color-box {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      margin-right: 8px;
+      border: 2px solid #333;
+    }
 
-        .legend-color-box.available {
-            border: 2px solid #00FF00;
-            box-shadow: 0 0 5px #00FF00;
-        }
+    .legend-color-box.available {
+      border: 2px solid #00FF00;
+      box-shadow: 0 0 5px #00FF00;
+    }
 
-        .legend-size-example {
-            display: inline-block;
-            border-radius: 50%;
-            background: #666;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
+    .legend-size-example {
+      display: inline-block;
+      border-radius: 50%;
+      background: #666;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
 
-        .legend-arrow {
-            width: 30px;
-            height: 2px;
-            background: #666;
-            margin-right: 8px;
-            position: relative;
-        }
+    .legend-arrow {
+      width: 30px;
+      height: 2px;
+      background: #666;
+      margin-right: 8px;
+      position: relative;
+    }
 
-        .legend-arrow::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: -3px;
-            width: 0;
-            height: 0;
-            border-left: 6px solid #666;
-            border-top: 4px solid transparent;
-            border-bottom: 4px solid transparent;
-        }
-    </style>
+    .legend-arrow::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: -3px;
+      width: 0;
+      height: 0;
+      border-left: 6px solid #666;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+    }
+  </style>
 </head>
+
 <body>
-    <div id="graph"></div>
-    <div class="tooltip" id="tooltip"></div>
-    <div class="loading" id="loading">Loading graph data...</div>
-    
-    <div class="legend">
-        <div class="legend-title">Legend</div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Status</div>
-            <div class="legend-item">
-                <div class="legend-color-box" style="background: #2196F3;"></div>
-                <span>Pending</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color-box" style="background: #FFC107;"></div>
-                <span>In Progress</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color-box" style="background: #4CAF50;"></div>
-                <span>Completed</span>
-            </div>
-        </div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Available Tasks</div>
-            <div class="legend-item">
-                <div class="legend-color-box available" style="background: #2196F3;"></div>
-                <span>Green border + glow</span>
-            </div>
-        </div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Node Size</div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 10px; height: 10px;"></span>
-                <span>Completed (fixed)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 8px; height: 8px;"></span>
-                <span>Priority 0 (lowest)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 19px; height: 19px;"></span>
-                <span>Priority 5 (medium)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 30px; height: 30px;"></span>
-                <span>Priority 10 (highest)</span>
-            </div>
-        </div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Dependencies</div>
-            <div class="legend-item">
-                <div class="legend-arrow"></div>
-                <span>Points to dependent</span>
-            </div>
-        </div>
+  <div id="graph"></div>
+  <div class="tooltip" id="tooltip"></div>
+  <div class="loading" id="loading">Loading graph data...</div>
+
+  <div class="legend">
+    <div class="legend-title">Legend</div>
+
+    <div class="legend-section">
+      <div class="legend-section-title">Status</div>
+      <div class="legend-item">
+        <div class="legend-color-box" style="background: #2196F3;"></div>
+        <span>Pending</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color-box" style="background: #FFC107;"></div>
+        <span>In Progress</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color-box" style="background: #4CAF50;"></div>
+        <span>Completed</span>
+      </div>
     </div>
 
-    <script>
-        // Configuration
-        const API_ENDPOINT = 'http://localhost:8000/api/graph';
-        const WIDTH = window.innerWidth;
-        const HEIGHT = window.innerHeight;
-        
-        // Status colors
-        const STATUS_COLORS = {
-            'pending': '#2196F3',      // Blue
-            'in_progress': '#FFC107',  // Yellow/Amber
-            'completed': '#4CAF50'     // Green
-        };
+    <div class="legend-section">
+      <div class="legend-section-title">Available Tasks</div>
+      <div class="legend-item">
+        <div class="legend-color-box available" style="background: #2196F3;"></div>
+        <span>Green border + glow</span>
+      </div>
+    </div>
 
-        // Create SVG
-        const svg = d3.select('#graph')
-            .append('svg')
-            .attr('width', WIDTH)
-            .attr('height', HEIGHT);
+    <div class="legend-section">
+      <div class="legend-section-title">Node Size</div>
+      <div class="legend-item">
+        <span class="legend-size-example" style="width: 10px; height: 10px;"></span>
+        <span>Completed (fixed)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-size-example" style="width: 8px; height: 8px;"></span>
+        <span>Priority 0 (lowest)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-size-example" style="width: 19px; height: 19px;"></span>
+        <span>Priority 5 (medium)</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-size-example" style="width: 30px; height: 30px;"></span>
+        <span>Priority 10 (highest)</span>
+      </div>
+    </div>
 
-        // Define arrowhead marker for directed edges
-        const defs = svg.append('defs');
-        
-        defs.append('marker')
-            .attr('id', 'arrowhead')
-            .attr('viewBox', '0 -5 10 10')
-            .attr('refX', 20)
-            .attr('refY', 0)
-            .attr('markerWidth', 4.5)
-            .attr('markerHeight', 4.5)
-            .attr('orient', 'auto')
-            .append('path')
-            .attr('d', 'M0,-5L10,0L0,5')
-            .attr('fill', '#666');
+    <div class="legend-section">
+      <div class="legend-section-title">Dependencies</div>
+      <div class="legend-item">
+        <div class="legend-arrow"></div>
+        <span>Points to dependent</span>
+      </div>
+    </div>
+  </div>
 
-        // Define glow filter for available tasks
-        const filter = defs.append('filter')
-            .attr('id', 'glow')
-            .attr('x', '-50%')
-            .attr('y', '-50%')
-            .attr('width', '200%')
-            .attr('height', '200%');
+  <script>
+    // Configuration
+    const API_ENDPOINT = 'http://localhost:8000/api/graph';
+    const WIDTH = window.innerWidth;
+    const HEIGHT = window.innerHeight;
 
-        filter.append('feGaussianBlur')
-            .attr('stdDeviation', '3')
-            .attr('result', 'coloredBlur');
+    // Status colors
+    const STATUS_COLORS = {
+      'pending': '#2196F3',      // Blue
+      'in_progress': '#FFC107',  // Yellow/Amber
+      'completed': '#4CAF50'     // Green
+    };
 
-        const feMerge = filter.append('feMerge');
-        feMerge.append('feMergeNode').attr('in', 'coloredBlur');
-        feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+    // Create SVG
+    const svg = d3.select('#graph')
+      .append('svg')
+      .attr('width', WIDTH)
+      .attr('height', HEIGHT);
 
-        // Create container for zoom/pan
-        const container = svg.append('g');
+    // Define arrowhead marker for directed edges
+    const defs = svg.append('defs');
 
-        // Add zoom behavior
-        const zoom = d3.zoom()
-            .scaleExtent([0.1, 4])
-            .on('zoom', (event) => {
-                container.attr('transform', event.transform);
-            });
+    defs.append('marker')
+      .attr('id', 'arrowhead')
+      .attr('viewBox', '0 -5 10 10')
+      .attr('refX', 20)
+      .attr('refY', 0)
+      .attr('markerWidth', 4.5)
+      .attr('markerHeight', 4.5)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M0,-5L10,0L0,5')
+      .attr('fill', '#666');
 
-        svg.call(zoom);
+    // Define glow filter for available tasks
+    const filter = defs.append('filter')
+      .attr('id', 'glow')
+      .attr('x', '-50%')
+      .attr('y', '-50%')
+      .attr('width', '200%')
+      .attr('height', '200%');
 
-        // Initialize force simulation
-        const simulation = d3.forceSimulation()
-            .force('link', d3.forceLink().id(d => d.name).distance(150))
-            .force('charge', d3.forceManyBody().strength(-400))
-            .force('center', d3.forceCenter(WIDTH / 2, HEIGHT / 2))
-            .force('collision', d3.forceCollide().radius(30));
+    filter.append('feGaussianBlur')
+      .attr('stdDeviation', '3')
+      .attr('result', 'coloredBlur');
 
-        // Graph elements
-        let linkGroup = container.append('g').attr('class', 'links');
-        let nodeGroup = container.append('g').attr('class', 'nodes');
-        let labelGroup = container.append('g').attr('class', 'labels');
+    const feMerge = filter.append('feMerge');
+    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-        let link, node, label;
+    // Create container for zoom/pan
+    const container = svg.append('g');
 
-        // Tooltip
-        const tooltip = d3.select('#tooltip');
+    // Add zoom behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 4])
+      .on('zoom', (event) => {
+        container.attr('transform', event.transform);
+      });
 
-        function showTooltip(event, d) {
-            const content = `
+    svg.call(zoom);
+
+    // Initialize force simulation
+    const simulation = d3.forceSimulation()
+      .force('link', d3.forceLink().id(d => d.name).distance(150))
+      .force('charge', d3.forceManyBody().strength(-400))
+      .force('center', d3.forceCenter(WIDTH / 2, HEIGHT / 2))
+      .force('collision', d3.forceCollide().radius(30));
+
+    // Graph elements
+    let linkGroup = container.append('g').attr('class', 'links');
+    let nodeGroup = container.append('g').attr('class', 'nodes');
+    let labelGroup = container.append('g').attr('class', 'labels');
+
+    let link, node, label;
+
+    // Tooltip
+    const tooltip = d3.select('#tooltip');
+
+    function showTooltip(event, d) {
+      const content = `
                 <div><span class="tooltip-label">Task:</span> ${d.name}</div>
                 <div><span class="tooltip-label">Description:</span> ${d.description || 'N/A'}</div>
                 <div><span class="tooltip-label">Status:</span> ${d.status}</div>
@@ -322,242 +324,243 @@
                 <div><span class="tooltip-label">Available:</span> ${d.is_available ? 'Yes' : 'No'}</div>
                 ${d.completed_at ? `<div><span class="tooltip-label">Completed:</span> ${d.completed_at}</div>` : ''}
             `;
-            
-            tooltip.html(content)
-                .style('left', (event.pageX + 10) + 'px')
-                .style('top', (event.pageY + 10) + 'px')
-                .classed('visible', true);
-        }
 
-        function hideTooltip() {
-            tooltip.classed('visible', false);
-        }
+      tooltip.html(content)
+        .style('left', (event.pageX + 10) + 'px')
+        .style('top', (event.pageY + 10) + 'px')
+        .classed('visible', true);
+    }
 
-        function getNodeColor(d) {
-            return STATUS_COLORS[d.status] || '#999';
-        }
+    function hideTooltip() {
+      tooltip.classed('visible', false);
+    }
 
-        function getNodeRadius(d) {
-            if (d.status === 'completed') return 10;
-            return 8 + (d.priority / 10) * 22;
-        }
+    function getNodeColor(d) {
+      return STATUS_COLORS[d.status] || '#999';
+    }
 
-        function getNodeStroke(d) {
-            // Highlight available tasks with a bright border
-            return d.is_available ? '#00FF00' : '#333';
-        }
+    function getNodeRadius(d) {
+      if (d.status === 'completed') return 10;
+      return 8 + (d.priority / 10) * 22;
+    }
 
-        function getNodeStrokeWidth(d) {
-            return d.is_available ? 3 : 2;
-        }
+    function getNodeStroke(d) {
+      // Highlight available tasks with a bright border
+      return d.is_available ? '#00FF00' : '#333';
+    }
 
-        function updateGraph(graphData) {
-            // Update loading state
-            d3.select('#loading').style('display', 'none');
+    function getNodeStrokeWidth(d) {
+      return d.is_available ? 3 : 2;
+    }
 
-            // Store current positions BEFORE data update
-            const positionCache = new Map();
-            if (node) {
-                node.each(d => {
-                    positionCache.set(d.name, {
-                        x: d.x,
-                        y: d.y,
-                        vx: d.vx || 0,
-                        vy: d.vy || 0,
-                        fx: d.fx,
-                        fy: d.fy
-                    });
-                });
-            }
+    function updateGraph(graphData) {
+      // Update loading state
+      d3.select('#loading').style('display', 'none');
 
-            // Convert edges from {from, to} to {source, target}
-            const links = graphData.edges.map(e => ({
-                source: e.from,
-                target: e.to
-            }));
-
-            const nodes = graphData.nodes;
-
-            // Store previous counts for change detection
-            const previousNodeCount = positionCache.size;
-            const previousLinkCount = link ? link.size() : 0;
-
-            // Update links (stable key function handles D3 mutation)
-            link = linkGroup.selectAll('.link')
-                .data(links, d => {
-                    const source = typeof d.source === 'object' ? d.source.name : d.source;
-                    const target = typeof d.target === 'object' ? d.target.name : d.target;
-                    return `${source}-${target}`;
-                });
-
-            link.exit().remove();
-
-            const linkEnter = link.enter()
-                .append('path')
-                .attr('class', 'link');
-
-            link = linkEnter.merge(link);
-
-            // Update nodes
-            node = nodeGroup.selectAll('.node')
-                .data(nodes, d => d.name);
-
-            node.exit().remove();
-
-            const nodeEnter = node.enter()
-                .append('circle')
-                .attr('class', 'node')
-                .call(d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended))
-                .on('mouseover', showTooltip)
-                .on('mouseout', hideTooltip);
-
-            node = nodeEnter.merge(node);
-
-            // Restore positions for existing nodes AFTER data join
-            node.each(d => {
-                const cached = positionCache.get(d.name);
-                if (cached) {
-                    d.x = cached.x;
-                    d.y = cached.y;
-                    d.vx = cached.vx;
-                    d.vy = cached.vy;
-                    d.fx = cached.fx;
-                    d.fy = cached.fy;
-                }
-                // New nodes will get default force-directed positions
-            });
-
-            node.attr('r', getNodeRadius)
-                .attr('fill', getNodeColor)
-                .attr('stroke', getNodeStroke)
-                .attr('stroke-width', getNodeStrokeWidth)
-                .attr('filter', d => d.is_available ? 'url(#glow)' : null);
-
-            // Update labels
-            label = labelGroup.selectAll('.node-label')
-                .data(nodes, d => d.name);
-
-            label.exit().remove();
-
-            const labelEnter = label.enter()
-                .append('text')
-                .attr('class', 'node-label')
-                .attr('dy', 4);
-
-            label = labelEnter.merge(label);
-
-            label.text(d => d.name.length > 20 ? d.name.substring(0, 18) + '...' : d.name);
-
-            // Detect structural changes
-            const structureChanged = 
-                nodes.length !== previousNodeCount ||
-                links.length !== previousLinkCount;
-
-            // Update simulation
-            simulation.nodes(nodes).on('tick', ticked);
-            simulation.force('link').links(links);
-            
-            // Only reheat simulation if structure changed
-            if (structureChanged) {
-                simulation.alpha(0.3).restart();
-            }
-        }
-
-        function ticked() {
-            link.attr('d', d => {
-                const sourceX = d.source.x;
-                const sourceY = d.source.y;
-                const targetX = d.target.x;
-                const targetY = d.target.y;
-                
-                // Calculate the direction vector
-                const dx = targetX - sourceX;
-                const dy = targetY - sourceY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist === 0) return `M${sourceX},${sourceY}L${targetX},${targetY}`;
-                
-                // Adjust the end point to stop at the target node's edge
-                const targetRadius = getNodeRadius(d.target);
-                const offsetX = (dx / dist) * targetRadius;
-                const offsetY = (dy / dist) * targetRadius;
-                
-                const adjustedTargetX = targetX - offsetX;
-                const adjustedTargetY = targetY - offsetY;
-                
-                return `M${sourceX},${sourceY}L${adjustedTargetX},${adjustedTargetY}`;
-            });
-
-            node.attr('cx', d => d.x)
-                .attr('cy', d => d.y);
-
-            label.attr('x', d => d.x)
-                .attr('y', d => d.y);
-        }
-
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        }
-
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
-
-        function showError(message) {
-            d3.select('#loading').style('display', 'none');
-            
-            const errorDiv = d3.select('body')
-                .append('div')
-                .attr('class', 'error-message')
-                .text(message);
-            
-            setTimeout(() => errorDiv.remove(), 5000);
-        }
-
-        async function fetchGraph() {
-            try {
-                const response = await fetch(API_ENDPOINT);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                updateGraph(data);
-            } catch (error) {
-                console.error('Error fetching graph:', error);
-                showError(`Failed to fetch graph: ${error.message}`);
-            }
-        }
-
-        // Initial fetch
-        fetchGraph();
-
-        // Auto-refresh every 3 seconds
-        setInterval(fetchGraph, 3000);
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            const newWidth = window.innerWidth;
-            const newHeight = window.innerHeight;
-            
-            svg.attr('width', newWidth).attr('height', newHeight);
-            
-            simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
-            simulation.alpha(0.3).restart();
+      // Store current positions BEFORE data update
+      const positionCache = new Map();
+      if (node) {
+        node.each(d => {
+          positionCache.set(d.name, {
+            x: d.x,
+            y: d.y,
+            vx: d.vx || 0,
+            vy: d.vy || 0,
+            fx: d.fx,
+            fy: d.fy
+          });
         });
-    </script>
+      }
+
+      // Convert edges from {from, to} to {source, target}
+      const links = graphData.edges.map(e => ({
+        source: e.from,
+        target: e.to
+      }));
+
+      const nodes = graphData.nodes;
+
+      // Store previous counts for change detection
+      const previousNodeCount = positionCache.size;
+      const previousLinkCount = link ? link.size() : 0;
+
+      // Update links (stable key function handles D3 mutation)
+      link = linkGroup.selectAll('.link')
+        .data(links, d => {
+          const source = typeof d.source === 'object' ? d.source.name : d.source;
+          const target = typeof d.target === 'object' ? d.target.name : d.target;
+          return `${source}-${target}`;
+        });
+
+      link.exit().remove();
+
+      const linkEnter = link.enter()
+        .append('path')
+        .attr('class', 'link');
+
+      link = linkEnter.merge(link);
+
+      // Update nodes
+      node = nodeGroup.selectAll('.node')
+        .data(nodes, d => d.name);
+
+      node.exit().remove();
+
+      const nodeEnter = node.enter()
+        .append('circle')
+        .attr('class', 'node')
+        .call(d3.drag()
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended))
+        .on('mouseover', showTooltip)
+        .on('mouseout', hideTooltip);
+
+      node = nodeEnter.merge(node);
+
+      // Restore positions for existing nodes AFTER data join
+      node.each(d => {
+        const cached = positionCache.get(d.name);
+        if (cached) {
+          d.x = cached.x;
+          d.y = cached.y;
+          d.vx = cached.vx;
+          d.vy = cached.vy;
+          d.fx = cached.fx;
+          d.fy = cached.fy;
+        }
+        // New nodes will get default force-directed positions
+      });
+
+      node.attr('r', getNodeRadius)
+        .attr('fill', getNodeColor)
+        .attr('stroke', getNodeStroke)
+        .attr('stroke-width', getNodeStrokeWidth)
+        .attr('filter', d => d.is_available ? 'url(#glow)' : null);
+
+      // Update labels
+      label = labelGroup.selectAll('.node-label')
+        .data(nodes, d => d.name);
+
+      label.exit().remove();
+
+      const labelEnter = label.enter()
+        .append('text')
+        .attr('class', 'node-label')
+        .attr('dy', 4);
+
+      label = labelEnter.merge(label);
+
+      label.text(d => d.name.length > 20 ? d.name.substring(0, 18) + '...' : d.name);
+
+      // Detect structural changes
+      const structureChanged =
+        nodes.length !== previousNodeCount ||
+        links.length !== previousLinkCount;
+
+      // Update simulation
+      simulation.nodes(nodes).on('tick', ticked);
+      simulation.force('link').links(links);
+
+      // Only reheat simulation if structure changed
+      if (structureChanged) {
+        simulation.alpha(0.3).restart();
+      }
+    }
+
+    function ticked() {
+      link.attr('d', d => {
+        const sourceX = d.source.x;
+        const sourceY = d.source.y;
+        const targetX = d.target.x;
+        const targetY = d.target.y;
+
+        // Calculate the direction vector
+        const dx = targetX - sourceX;
+        const dy = targetY - sourceY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist === 0) return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+
+        // Adjust the end point to stop at the target node's edge
+        const targetRadius = getNodeRadius(d.target);
+        const offsetX = (dx / dist) * targetRadius;
+        const offsetY = (dy / dist) * targetRadius;
+
+        const adjustedTargetX = targetX - offsetX;
+        const adjustedTargetY = targetY - offsetY;
+
+        return `M${sourceX},${sourceY}L${adjustedTargetX},${adjustedTargetY}`;
+      });
+
+      node.attr('cx', d => d.x)
+        .attr('cy', d => d.y);
+
+      label.attr('x', d => d.x)
+        .attr('y', d => d.y);
+    }
+
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    function showError(message) {
+      d3.select('#loading').style('display', 'none');
+
+      const errorDiv = d3.select('body')
+        .append('div')
+        .attr('class', 'error-message')
+        .text(message);
+
+      setTimeout(() => errorDiv.remove(), 5000);
+    }
+
+    async function fetchGraph() {
+      try {
+        const response = await fetch(API_ENDPOINT);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        updateGraph(data);
+      } catch (error) {
+        console.error('Error fetching graph:', error);
+        showError(`Failed to fetch graph: ${error.message}`);
+      }
+    }
+
+    // Initial fetch
+    fetchGraph();
+
+    // Auto-refresh every 3 seconds
+    setInterval(fetchGraph, 3000);
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      const newWidth = window.innerWidth;
+      const newHeight = window.innerHeight;
+
+      svg.attr('width', newWidth).attr('height', newHeight);
+
+      simulation.force('center', d3.forceCenter(newWidth / 2, newHeight / 2));
+      simulation.alpha(0.3).restart();
+    });
+  </script>
 </body>
+
 </html>
