@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tasktree_mcp.paths import find_repo_root, get_db_path
+from tasktree_mcp.paths import find_repo_root, get_db_path, get_snapshot_path
 
 
 class TestFindRepoRoot:
@@ -273,3 +273,53 @@ class TestPathResolutionIntegration:
         path2 = get_db_path()
 
         assert path1 == path2
+
+
+class TestGetSnapshotPath:
+    """Tests for get_snapshot_path function."""
+
+    def test_get_snapshot_path_with_env_override(self, tmp_path, monkeypatch):
+        """Test that TASKTREE_SNAPSHOT_PATH environment variable takes priority."""
+        snapshot_path = tmp_path / "snapshots" / "tasktree.snapshot.jsonl"
+        monkeypatch.setenv("TASKTREE_SNAPSHOT_PATH", str(snapshot_path))
+
+        result = get_snapshot_path()
+
+        assert result == snapshot_path
+        assert snapshot_path.parent.exists()
+
+    def test_get_snapshot_path_env_must_be_absolute(self, monkeypatch):
+        """Test that TASKTREE_SNAPSHOT_PATH must be an absolute path."""
+        monkeypatch.setenv("TASKTREE_SNAPSHOT_PATH", "relative/snapshot.jsonl")
+
+        with pytest.raises(ValueError, match="must be an absolute path"):
+            get_snapshot_path()
+
+    def test_get_snapshot_path_in_git_repo(self, tmp_path, monkeypatch):
+        """Test that repo root snapshot path is used when in a git repo."""
+        repo_root = tmp_path / "myrepo"
+        repo_root.mkdir()
+        (repo_root / ".git").mkdir()
+
+        monkeypatch.chdir(repo_root)
+        monkeypatch.delenv("TASKTREE_SNAPSHOT_PATH", raising=False)
+
+        result = get_snapshot_path()
+        expected = repo_root / "tasktree.snapshot.jsonl"
+
+        assert result == expected
+        assert result.is_absolute()
+
+    def test_get_snapshot_path_fallback_to_cwd(self, tmp_path, monkeypatch):
+        """Test fallback to cwd when not in a git repo."""
+        non_repo = tmp_path / "not_a_repo"
+        non_repo.mkdir()
+
+        monkeypatch.chdir(non_repo)
+        monkeypatch.delenv("TASKTREE_SNAPSHOT_PATH", raising=False)
+
+        result = get_snapshot_path()
+        expected = non_repo.resolve() / "tasktree.snapshot.jsonl"
+
+        assert result == expected
+        assert result.is_absolute()

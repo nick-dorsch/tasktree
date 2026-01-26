@@ -96,6 +96,46 @@ def get_db_path() -> Path:
     return home_dir / "tasktree.db"
 
 
+def get_snapshot_path() -> Path:
+    """
+    Get the snapshot path using the following priority:
+
+    1. TASKTREE_SNAPSHOT_PATH environment variable (if set, must be absolute)
+    2. tasktree.snapshot.jsonl in repository root (if in a git repo)
+    3. tasktree.snapshot.jsonl in current working directory (fallback)
+
+    Returns:
+        Path: Absolute path to the snapshot file
+
+    Raises:
+        ValueError: If TASKTREE_SNAPSHOT_PATH is set but not an absolute path
+        PermissionError: If the parent directory cannot be created
+
+    Side effects:
+        - Creates parent directory if it doesn't exist
+        - Does NOT create the snapshot file itself
+    """
+    env_path = os.getenv("TASKTREE_SNAPSHOT_PATH")
+    if env_path:
+        snapshot_path = Path(env_path)
+        if not snapshot_path.is_absolute():
+            raise ValueError(
+                f"TASKTREE_SNAPSHOT_PATH must be an absolute path, got: {env_path}"
+            )
+        _ensure_parent_dir(snapshot_path)
+        return snapshot_path
+
+    repo_root = find_repo_root()
+    if repo_root:
+        snapshot_path = repo_root / "tasktree.snapshot.jsonl"
+        _ensure_parent_dir(snapshot_path)
+        return snapshot_path
+
+    snapshot_path = Path.cwd().resolve() / "tasktree.snapshot.jsonl"
+    _ensure_parent_dir(snapshot_path)
+    return snapshot_path
+
+
 def _ensure_dir_exists(dir_path: Path) -> None:
     """
     Ensure a directory exists, creating it if necessary.

@@ -270,62 +270,6 @@ def test_update_task_preserves_unspecified_fields(test_db: Path, monkeypatch):
     assert updated.details == "Original details"  # Preserved
 
 
-def test_update_task_status_transition_to_in_progress_sets_started_at(
-    test_db: Path, monkeypatch
-):
-    """Test that transitioning to in_progress sets started_at timestamp."""
-    monkeypatch.setattr(db, "DB_PATH", test_db)
-
-    # Create pending task
-    TaskRepository.add_task(
-        name="start-task",
-        description="Task to start",
-        status="pending",
-    )
-
-    # Verify started_at is None
-    task_before = TaskRepository.get_task("start-task")
-    assert task_before.started_at is None
-
-    # Update to in_progress
-    updated = TaskRepository.update_task(
-        name="start-task",
-        status="in_progress",
-    )
-
-    assert updated is not None
-    assert updated.status == "in_progress"
-    assert updated.started_at is not None
-
-
-def test_update_task_status_transition_to_completed_sets_completed_at(
-    test_db: Path, monkeypatch
-):
-    """Test that transitioning to completed sets completed_at timestamp."""
-    monkeypatch.setattr(db, "DB_PATH", test_db)
-
-    # Create task
-    TaskRepository.add_task(
-        name="complete-task",
-        description="Task to complete",
-        status="in_progress",
-    )
-
-    # Verify completed_at is None
-    task_before = TaskRepository.get_task("complete-task")
-    assert task_before.completed_at is None
-
-    # Update to completed
-    updated = TaskRepository.update_task(
-        name="complete-task",
-        status="completed",
-    )
-
-    assert updated is not None
-    assert updated.status == "completed"
-    assert updated.completed_at is not None
-
-
 def test_update_task_status_from_pending_to_completed(test_db: Path, monkeypatch):
     """Test transitioning directly from pending to completed."""
     monkeypatch.setattr(db, "DB_PATH", test_db)

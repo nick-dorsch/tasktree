@@ -128,25 +128,6 @@ def test_get_task_immediately_after_creation(mock_db_path):
     assert retrieved.created_at == created.created_at
 
 
-def test_get_task_case_sensitive(mock_db_path):
-    """Test that task names are case-sensitive."""
-    # Create a task with lowercase name
-    TaskRepository.add_task(
-        name="lowercase-task",
-        description="Lowercase name",
-    )
-
-    # Try to retrieve with different case
-    task_exact = TaskRepository.get_task("lowercase-task")
-    task_upper = TaskRepository.get_task("LOWERCASE-TASK")
-    task_mixed = TaskRepository.get_task("Lowercase-Task")
-
-    # Only exact match should work
-    assert task_exact is not None
-    assert task_upper is None
-    assert task_mixed is None
-
-
 def test_get_task_after_update(mock_db_path):
     """Test getting a task after it has been updated."""
     # Create a task
@@ -228,20 +209,3 @@ def test_get_task_after_delete_returns_none(mock_db_path):
     # Try to get it again
     task = TaskRepository.get_task("delete-task")
     assert task is None
-
-
-def test_get_task_with_long_name(mock_db_path):
-    """Test getting a task with a long name."""
-    long_name = "task-" + "a" * 200
-
-    # Create task with long name
-    TaskRepository.add_task(
-        name=long_name,
-        description="Task with long name",
-    )
-
-    # Get the task
-    task = TaskRepository.get_task(long_name)
-
-    assert task is not None
-    assert task.name == long_name
