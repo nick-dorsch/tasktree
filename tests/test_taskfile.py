@@ -60,7 +60,7 @@ def test_all_expected_tasks_exist(taskfile_config: dict):
         "refresh-views",
         "graph-json",
         "draw",
-        "graph",
+        "web-graph",
     ]
 
     tasks = taskfile_config.get("tasks", {})
@@ -71,12 +71,12 @@ def test_all_expected_tasks_exist(taskfile_config: dict):
 def test_graph_task_exists(taskfile_config: dict):
     """Test that the graph task is defined."""
     tasks = taskfile_config.get("tasks", {})
-    assert "graph" in tasks
+    assert "web-graph" in tasks
 
 
 def test_graph_task_has_description(taskfile_config: dict):
     """Test that the graph task has a description."""
-    graph_task = taskfile_config["tasks"]["graph"]
+    graph_task = taskfile_config["tasks"]["web-graph"]
     assert "desc" in graph_task
     assert isinstance(graph_task["desc"], str)
     assert len(graph_task["desc"]) > 0
@@ -84,7 +84,7 @@ def test_graph_task_has_description(taskfile_config: dict):
 
 def test_graph_task_has_commands(taskfile_config: dict):
     """Test that the graph task has commands defined."""
-    graph_task = taskfile_config["tasks"]["graph"]
+    graph_task = taskfile_config["tasks"]["web-graph"]
     assert "cmds" in graph_task
     assert isinstance(graph_task["cmds"], list)
     assert len(graph_task["cmds"]) > 0
@@ -92,7 +92,7 @@ def test_graph_task_has_commands(taskfile_config: dict):
 
 def test_graph_task_starts_server(taskfile_config: dict):
     """Test that the graph task includes server startup command."""
-    graph_task = taskfile_config["tasks"]["graph"]
+    graph_task = taskfile_config["tasks"]["web-graph"]
     commands = graph_task.get("cmds", [])
 
     # Commands can be strings or multi-line strings
@@ -107,7 +107,7 @@ def test_graph_task_starts_server(taskfile_config: dict):
 
 def test_graph_task_opens_browser(taskfile_config: dict):
     """Test that the graph task includes browser opening logic."""
-    graph_task = taskfile_config["tasks"]["graph"]
+    graph_task = taskfile_config["tasks"]["web-graph"]
     commands = graph_task.get("cmds", [])
 
     all_commands = " ".join(str(cmd) for cmd in commands)
@@ -123,7 +123,7 @@ def test_graph_task_opens_browser(taskfile_config: dict):
 
 def test_graph_task_references_correct_port(taskfile_config: dict):
     """Test that the graph task uses the correct port (8000)."""
-    graph_task = taskfile_config["tasks"]["graph"]
+    graph_task = taskfile_config["tasks"]["web-graph"]
     commands = graph_task.get("cmds", [])
 
     all_commands = " ".join(str(cmd) for cmd in commands)
@@ -134,7 +134,7 @@ def test_graph_task_references_correct_port(taskfile_config: dict):
 
 def test_graph_task_references_database(taskfile_config: dict):
     """Test that the graph task references the database."""
-    graph_task = taskfile_config["tasks"]["graph"]
+    graph_task = taskfile_config["tasks"]["web-graph"]
     commands = graph_task.get("cmds", [])
 
     all_commands = " ".join(str(cmd) for cmd in commands)
@@ -179,7 +179,7 @@ def test_task_list_runs_successfully():
         assert result.returncode == 0
 
         # Should list the graph task
-        assert "graph" in result.stdout.lower()
+        assert "web-graph" in result.stdout.lower()
     except (subprocess.TimeoutExpired, FileNotFoundError):
         pytest.skip("Task command not available in test environment")
 

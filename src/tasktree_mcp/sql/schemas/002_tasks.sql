@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   ),
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   started_at TIMESTAMP,
   completed_at TIMESTAMP,
 
@@ -29,7 +30,9 @@ CREATE TRIGGER IF NOT EXISTS set_started_at
 AFTER UPDATE ON tasks
 WHEN NEW.status = 'in_progress' AND OLD.status != 'in_progress'
 BEGIN
-    UPDATE tasks SET started_at = CURRENT_TIMESTAMP WHERE name = NEW.name;
+    UPDATE tasks
+    SET started_at = CURRENT_TIMESTAMP
+    WHERE name = NEW.name;
 END;
 
 -- Trigger to set completed_at when status becomes 'completed'
@@ -37,5 +40,16 @@ CREATE TRIGGER IF NOT EXISTS set_completed_at
 AFTER UPDATE ON tasks
 WHEN NEW.status = 'completed' AND OLD.status != 'completed'
 BEGIN
-    UPDATE tasks SET completed_at = CURRENT_TIMESTAMP WHERE name = NEW.name;
+    UPDATE tasks
+    SET completed_at = CURRENT_TIMESTAMP
+    WHERE name = NEW.name;
+END;
+
+CREATE TRIGGER IF NOT EXISTS set_tasks_updated_at
+AFTER UPDATE ON tasks
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE tasks
+  SET updated_at = CURRENT_TIMESTAMP
+  WHERE name = NEW.name;
 END;

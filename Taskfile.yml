@@ -28,7 +28,7 @@ tasks:
     cmds:
       - echo "Creating SQLite database schemas..."
       - mkdir -p data
-      - cat sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
+      - cat src/tasktree_mcp/sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
     generates:
       - data/tasktree.db
     silent: true
@@ -45,7 +45,7 @@ tasks:
     aliases: [rv]
     cmds:
       - echo "Refreshing database views..."
-      - cat sql/views/*.sql | sqlite3 .tasktree/tasktree.db
+      - cat src/tasktree_mcp/sql/views/*.sql | sqlite3 .tasktree/tasktree.db
     silent: true
 
   graph-json:
