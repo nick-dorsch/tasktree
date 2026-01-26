@@ -62,3 +62,34 @@ tasks:
       - echo "Drawing dependency graph..."
       - ./scripts/draw-graph.sh data/tasktree.db
     silent: true
+
+  graph:
+    desc: Launch graph server and open browser visualization
+    cmds:
+      - echo "Starting graph server and opening browser..."
+      - |
+        # Start the server in the background
+        uv run python scripts/graph-server.py --port 8000 --db data/tasktree.db &
+        SERVER_PID=$!
+        
+        # Wait for server to be ready
+        sleep 2
+        
+        # Open the HTML viewer in default browser
+        if command -v xdg-open > /dev/null; then
+          xdg-open "file://$(pwd)/scripts/graph-viewer.html"
+        elif command -v open > /dev/null; then
+          open "file://$(pwd)/scripts/graph-viewer.html"
+        elif command -v start > /dev/null; then
+          start "file://$(pwd)/scripts/graph-viewer.html"
+        else
+          echo "Could not detect browser opener. Please open scripts/graph-viewer.html manually."
+        fi
+        
+        echo "Graph server running on http://localhost:8000"
+        echo "Browser should open automatically. If not, open scripts/graph-viewer.html"
+        echo "Press Ctrl+C to stop the server"
+        
+        # Wait for the server process
+        wait $SERVER_PID
+    silent: false
