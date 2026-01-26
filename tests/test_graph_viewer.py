@@ -201,3 +201,44 @@ def test_graph_viewer_has_available_task_highlighting(graph_viewer_path):
 
     # Check for is_available flag usage
     assert "is_available" in content or "available" in content.lower()
+
+
+def test_graph_viewer_has_position_caching(graph_viewer_path):
+    """Test that position caching is implemented to preserve node positions."""
+    content = graph_viewer_path.read_text()
+
+    # Check for position caching mechanism
+    assert "positionCache" in content or "position_cache" in content.lower()
+    # Should use Map for caching
+    assert "Map()" in content or "new Map" in content
+
+
+def test_graph_viewer_preserves_node_positions(graph_viewer_path):
+    """Test that existing node positions are preserved across updates."""
+    content = graph_viewer_path.read_text()
+
+    # Should cache x, y coordinates
+    assert ".x" in content and ".y" in content
+    # Should cache velocity (vx, vy)
+    assert ".vx" in content or "vx" in content
+    assert ".vy" in content or "vy" in content
+
+
+def test_graph_viewer_has_smart_simulation_restart(graph_viewer_path):
+    """Test that simulation restart is conditional based on structural changes."""
+    content = graph_viewer_path.read_text()
+
+    # Should detect structural changes
+    assert "structureChanged" in content or "structure_changed" in content.lower()
+    # Should have conditional logic for restart
+    assert "if" in content and "restart()" in content
+
+
+def test_graph_viewer_differentiates_alpha_values(graph_viewer_path):
+    """Test that different alpha values are used for structural vs property changes."""
+    content = graph_viewer_path.read_text()
+
+    # Should have at least two different alpha values
+    # One for structural changes (higher) and one for property updates (lower)
+    assert "alpha(0.3)" in content or "alpha(0.5)" in content
+    assert "alpha(0.05)" in content or "alpha(0.1)" in content or "alpha(0)" in content

@@ -195,6 +195,21 @@
             // Update loading state
             d3.select('#loading').style('display', 'none');
 
+            // Store current positions BEFORE data update
+            const positionCache = new Map();
+            if (node) {
+                node.each(d => {
+                    positionCache.set(d.name, {
+                        x: d.x,
+                        y: d.y,
+                        vx: d.vx || 0,
+                        vy: d.vy || 0,
+                        fx: d.fx,
+                        fy: d.fy
+                    });
+                });
+            }
+
             // Convert edges from {from, to} to {source, target}
             const links = graphData.edges.map(e => ({
                 source: e.from,
@@ -202,6 +217,10 @@
             }));
 
             const nodes = graphData.nodes;
+
+            // Store previous counts for change detection
+            const previousNodeCount = positionCache.size;
+            const previousLinkCount = link ? link.size() : 0;
 
             // Update links
             link = linkGroup.selectAll('.link')
@@ -233,6 +252,20 @@
 
             node = nodeEnter.merge(node);
 
+            // Restore positions for existing nodes AFTER data join
+            node.each(d => {
+                const cached = positionCache.get(d.name);
+                if (cached) {
+                    d.x = cached.x;
+                    d.y = cached.y;
+                    d.vx = cached.vx;
+                    d.vy = cached.vy;
+                    d.fx = cached.fx;
+                    d.fy = cached.fy;
+                }
+                // New nodes will get default force-directed positions
+            });
+
             node.attr('r', getNodeRadius)
                 .attr('fill', getNodeColor)
                 .attr('stroke', getNodeStroke)
@@ -253,10 +286,22 @@
 
             label.text(d => d.name.length > 20 ? d.name.substring(0, 18) + '...' : d.name);
 
+            // Detect structural changes
+            const structureChanged = 
+                nodes.length !== previousNodeCount ||
+                links.length !== previousLinkCount;
+
             // Update simulation
             simulation.nodes(nodes).on('tick', ticked);
             simulation.force('link').links(links);
-            simulation.alpha(0.3).restart();
+            
+            // Only reheat simulation if structure changed
+            if (structureChanged) {
+                simulation.alpha(0.3).restart();
+            } else {
+                // Just a gentle nudge for property updates
+                simulation.alpha(0.05).restart();
+            }
         }
 
         function ticked() {
