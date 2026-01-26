@@ -22,6 +22,10 @@ class Task(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255)
     description: str = Field(..., min_length=1)
+    details: Optional[str] = Field(
+        None,
+        description="Optional field for more detailed implementation details of the task",
+    )
     priority: int = Field(default=0, ge=0, le=10)
     status: TaskStatus = Field(default=TaskStatus.PENDING)
     created_at: Optional[str] = None
@@ -87,6 +91,10 @@ class AddTaskRequest(BaseModel):
     description: str = Field(
         ..., min_length=1, description="Description of what the task involves"
     )
+    details: Optional[str] = Field(
+        default=None,
+        description="Optional field for more detailed implementation details of the task",
+    )
     priority: int = Field(
         default=0,
         ge=0,
@@ -120,6 +128,7 @@ class UpdateTaskRequest(BaseModel):
     description: Optional[str] = Field(
         None, min_length=1, description="New description"
     )
+    details: Optional[str] = Field(None, description="New details")
     status: Optional[str] = Field(None, description="New status")
     priority: Optional[int] = Field(None, ge=0, le=10, description="New priority")
 
@@ -207,6 +216,7 @@ class TaskResponse(BaseModel):
 
     name: str = Field(..., description="Task name")
     description: str = Field(..., description="Task description")
+    details: Optional[str] = Field(None, description="Task details")
     priority: int = Field(..., ge=0, le=10, description="Task priority")
     status: str = Field(..., description="Task status")
     created_at: Optional[str] = Field(None, description="Creation timestamp")
