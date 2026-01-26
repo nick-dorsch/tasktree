@@ -5,6 +5,7 @@ Tests the HTTP API endpoints for retrieving task dependency graphs.
 """
 
 import json
+import socket
 from http.client import HTTPConnection
 from pathlib import Path
 from threading import Thread
@@ -22,6 +23,8 @@ scripts_dir = Path(__file__).parent.parent / "scripts"
 graph_server_path = scripts_dir / "graph-server.py"
 
 spec = importlib.util.spec_from_file_location("graph_server", graph_server_path)
+if spec is None or spec.loader is None:
+    raise RuntimeError("Unable to load graph-server module")
 graph_server = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(graph_server)
 
@@ -44,22 +47,19 @@ def mock_db_path(test_db: Path, monkeypatch):
 
 
 @pytest.fixture
-def server_thread(test_db: Path, request):
+def server_thread(test_db: Path):
     """
     Start the graph server in a background thread for testing.
 
     Args:
         test_db: Path to the test database
-        request: pytest request fixture for unique port per test
 
     Yields:
         int: port number the server is listening on
     """
-    # Use unique port for each test to avoid conflicts
-    # Base port 8765 + hash of test name
-    base_port = 8765
-    port_offset = abs(hash(request.node.name)) % 100
-    port = base_port + port_offset
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("localhost", 0))
+        port = sock.getsockname()[1]
 
     # Start server in background thread
     thread = Thread(target=run_server, args=(port, test_db), daemon=True)
@@ -71,6 +71,18 @@ def server_thread(test_db: Path, request):
     yield port
 
     # Thread will be cleaned up automatically (daemon=True)
+
+
+def fetch_graph_js(port: int) -> str:
+    """Fetch the graph.js asset content from the running server."""
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/static/graph.js")
+        response = conn.getresponse()
+        assert response.status == 200
+        return response.read().decode()
+    finally:
+        conn.close()
 
 
 def test_graph_api_handler_class_exists():
@@ -272,7 +284,7 @@ def test_root_endpoint_returns_html(server_thread):
 
         html = response.read().decode()
         assert "TaskTree Graph Visualization" in html
-        assert "/api/graph" in html
+        assert "/static/graph.js" in html
     finally:
         conn.close()
 
@@ -588,14 +600,19 @@ def test_root_endpoint_includes_graph_visualization(server_thread):
         # Check for graph container
         assert 'id="graph"' in html
 
-        # Check for force simulation code
-        assert "forceSimulation" in html
-        assert "forceLink" in html
-
-        # Check for API endpoint reference
-        assert "/api/graph" in html
+        # Check that the external script is referenced
+        assert "/static/graph.js" in html
     finally:
         conn.close()
+
+    graph_js = fetch_graph_js(port)
+
+    # Check for force simulation code
+    assert "forceSimulation" in graph_js
+    assert "forceLink" in graph_js
+
+    # Check for API endpoint reference
+    assert "/api/graph" in graph_js
 
 
 def test_root_endpoint_legend_includes_blocked_status(server_thread):
@@ -754,21 +771,14 @@ def test_root_endpoint_toggle_function_exists(server_thread):
     """Test that toggleTaskDetails JavaScript function is defined."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
-
-        # Check for toggle function definition
-        assert "function toggleTaskDetails" in html
-        assert "querySelector('.task-details')" in html
-        assert "querySelector('.task-expand-icon')" in html
-        assert "classList.add('expanded')" in html
-        assert "classList.remove('expanded')" in html
-    finally:
-        conn.close()
+    # Check for toggle function definition
+    assert "function toggleTaskDetails" in graph_js
+    assert "querySelector('.task-details')" in graph_js
+    assert "querySelector('.task-expand-icon')" in graph_js
+    assert "classList.add('expanded')" in graph_js
+    assert "classList.remove('expanded')" in graph_js
 
 
 def test_root_endpoint_task_details_css_styling(server_thread):
@@ -819,44 +829,33 @@ def test_root_endpoint_tooltip_shows_started_at_conditionally(server_thread):
     """Test that tooltip shows started_at only when non-null."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
+    # Check that tooltip function conditionally shows started_at
+    assert "d.started_at" in graph_js
+    assert "Started:" in graph_js
 
-        # Check that tooltip function conditionally shows started_at
-        assert "d.started_at" in html
-        assert "Started:" in html
-
-        # Should use conditional rendering (ternary or template literal)
-        # Pattern: ${d.started_at ? `<div>...Started:...</div>` : ''}
-        assert "d.started_at ?" in html or "started_at?" in html
-    finally:
-        conn.close()
+    # Should use conditional rendering (ternary or template literal)
+    # Pattern: ${d.started_at ? `<div>...Started:...</div>` : ''}
+    assert "d.started_at ?" in graph_js or "started_at?" in graph_js
 
 
 def test_root_endpoint_tooltip_shows_completion_minutes(server_thread):
     """Test that tooltip shows completion_minutes when available."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
+    # Check that tooltip function shows completion_minutes
+    assert "d.completion_minutes" in graph_js
+    assert "Duration:" in graph_js or "completion_minutes" in graph_js
 
-        # Check that tooltip function shows completion_minutes
-        assert "d.completion_minutes" in html
-        assert "Duration:" in html or "completion_minutes" in html
-
-        # Should use conditional rendering for completion_minutes
-        # Pattern: ${d.completion_minutes !== null ? `<div>...Duration:...</div>` : ''}
-        assert "completion_minutes !== null" in html or "completion_minutes !==" in html
-    finally:
-        conn.close()
+    # Should use conditional rendering for completion_minutes
+    # Pattern: ${d.completion_minutes !== null ? `<div>...Duration:...</div>` : ''}
+    assert (
+        "completion_minutes !== null" in graph_js
+        or "completion_minutes !==" in graph_js
+    )
 
 
 def test_root_endpoint_accordion_behavior(mock_db_path, server_thread):
@@ -868,36 +867,30 @@ def test_root_endpoint_accordion_behavior(mock_db_path, server_thread):
     TaskRepository.add_task("task-2", "Second task", priority=4)
     TaskRepository.add_task("task-3", "Third task", priority=3)
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
+    # Check that toggleTaskDetails closes all other tasks before opening
+    assert "querySelectorAll('.task-details')" in graph_js
+    assert "querySelectorAll('.task-expand-icon')" in graph_js
 
-        # Check that toggleTaskDetails closes all other tasks before opening
-        assert "querySelectorAll('.task-details')" in html
-        assert "querySelectorAll('.task-expand-icon')" in html
+    # Should iterate through all task details and close them
+    assert "forEach" in graph_js
 
-        # Should iterate through all task details and close them
-        assert "forEach" in html
+    # Should set display to none for all details
+    assert (
+        "details.style.display = 'none'" in graph_js
+        or "style.display='none'" in graph_js
+    )
 
-        # Should set display to none for all details
-        assert (
-            "details.style.display = 'none'" in html or "style.display='none'" in html
-        )
+    # Should remove expanded class from all icons
+    assert "classList.remove('expanded')" in graph_js
 
-        # Should remove expanded class from all icons
-        assert "classList.remove('expanded')" in html
-
-        # Should expand only the clicked task
-        assert (
-            "detailsDiv.style.display = 'block'" in html
-            or "style.display='block'" in html
-        )
-        assert "expandIcon.classList.add('expanded')" in html
-    finally:
-        conn.close()
+    # Should expand only the clicked task
+    assert (
+        "detailsDiv.style.display = 'block'" in graph_js
+        or "style.display='block'" in graph_js
+    )
+    assert "expandIcon.classList.add('expanded')" in graph_js
 
 
 def test_root_endpoint_description_scrollable_container(mock_db_path, server_thread):
@@ -1106,6 +1099,19 @@ def test_root_endpoint_includes_tasks_endpoint(server_thread):
     """Test that the root endpoint includes reference to /api/tasks."""
     port = server_thread
 
+    graph_js = fetch_graph_js(port)
+
+    # Should include TASKS_ENDPOINT constant
+    assert "TASKS_ENDPOINT" in graph_js
+    assert "/api/tasks" in graph_js
+
+
+def test_root_endpoint_renders_template_placeholders(mock_db_path, server_thread):
+    """Test that template placeholders are replaced in the root response."""
+    port = server_thread
+
+    TaskRepository.add_task("templated-task", "Template task")
+
     conn = HTTPConnection("localhost", port)
     try:
         conn.request("GET", "/")
@@ -1113,9 +1119,10 @@ def test_root_endpoint_includes_tasks_endpoint(server_thread):
 
         html = response.read().decode()
 
-        # Should include TASKS_ENDPOINT constant
-        assert "TASKS_ENDPOINT" in html
-        assert "/api/tasks" in html
+        assert "{{FEATURE_OPTIONS}}" not in html
+        assert "{{TASK_ITEMS}}" not in html
+        assert "templated-task" in html
+        assert "default" in html
     finally:
         conn.close()
 
@@ -1124,85 +1131,59 @@ def test_root_endpoint_includes_fetch_tasks_function(server_thread):
     """Test that fetchTasks function is defined in the HTML."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
-
-        # Check for fetchTasks function
-        assert "function fetchTasks()" in html or "async function fetchTasks()" in html
-        assert "fetch(TASKS_ENDPOINT)" in html
-        assert "updateTaskList" in html
-    finally:
-        conn.close()
+    # Check for fetchTasks function
+    assert (
+        "function fetchTasks()" in graph_js or "async function fetchTasks()" in graph_js
+    )
+    assert "fetch(TASKS_ENDPOINT)" in graph_js
+    assert "updateTaskList" in graph_js
 
 
 def test_root_endpoint_includes_update_task_list_function(server_thread):
     """Test that updateTaskList function is defined."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
-
-        # Check for updateTaskList function
-        assert "function updateTaskList(tasks)" in html
-        assert "querySelector('.task-list')" in html
-    finally:
-        conn.close()
+    # Check for updateTaskList function
+    assert "function updateTaskList(tasks)" in graph_js
+    assert "querySelector('.task-list')" in graph_js
 
 
 def test_root_endpoint_auto_refresh_includes_tasks(server_thread):
     """Test that auto-refresh interval calls both fetchGraph and fetchTasks."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
+    # Check that setInterval calls both functions
+    assert "setInterval" in graph_js
+    assert "fetchGraph()" in graph_js
+    assert "fetchTasks()" in graph_js
 
-        # Check that setInterval calls both functions
-        assert "setInterval" in html
-        assert "fetchGraph()" in html
-        assert "fetchTasks()" in html
+    # Should be in the same interval block
+    interval_start = graph_js.find("setInterval")
+    interval_end = graph_js.find("}", interval_start)
+    interval_block = graph_js[interval_start:interval_end]
 
-        # Should be in the same interval block
-        interval_start = html.find("setInterval")
-        interval_end = html.find("}", interval_start)
-        interval_block = html[interval_start:interval_end]
-
-        assert "fetchGraph" in interval_block
-        assert "fetchTasks" in interval_block
-    finally:
-        conn.close()
+    assert "fetchGraph" in interval_block
+    assert "fetchTasks" in interval_block
 
 
 def test_update_task_list_preserves_expanded_state(server_thread):
     """Test that updateTaskList preserves which tasks are expanded."""
     port = server_thread
 
-    conn = HTTPConnection("localhost", port)
-    try:
-        conn.request("GET", "/")
-        response = conn.getresponse()
+    graph_js = fetch_graph_js(port)
 
-        html = response.read().decode()
+    # Check that updateTaskList stores expanded task names
+    assert "expandedTasks" in graph_js
+    assert "new Set()" in graph_js
 
-        # Check that updateTaskList stores expanded task names
-        assert "expandedTasks" in html
-        assert "new Set()" in html
+    # Should check which tasks are currently expanded
+    assert "style.display === 'block'" in graph_js or "display==='block'" in graph_js
 
-        # Should check which tasks are currently expanded
-        assert "style.display === 'block'" in html or "display==='block'" in html
-
-        # Should restore expanded state after rebuild
-        assert "shouldExpand" in html or "expandedTasks.has" in html
-    finally:
-        conn.close()
+    # Should restore expanded state after rebuild
+    assert "shouldExpand" in graph_js or "expandedTasks.has" in graph_js

@@ -3,6 +3,7 @@ Tests for graph server static asset placeholders.
 """
 
 import importlib.util
+import socket
 from http.client import HTTPConnection
 from pathlib import Path
 from threading import Thread
@@ -24,20 +25,19 @@ run_server = graph_server.run_server
 
 
 @pytest.fixture
-def server_thread(test_db: Path, request):
+def server_thread(test_db: Path):
     """
     Start the graph server in a background thread for testing.
 
     Args:
         test_db: Path to the test database
-        request: pytest request fixture for unique port per test
 
     Yields:
         int: port number the server is listening on
     """
-    base_port = 8865
-    port_offset = abs(hash(request.node.name)) % 100
-    port = base_port + port_offset
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("localhost", 0))
+        port = sock.getsockname()[1]
 
     thread = Thread(target=run_server, args=(port, test_db), daemon=True)
     thread.start()
@@ -75,6 +75,15 @@ def test_graph_server_assets_placeholders_have_expected_content() -> None:
     assert "<!DOCTYPE html>" in index_content
     assert "graph.js" in index_content
     assert "tasktreeGraphServerAssetsLoaded" in graph_js_content
+
+
+def test_graph_server_index_template_has_placeholders() -> None:
+    """Ensure index template contains placeholder tokens."""
+    assets_dir = Path(__file__).parent.parent / "scripts" / "graph-server"
+    index_content = (assets_dir / "index.html").read_text()
+
+    assert "{{FEATURE_OPTIONS}}" in index_content
+    assert "{{TASK_ITEMS}}" in index_content
 
 
 def test_static_asset_serves_graph_js(server_thread):
