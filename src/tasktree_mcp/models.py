@@ -266,12 +266,25 @@ class TaskResponse(BaseModel):
     created_at: Optional[str] = Field(None, description="Creation timestamp")
     started_at: Optional[str] = Field(None, description="Start timestamp")
     completed_at: Optional[str] = Field(None, description="Completion timestamp")
+    updated_at: Optional[str] = Field(None, description="Update timestamp")
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "TaskResponse":
+        """Create a TaskResponse from a database dictionary."""
+        return cls(**data)
 
 
 class TaskListResponse(BaseModel):
     """Response model for list of tasks."""
 
     tasks: List[TaskResponse] = Field(..., description="List of tasks")
+
+    @classmethod
+    def from_list(cls, data: List[dict]) -> "TaskListResponse":
+        """Create a TaskListResponse from a list of database dictionaries."""
+        return cls(tasks=[TaskResponse.from_dict(item) for item in data])
 
 
 class DependencyResponse(BaseModel):
@@ -280,6 +293,13 @@ class DependencyResponse(BaseModel):
     task_name: str = Field(..., description="Name of the task")
     depends_on_task_name: str = Field(..., description="Name of the dependency task")
 
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "DependencyResponse":
+        """Create a DependencyResponse from a database dictionary."""
+        return cls(**data)
+
 
 class DependencyListResponse(BaseModel):
     """Response model for list of dependencies."""
@@ -287,6 +307,11 @@ class DependencyListResponse(BaseModel):
     dependencies: List[DependencyResponse] = Field(
         ..., description="List of dependencies"
     )
+
+    @classmethod
+    def from_list(cls, data: List[dict]) -> "DependencyListResponse":
+        """Create a DependencyListResponse from a list of database dictionaries."""
+        return cls(dependencies=[DependencyResponse.from_dict(item) for item in data])
 
 
 class TaskCreateResponse(BaseModel):
@@ -301,6 +326,11 @@ class TaskUpdateResponse(BaseModel):
     task: Optional[TaskResponse] = Field(
         ..., description="Updated task or None if not found"
     )
+
+    @classmethod
+    def from_dict(cls, data: Optional[dict]) -> "TaskUpdateResponse":
+        """Create a TaskUpdateResponse from an optional database dictionary."""
+        return cls(task=TaskResponse.from_dict(data) if data else None)
 
 
 class TaskDeleteResponse(BaseModel):
@@ -333,11 +363,23 @@ class FeatureResponse(BaseModel):
     enabled: bool = Field(..., description="Whether the feature is enabled")
     created_at: Optional[str] = Field(None, description="Creation timestamp")
 
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "FeatureResponse":
+        """Create a FeatureResponse from a database dictionary."""
+        return cls(**data)
+
 
 class FeatureListResponse(BaseModel):
     """Response model for list of features."""
 
     features: List[FeatureResponse] = Field(..., description="List of features")
+
+    @classmethod
+    def from_list(cls, data: List[dict]) -> "FeatureListResponse":
+        """Create a FeatureListResponse from a list of database dictionaries."""
+        return cls(features=[FeatureResponse.from_dict(item) for item in data])
 
 
 class FeatureCreateResponse(BaseModel):
