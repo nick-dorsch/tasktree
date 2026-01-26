@@ -14,13 +14,14 @@ import pytest
 @pytest.fixture(scope="function")
 def test_db() -> Generator[Path, None, None]:
     """
-    Create a temporary test database with schema for each test.
+    Create a temporary test database with schema and views for each test.
 
     This fixture:
     1. Creates a temporary SQLite database file
     2. Applies the database schema from sql/schemas/
-    3. Provides an isolated database for each test
-    4. Automatically cleans up after the test
+    3. Applies the database views from sql/views/
+    4. Provides an isolated database for each test
+    5. Automatically cleans up after the test
 
     Yields:
         Path: Path to the temporary test database file
@@ -44,6 +45,16 @@ def test_db() -> Generator[Path, None, None]:
             with open(schema_file, "r") as f:
                 schema_sql = f.read()
                 conn.executescript(schema_sql)
+
+        # Get the view files
+        views_dir = Path(__file__).parent.parent / "sql" / "views"
+        view_files = sorted(views_dir.glob("*.sql"))
+
+        # Apply each view file in order
+        for view_file in view_files:
+            with open(view_file, "r") as f:
+                view_sql = f.read()
+                conn.executescript(view_sql)
 
         conn.commit()
         conn.close()

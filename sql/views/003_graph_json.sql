@@ -9,6 +9,7 @@ SELECT json_object(
         SELECT json_group_array(
             json_object(
                 'name', t.name,
+                'description', t.description,
                 'status', t.status,
                 'priority', t.priority,
                 'completed_at', t.completed_at,
