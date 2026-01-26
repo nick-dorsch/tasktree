@@ -6,10 +6,10 @@ if [ -f "PROMPT.md" ]; then
         echo "=== Iteration $i ==="
         
         # Run opencode with prompt
-        output=$(cat prompt.md | \
+        output=$(cat PROMPT.md | \
                 opencode run \
-                --model google/gemini-3-pro-preview \
-                )
+                --model opencode/big-pickle \
+                2>&1 | tee /dev/tty)
         
         # Check for the stop condition promise
         if echo "$output" | grep -q "<promise>COMPLETE</promise>"; then
