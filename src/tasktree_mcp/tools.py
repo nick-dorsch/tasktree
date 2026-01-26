@@ -10,6 +10,7 @@ from .database import DependencyRepository, TaskRepository
 from .models import (
     AddDependencyRequest,
     AddTaskRequest,
+    CompleteTaskRequest,
     DeleteTaskRequest,
     Dependency,
     GetTaskRequest,
@@ -203,6 +204,21 @@ def register_task_tools(mcp: FastMCP) -> None:
         """
         validate_task_name(name)
         return TaskRepository.update_task(name=name, status="in_progress")
+
+    @mcp.tool()
+    def complete_task(name: str) -> Optional[Dict[str, Any]]:
+        """
+        Complete a task by setting its status to 'completed'.
+
+        Args:
+            name: Name of the task to complete
+
+        Returns:
+            Updated task dictionary if found, None otherwise
+        """
+        request = CompleteTaskRequest(name=name)
+        validate_task_name(request.name)
+        return TaskRepository.complete_task(request.name)
 
 
 def register_dependency_tools(mcp: FastMCP) -> None:

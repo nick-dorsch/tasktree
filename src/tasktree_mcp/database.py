@@ -154,6 +154,14 @@ class TaskRepository:
             conn.commit()
             return deleted
 
+    @staticmethod
+    def complete_task(name: str) -> Optional[Dict[str, Any]]:
+        """Mark a task as completed."""
+        if not name or not name.strip():
+            raise ValueError("Task name cannot be empty")
+
+        return TaskRepository.update_task(name=name, status="completed")
+
 
 class DependencyRepository:
     """Repository class for dependency operations."""

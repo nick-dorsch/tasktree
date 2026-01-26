@@ -155,6 +155,14 @@ class DeleteTaskRequest(BaseModel):
     )
 
 
+class CompleteTaskRequest(BaseModel):
+    """Request model for complete_task function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=255, description="Name of the task to complete"
+    )
+
+
 class ListDependenciesRequest(BaseModel):
     """Request model for list_dependencies function."""
 
