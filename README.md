@@ -186,6 +186,36 @@ tasktree/
 - [Core Components](docs/core-components.md) - Component architecture
 - [API Reference](docs/api-reference.md) - Complete method documentation
 - [Project Structure](docs/project-structure.md) - File organization and development
+- [JSONL Snapshot Format](docs/jsonl-snapshot-format.md) - Canonical snapshot schema
+
+## Snapshot Workflow
+
+TaskTree keeps the SQLite database (`.tasktree/tasktree.db`) out of git. Use JSONL snapshots
+for collaboration, merges, and rehydrating local state.
+
+### Export a Snapshot
+
+```bash
+task snapshot-export
+```
+
+By default this writes `tasktree.snapshot.jsonl` at the repo root. You can override the
+location with `TASKTREE_SNAPSHOT_PATH=/absolute/path/to/tasktree.snapshot.jsonl`.
+
+### Merge Workflow
+
+1. Run `task snapshot-export` and commit `tasktree.snapshot.jsonl`.
+2. Merge or rebase as usual; resolve any JSONL conflicts line-by-line.
+3. Rehydrate your local database from the merged snapshot.
+
+### Rehydrate (Import)
+
+```bash
+task snapshot-import
+```
+
+`snapshot-import` overwrites the local database by default. To keep the existing database
+and only import when it's missing, run `task snapshot-import OVERWRITE=false`.
 
 ## Use Cases
 

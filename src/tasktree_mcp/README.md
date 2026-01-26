@@ -48,6 +48,20 @@ cd src/mcp
 uv run python server.py --test
 ```
 
+## Snapshot Workflow
+
+TaskTree keeps the SQLite database (`.tasktree/tasktree.db`) out of git. Use JSONL
+snapshots for collaboration and rehydrating local state.
+
+```bash
+task snapshot-export
+task snapshot-import
+```
+
+Snapshots are written to `tasktree.snapshot.jsonl` in the repo root by default. Override
+the location with `TASKTREE_SNAPSHOT_PATH=/absolute/path/to/tasktree.snapshot.jsonl`. Import
+overwrites the local database by default; set `OVERWRITE=false` to skip overwriting.
+
 ## Integration with Claude Desktop
 
 Add to your Claude Desktop configuration:
