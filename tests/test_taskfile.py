@@ -58,6 +58,8 @@ def test_all_expected_tasks_exist(taskfile_config: dict):
         "create-db",
         "seed-db",
         "refresh-views",
+        "snapshot-export",
+        "snapshot-import",
         "graph-json",
         "draw",
         "web-graph",
@@ -72,6 +74,53 @@ def test_graph_task_exists(taskfile_config: dict):
     """Test that the graph task is defined."""
     tasks = taskfile_config.get("tasks", {})
     assert "web-graph" in tasks
+
+
+def test_snapshot_tasks_exist(taskfile_config: dict):
+    """Test that the snapshot tasks are defined."""
+    tasks = taskfile_config.get("tasks", {})
+    assert "snapshot-export" in tasks
+    assert "snapshot-import" in tasks
+
+
+def test_snapshot_tasks_use_uv_run(taskfile_config: dict):
+    """Test that snapshot tasks use uv run for Python execution."""
+    tasks = taskfile_config.get("tasks", {})
+    snapshot_export = tasks["snapshot-export"]
+    snapshot_import = tasks["snapshot-import"]
+
+    export_commands = " ".join(str(cmd) for cmd in snapshot_export.get("cmds", []))
+    import_commands = " ".join(str(cmd) for cmd in snapshot_import.get("cmds", []))
+
+    assert "uv run" in export_commands
+    assert "uv run" in import_commands
+
+
+def test_snapshot_tasks_use_default_paths(taskfile_config: dict):
+    """Test that snapshot tasks use default path helpers."""
+    tasks = taskfile_config.get("tasks", {})
+    snapshot_export = tasks["snapshot-export"]
+    snapshot_import = tasks["snapshot-import"]
+
+    export_commands = " ".join(str(cmd) for cmd in snapshot_export.get("cmds", []))
+    import_commands = " ".join(str(cmd) for cmd in snapshot_import.get("cmds", []))
+
+    assert "get_snapshot_path" in export_commands
+    assert "get_snapshot_path" in import_commands
+    assert "get_db_path" in export_commands
+    assert "get_db_path" in import_commands
+
+
+def test_snapshot_import_overwrite_var(taskfile_config: dict):
+    """Test that snapshot import task supports overwrite toggle."""
+    tasks = taskfile_config.get("tasks", {})
+    snapshot_import = tasks["snapshot-import"]
+
+    vars_section = snapshot_import.get("vars", {})
+    assert "OVERWRITE" in vars_section
+
+    commands = " ".join(str(cmd) for cmd in snapshot_import.get("cmds", []))
+    assert "OVERWRITE" in commands
 
 
 def test_graph_task_has_description(taskfile_config: dict):

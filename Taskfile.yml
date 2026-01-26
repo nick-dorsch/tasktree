@@ -48,6 +48,26 @@ tasks:
       - cat src/tasktree_mcp/sql/views/*.sql | sqlite3 .tasktree/tasktree.db
     silent: true
 
+  snapshot-export:
+    desc: Export database to JSONL snapshot
+    cmds:
+      - echo "Exporting snapshot..."
+      - |
+          uv run python -c "from tasktree_mcp.paths import get_db_path, get_snapshot_path; from tasktree_mcp.snapshot import export_snapshot; export_snapshot(get_db_path(), get_snapshot_path())"
+      - echo "Snapshot export complete."
+    silent: true
+
+  snapshot-import:
+    desc: Import JSONL snapshot into database
+    vars:
+      OVERWRITE: '{{.OVERWRITE | default "true"}}'
+    cmds:
+      - echo "Importing snapshot..."
+      - |
+          uv run python -c "from tasktree_mcp.paths import get_db_path, get_snapshot_path; from tasktree_mcp.snapshot import import_snapshot; overwrite='{{.OVERWRITE}}'.lower()=='true'; import_snapshot(get_db_path(), get_snapshot_path(), overwrite=overwrite)"
+      - echo "Snapshot import complete."
+    silent: true
+
   graph-json:
     desc: Output the task dependency graph as JSON
     aliases: [json]
