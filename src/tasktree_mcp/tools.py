@@ -135,6 +135,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         description: Optional[str] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
+        details: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Update an existing task.
@@ -153,6 +154,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=description,
             status=status,
             priority=priority,
+            details=details,
         )
         validate_task_name(request.name)
         validate_status(request.status)
