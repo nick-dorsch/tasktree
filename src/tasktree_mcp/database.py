@@ -191,6 +191,39 @@ class TaskRepository:
         return TaskRepository.update_task(name=name, status="completed")
 
 
+class FeatureRepository:
+    """Repository class for feature operations."""
+
+    @staticmethod
+    def add_feature(
+        name: str,
+        description: Optional[str] = None,
+        enabled: bool = True,
+    ) -> Dict[str, Any]:
+        """Add a new feature to the database."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO features (name, description, enabled)
+                    VALUES (?, ?, ?)
+                    """,
+                    (name, description, enabled),
+                )
+                conn.commit()
+
+                cursor.execute("SELECT * FROM features WHERE name = ?", (name,))
+                row = cursor.fetchone()
+                if row:
+                    return {key: row[key] for key in row.keys()}
+                return {}
+
+            except sqlite3.IntegrityError as e:
+                raise ValueError(f"Feature with name '{name}' already exists") from e
+
+
 class DependencyRepository:
     """Repository class for dependency operations."""
 
