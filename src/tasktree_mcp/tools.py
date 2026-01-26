@@ -74,6 +74,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         priority: int = 0,
         status: str = "pending",
         dependencies: Optional[List[str]] = None,
+        details: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Add a new task to the database.
@@ -84,6 +85,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority: Priority level (0-10, higher is more important)
             status: Initial status ('pending', 'in_progress', 'completed')
             dependencies: List of task names this task depends on (optional)
+            details: Optional field for more detailed implementation details of the task
 
         Returns:
             The created task dictionary
@@ -94,6 +96,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority=priority,
             status=status,
             dependencies=dependencies,
+            details=details,
         )
 
         # Validate dependencies exist before creating task
@@ -109,6 +112,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=request.description,
             priority=request.priority,
             status=task_status,
+            details=request.details,
         )
 
         # Create the task
@@ -117,6 +121,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=task.description,
             priority=task.priority,
             status=task.status.value,
+            details=task.details,
         )
 
         # Add dependencies if provided
@@ -145,6 +150,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description: New description (optional)
             status: New status (optional)
             priority: New priority (optional)
+            details: New details (optional)
 
         Returns:
             Updated task dictionary if found, None otherwise
@@ -166,6 +172,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=request.description,
             status=request.status,
             priority=request.priority,
+            details=request.details,
         )
 
     @mcp.tool()

@@ -66,7 +66,11 @@ class TaskRepository:
 
     @staticmethod
     def add_task(
-        name: str, description: str, priority: int = 0, status: str = "pending"
+        name: str,
+        description: str,
+        priority: int = 0,
+        status: str = "pending",
+        details: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Add a new task to the database."""
         with get_db_connection() as conn:
@@ -75,10 +79,10 @@ class TaskRepository:
             try:
                 cursor.execute(
                     """
-                    INSERT INTO tasks (name, description, priority, status)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO tasks (name, description, details, priority, status)
+                    VALUES (?, ?, ?, ?, ?)
                     """,
-                    (name, description, priority, status),
+                    (name, description, details, priority, status),
                 )
                 conn.commit()
 
@@ -97,6 +101,7 @@ class TaskRepository:
         description: Optional[str] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
+        details: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Update an existing task."""
         if not name or not name.strip():
@@ -121,6 +126,9 @@ class TaskRepository:
             if priority is not None:
                 updates.append("priority = ?")
                 params.append(priority)
+            if details is not None:
+                updates.append("details = ?")
+                params.append(details)
 
             if not updates:
                 return TaskRepository.get_task(name)
