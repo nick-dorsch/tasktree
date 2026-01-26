@@ -16,10 +16,10 @@ uv sync
 ## Available Tools
 
 ### Task Management
-- `list_tasks(status=None, priority_min=None)` - List tasks with optional filtering
+- `list_tasks(status=None, priority_min=None, feature_name=None)` - List tasks with optional filtering
 - `get_task(name)` - Get a specific task by name
-- `add_task(name, description, priority=0, status="pending")` - Add a new task
-- `update_task(name, **kwargs)` - Update an existing task
+- `add_task(name, description, priority=0, status="pending", dependencies=None, details=None, feature_name="default", tests_required=True)` - Add a new task
+- `update_task(name, description=None, status=None, priority=None, details=None, tests_required=None)` - Update an existing task
 - `delete_task(name)` - Delete a task
 
 ### Dependency Management
@@ -29,6 +29,10 @@ uv sync
 
 ### Utility Tools
 - `get_available_tasks()` - Get tasks that can be started (no uncompleted dependencies)
+
+### tests_required Flag
+
+Use `tests_required=False` when a task does not involve testable code (for example: documentation-only updates or content changes). Leave it as `True` for normal code changes so downstream automation can expect tests to run.
 
 ## Usage
 
@@ -67,6 +71,7 @@ Add to your Claude Desktop configuration:
 - `description` (TEXT) - Task description
 - `status` (TEXT) - 'pending', 'in_progress', or 'completed'
 - `priority` (INTEGER) - 0-10, higher is more important
+- `tests_required` (INTEGER) - 0 or 1, whether tests are required
 - `created_at` (TIMESTAMP) - When task was created
 - `started_at` (TIMESTAMP) - When work began
 - `completed_at` (TIMESTAMP) - When task was completed
