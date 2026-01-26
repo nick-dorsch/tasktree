@@ -14,5 +14,10 @@ dependencies = [
     "ruff>=0.14.14",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
 [tool.hatch.build]
 packages = ["src/tasktree_mcp"]
