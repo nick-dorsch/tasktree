@@ -77,6 +77,16 @@ def test_graph_server_assets_placeholders_have_expected_content() -> None:
     assert "tasktreeGraphServerAssetsLoaded" in graph_js_content
 
 
+def test_graph_server_handler_has_no_inline_html() -> None:
+    """Ensure handler does not embed inline HTML templates."""
+    server_file = Path(__file__).parent.parent / "scripts" / "graph-server.py"
+    server_content = server_file.read_text()
+
+    assert "<!DOCTYPE html>" not in server_content
+    assert "<style>" not in server_content
+    assert "<body>" not in server_content
+
+
 def test_graph_server_index_template_has_placeholders() -> None:
     """Ensure index template contains placeholder tokens."""
     assets_dir = Path(__file__).parent.parent / "scripts" / "graph-server"
