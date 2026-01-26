@@ -223,6 +223,26 @@ class FeatureRepository:
             except sqlite3.IntegrityError as e:
                 raise ValueError(f"Feature with name '{name}' already exists") from e
 
+    @staticmethod
+    def list_features(enabled: Optional[bool] = None) -> List[Dict[str, Any]]:
+        """List features from the database with optional filtering."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+
+            query = "SELECT * FROM features"
+            params: List[Any] = []
+
+            if enabled is not None:
+                query += " WHERE enabled = ?"
+                params.append(enabled)
+
+            query += " ORDER BY name ASC"
+
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+
+            return [{key: row[key] for key in row.keys()} for row in rows]
+
 
 class DependencyRepository:
     """Repository class for dependency operations."""

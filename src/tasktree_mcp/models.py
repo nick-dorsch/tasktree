@@ -65,6 +65,15 @@ class Dependency(BaseModel):
         return v
 
 
+class Feature(BaseModel):
+    """Feature model with validation."""
+
+    name: str = Field(..., min_length=1, max_length=55)
+    description: Optional[str] = Field(None, description="Feature description")
+    enabled: bool = Field(default=True)
+    created_at: Optional[str] = None
+
+
 # Request models for function arguments
 class ListTasksRequest(BaseModel):
     """Request model for list_tasks function."""
@@ -228,6 +237,22 @@ class RemoveDependencyRequest(BaseModel):
         return v
 
 
+class AddFeatureRequest(BaseModel):
+    """Request model for add_feature function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=55, description="Unique name for the feature"
+    )
+    description: Optional[str] = Field(None, description="Description of the feature")
+    enabled: bool = Field(default=True, description="Whether the feature is enabled")
+
+
+class ListFeaturesRequest(BaseModel):
+    """Request model for list_features function."""
+
+    enabled: Optional[bool] = Field(None, description="Filter by enabled state")
+
+
 # Response models for function returns
 class TaskResponse(BaseModel):
     """Response model for task data."""
@@ -298,3 +323,24 @@ class DependencyRemoveResponse(BaseModel):
     removed: bool = Field(
         ..., description="True if dependency was removed, False if not found"
     )
+
+
+class FeatureResponse(BaseModel):
+    """Response model for feature data."""
+
+    name: str = Field(..., description="Feature name")
+    description: Optional[str] = Field(None, description="Feature description")
+    enabled: bool = Field(..., description="Whether the feature is enabled")
+    created_at: Optional[str] = Field(None, description="Creation timestamp")
+
+
+class FeatureListResponse(BaseModel):
+    """Response model for list of features."""
+
+    features: List[FeatureResponse] = Field(..., description="List of features")
+
+
+class FeatureCreateResponse(BaseModel):
+    """Response model for feature creation."""
+
+    feature: FeatureResponse = Field(..., description="Created feature")

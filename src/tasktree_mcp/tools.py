@@ -6,15 +6,18 @@ from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 
-from .database import DependencyRepository, TaskRepository
+from .database import DependencyRepository, FeatureRepository, TaskRepository
 from .models import (
     AddDependencyRequest,
+    AddFeatureRequest,
     AddTaskRequest,
     CompleteTaskRequest,
     DeleteTaskRequest,
     Dependency,
+    Feature,
     GetTaskRequest,
     ListDependenciesRequest,
+    ListFeaturesRequest,
     ListTasksRequest,
     RemoveDependencyRequest,
     Task,
@@ -316,7 +319,63 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         return DependencyRepository.get_available_tasks()
 
 
+def register_feature_tools(mcp: FastMCP) -> None:
+    """Register all feature-related tools with the MCP server."""
+
+    @mcp.tool()
+    def add_feature(
+        name: str,
+        description: Optional[str] = None,
+        enabled: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Add a new feature to the database.
+
+        Args:
+            name: Unique name for the feature
+            description: Description of the feature (optional)
+            enabled: Whether the feature is enabled
+
+        Returns:
+            The created feature dictionary
+        """
+        request = AddFeatureRequest(
+            name=name,
+            description=description,
+            enabled=enabled,
+        )
+        validate_feature_name(request.name)
+        validate_description(request.description)
+
+        feature = Feature(
+            name=request.name,
+            description=request.description,
+            enabled=request.enabled,
+        )
+
+        return FeatureRepository.add_feature(
+            name=feature.name,
+            description=feature.description,
+            enabled=feature.enabled,
+        )
+
+    @mcp.tool()
+    def list_features(enabled: Optional[bool] = None) -> List[Dict[str, Any]]:
+        """
+        List features from the database with optional filtering.
+
+        Args:
+            enabled: Filter by enabled state (optional)
+
+        Returns:
+            List of feature dictionaries
+        """
+        request = ListFeaturesRequest(enabled=enabled)
+        return FeatureRepository.list_features(enabled=request.enabled)
+
+
 def register_all_tools(mcp: FastMCP) -> None:
     """Register all tools with the MCP server."""
     register_task_tools(mcp)
     register_dependency_tools(mcp)
+    register_feature_tools(mcp)

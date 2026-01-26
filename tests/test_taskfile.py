@@ -140,7 +140,7 @@ def test_graph_task_references_database(taskfile_config: dict):
     all_commands = " ".join(str(cmd) for cmd in commands)
 
     # Should reference the database path
-    assert "data/tasktree.db" in all_commands
+    assert ".tasktree/tasktree.db" in all_commands
 
 
 def test_all_tasks_have_descriptions(taskfile_config: dict):
