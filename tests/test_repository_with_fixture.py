@@ -3,7 +3,6 @@ Example tests demonstrating how to use the test_db fixture with repository class
 """
 
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 

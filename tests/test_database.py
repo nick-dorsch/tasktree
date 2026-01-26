@@ -4,7 +4,6 @@ Tests for database operations using the test_db fixture.
 
 from pathlib import Path
 
-import pytest
 import sqlite3
 
 
