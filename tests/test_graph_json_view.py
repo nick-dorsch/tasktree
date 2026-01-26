@@ -222,3 +222,182 @@ def test_graph_json_long_description(mock_db_path):
     task_node = nodes[0]
     assert task_node["description"] == long_description
     assert len(task_node["description"]) == 1000
+
+
+def test_graph_json_includes_started_at(mock_db_path):
+    """Test that graph_json includes the started_at field."""
+    # Add a task and start it
+    TaskRepository.add_task(
+        name="started-task", description="Task to be started", status="pending"
+    )
+
+    # Start the task (triggers started_at timestamp)
+    TaskRepository.update_task(name="started-task", status="in_progress")
+
+    # Get the graph JSON
+    graph = get_graph_json(mock_db_path)
+
+    # Verify started_at is present
+    nodes = graph["nodes"]
+    assert len(nodes) == 1
+
+    task_node = nodes[0]
+    assert task_node["name"] == "started-task"
+    assert "started_at" in task_node
+    assert task_node["started_at"] is not None
+    assert task_node["status"] == "in_progress"
+
+
+def test_graph_json_started_at_null_for_pending(mock_db_path):
+    """Test that started_at is null for pending tasks."""
+    # Add a pending task
+    TaskRepository.add_task(
+        name="pending-task", description="Pending task", status="pending"
+    )
+
+    # Get the graph JSON
+    graph = get_graph_json(mock_db_path)
+
+    # Verify started_at is null
+    nodes = graph["nodes"]
+    assert len(nodes) == 1
+
+    task_node = nodes[0]
+    assert task_node["name"] == "pending-task"
+    assert "started_at" in task_node
+    assert task_node["started_at"] is None
+
+
+def test_graph_json_completion_minutes_calculated(mock_db_path):
+    """Test that completion_minutes is calculated correctly."""
+    import sqlite3
+
+    # Add a task
+    TaskRepository.add_task(
+        name="timed-task", description="Task with timing", status="pending"
+    )
+
+    # Manually set started_at and completed_at with known values
+    # We'll use direct SQL to set specific timestamps for testing
+    conn = sqlite3.connect(mock_db_path)
+    cursor = conn.cursor()
+
+    # Set started_at to a known time
+    started_time = "2026-01-26 10:00:00"
+    # Set completed_at to 30 minutes later
+    completed_time = "2026-01-26 10:30:00"
+
+    # First update to completed status (triggers will fire)
+    cursor.execute(
+        "UPDATE tasks SET status = 'completed' WHERE name = ?",
+        ("timed-task",),
+    )
+    # Then update the timestamps (after triggers have fired)
+    cursor.execute(
+        "UPDATE tasks SET started_at = ?, completed_at = ? WHERE name = ?",
+        (started_time, completed_time, "timed-task"),
+    )
+    conn.commit()
+    conn.close()
+
+    # Get the graph JSON
+    graph = get_graph_json(mock_db_path)
+
+    # Verify completion_minutes
+    nodes = graph["nodes"]
+    assert len(nodes) == 1
+
+    task_node = nodes[0]
+    assert task_node["name"] == "timed-task"
+    assert "completion_minutes" in task_node
+    assert task_node["completion_minutes"] == 30
+
+
+def test_graph_json_completion_minutes_null_when_not_completed(mock_db_path):
+    """Test that completion_minutes is null when task is not completed."""
+    # Add an in-progress task (has started_at but no completed_at)
+    TaskRepository.add_task(
+        name="in-progress-task",
+        description="Task in progress",
+        status="pending",
+    )
+    TaskRepository.update_task(name="in-progress-task", status="in_progress")
+
+    # Get the graph JSON
+    graph = get_graph_json(mock_db_path)
+
+    # Verify completion_minutes is null
+    nodes = graph["nodes"]
+    assert len(nodes) == 1
+
+    task_node = nodes[0]
+    assert task_node["name"] == "in-progress-task"
+    assert "completion_minutes" in task_node
+    assert task_node["completion_minutes"] is None
+
+
+def test_graph_json_completion_minutes_null_when_pending(mock_db_path):
+    """Test that completion_minutes is null for pending tasks."""
+    # Add a pending task (no started_at or completed_at)
+    TaskRepository.add_task(
+        name="pending-task", description="Pending task", status="pending"
+    )
+
+    # Get the graph JSON
+    graph = get_graph_json(mock_db_path)
+
+    # Verify completion_minutes is null
+    nodes = graph["nodes"]
+    assert len(nodes) == 1
+
+    task_node = nodes[0]
+    assert task_node["name"] == "pending-task"
+    assert "completion_minutes" in task_node
+    assert task_node["completion_minutes"] is None
+
+
+def test_graph_json_completion_minutes_with_fractional_minutes(mock_db_path):
+    """Test that completion_minutes is rounded to integer."""
+    import sqlite3
+
+    # Add a task
+    TaskRepository.add_task(
+        name="fractional-task",
+        description="Task with fractional minutes",
+        status="pending",
+    )
+
+    # Set timestamps with fractional minutes (e.g., 5.5 minutes = 5 minutes 30 seconds)
+    conn = sqlite3.connect(mock_db_path)
+    cursor = conn.cursor()
+
+    started_time = "2026-01-26 10:00:00"
+    # 5 minutes and 30 seconds later
+    completed_time = "2026-01-26 10:05:30"
+
+    # First update to completed status (triggers will fire)
+    cursor.execute(
+        "UPDATE tasks SET status = 'completed' WHERE name = ?",
+        ("fractional-task",),
+    )
+    # Then update the timestamps (after triggers have fired)
+    cursor.execute(
+        "UPDATE tasks SET started_at = ?, completed_at = ? WHERE name = ?",
+        (started_time, completed_time, "fractional-task"),
+    )
+    conn.commit()
+    conn.close()
+
+    # Get the graph JSON
+    graph = get_graph_json(mock_db_path)
+
+    # Verify completion_minutes is an integer (should be 5)
+    nodes = graph["nodes"]
+    assert len(nodes) == 1
+
+    task_node = nodes[0]
+    assert task_node["name"] == "fractional-task"
+    assert "completion_minutes" in task_node
+    # Should be 5 (rounded down from 5.5)
+    assert task_node["completion_minutes"] == 5
+    assert isinstance(task_node["completion_minutes"], int)
