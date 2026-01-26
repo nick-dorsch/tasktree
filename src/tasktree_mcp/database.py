@@ -34,7 +34,17 @@ class TaskRepository:
         priority_min: Optional[int] = None,
         feature_name: Optional[str] = None,
     ) -> List[TaskResponse]:
-        """List tasks from the database with optional filtering."""
+        """
+        List tasks from the database with optional filtering.
+
+        Args:
+            status: Filter by status value
+            priority_min: Minimum priority level
+            feature_name: Filter by feature name
+
+        Returns:
+            List of TaskResponse models matching the filters
+        """
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
@@ -66,7 +76,18 @@ class TaskRepository:
 
     @staticmethod
     def get_task(name: str) -> Optional[TaskResponse]:
-        """Get a specific task by name."""
+        """
+        Get a specific task by name.
+
+        Args:
+            name: Task name to retrieve
+
+        Returns:
+            TaskResponse model if found, None otherwise
+
+        Raises:
+            ValueError: If task name is empty
+        """
         if not name or not name.strip():
             raise ValueError("Task name cannot be empty")
 
@@ -89,7 +110,23 @@ class TaskRepository:
         details: Optional[str] = None,
         feature_name: str = "default",
     ) -> TaskResponse:
-        """Add a new task to the database."""
+        """
+        Add a new task to the database.
+
+        Args:
+            name: Unique task name
+            description: Task description
+            priority: Priority level (0-10)
+            status: Initial status
+            details: Optional detailed description
+            feature_name: Feature this task belongs to
+
+        Returns:
+            TaskResponse model with the created task data
+
+        Raises:
+            ValueError: If task name already exists or feature doesn't exist
+        """
         with get_db_connection() as conn:
             cursor = conn.cursor()
 

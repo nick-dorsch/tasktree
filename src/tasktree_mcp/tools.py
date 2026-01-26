@@ -54,7 +54,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             feature_name: Filter by feature name
 
         Returns:
-            List of task dictionaries with name, description, status, priority, and timestamps
+            List of TaskResponse models with task data
         """
         request = ListTasksRequest(
             status=status, priority_min=priority_min, feature_name=feature_name
@@ -77,7 +77,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             name: The name of the task to retrieve
 
         Returns:
-            Task dictionary if found, None otherwise
+            TaskResponse model if found, None otherwise
         """
         request = GetTaskRequest(name=name)
         validate_task_name(request.name)
@@ -106,7 +106,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             feature_name: Feature this task belongs to (defaults to 'default')
 
         Returns:
-            The created task dictionary
+            TaskResponse model with the created task data
         """
         request = AddTaskRequest(
             name=name,
@@ -175,7 +175,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             details: New details (optional)
 
         Returns:
-            Updated task dictionary if found, None otherwise
+            TaskResponse model with updated task data if found, None otherwise
         """
         request = UpdateTaskRequest(
             name=name,
@@ -221,7 +221,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             name: Name of the task to start
 
         Returns:
-            Updated task dictionary if found, None otherwise
+            TaskResponse model with updated task data if found, None otherwise
         """
         validate_task_name(name)
         return TaskRepository.update_task(name=name, status="in_progress")
@@ -235,7 +235,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             name: Name of the task to complete
 
         Returns:
-            Updated task dictionary if found, None otherwise
+            TaskResponse model with updated task data if found, None otherwise
         """
         request = CompleteTaskRequest(name=name)
         validate_task_name(request.name)
@@ -254,7 +254,7 @@ def register_dependency_tools(mcp: FastMCP) -> None:
             task_name: Filter dependencies for a specific task (optional)
 
         Returns:
-            List of dependency relationships
+            List of DependencyResponse models with dependency relationship data
         """
         request = ListDependenciesRequest(task_name=task_name)
         return DependencyRepository.list_dependencies(task_name=request.task_name)
@@ -269,7 +269,7 @@ def register_dependency_tools(mcp: FastMCP) -> None:
             depends_on_task_name: Name of the task that must be completed first
 
         Returns:
-            The created dependency relationship
+            DependencyResponse model with the created dependency relationship data
         """
         request = AddDependencyRequest(
             task_name=task_name, depends_on_task_name=depends_on_task_name
@@ -317,7 +317,7 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         They are ordered by priority, favour high priority tasks.
 
         Returns:
-            List of available tasks with their dependencies resolved
+            List of TaskResponse models for available tasks with dependencies resolved
         """
         return DependencyRepository.get_available_tasks()
 
@@ -340,7 +340,7 @@ def register_feature_tools(mcp: FastMCP) -> None:
             enabled: Whether the feature is enabled
 
         Returns:
-            The created feature dictionary
+            FeatureResponse model with the created feature data
         """
         request = AddFeatureRequest(
             name=name,
@@ -371,7 +371,7 @@ def register_feature_tools(mcp: FastMCP) -> None:
             enabled: Filter by enabled state (optional)
 
         Returns:
-            List of feature dictionaries
+            List of FeatureResponse models with feature data
         """
         request = ListFeaturesRequest(enabled=enabled)
         return FeatureRepository.list_features(enabled=request.enabled)

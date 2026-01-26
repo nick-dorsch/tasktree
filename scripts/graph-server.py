@@ -567,37 +567,9 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 <div class="legend-color-box" style="background: #4CAF50;"></div>
                 <span>Completed</span>
             </div>
-        </div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Available Tasks</div>
             <div class="legend-item">
                 <div class="legend-color-box available" style="background: #2196F3;"></div>
-                <span>Green border + glow</span>
-            </div>
-        </div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Node Size</div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 8px; height: 8px;"></span>
-                <span>Priority 0 (lowest)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 19px; height: 19px;"></span>
-                <span>Priority 5 (medium)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-size-example" style="width: 30px; height: 30px;"></span>
-                <span>Priority 10 (highest)</span>
-            </div>
-        </div>
-        
-        <div class="legend-section">
-            <div class="legend-section-title">Dependencies</div>
-            <div class="legend-item">
-                <div class="legend-arrow"></div>
-                <span>Points to dependent</span>
+                <span>Available</span>
             </div>
         </div>
     </div>

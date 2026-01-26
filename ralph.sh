@@ -1,20 +1,20 @@
 #!/bin/bash
 
+# Model to use for opencode runs
+MODEL="openai/gpt-5.2-codex"
+
 # Run agent in a loop with stop condition
 if [ -f "PROMPT.md" ]; then
     for i in {1..50}; do
         echo "=========================="
-        echo "=== Iteration $i ==="
+        echo "=== Iteration $i ($MODEL) ==="
         echo "=========================="
         echo ""
         
         # Run opencode with prompt
         output=$(cat PROMPT.md | \
                 opencode run \
-                # --model opencode/big-pickle 
-                # --model google/gemini-3-pro-preview
-                # --model anthropic/claude-sonnet-4-5
-                --model openai/gpt-5.2-codex \
+                --model "$MODEL" \
                 2>&1 | tee /dev/tty)
         
         # Check for the stop condition promise
