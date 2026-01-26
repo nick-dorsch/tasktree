@@ -270,6 +270,40 @@ def test_graph_viewer_has_priority_based_sizing(graph_viewer_path):
     assert "priority" in content.lower()
 
 
+def test_graph_viewer_node_size_range(graph_viewer_path):
+    """Test that node size scales from 8px (min priority) to 30px (max priority)."""
+    content = graph_viewer_path.read_text()
+
+    # Find the getNodeRadius function
+    lines = content.split("\n")
+    found_function = False
+    for i, line in enumerate(lines):
+        if "function getNodeRadius" in line or "getNodeRadius(d)" in line:
+            # Get the function body (next few lines)
+            function_body = "\n".join(lines[i : i + 5])
+
+            # Should return 8 + something based on priority
+            assert "return 8 +" in function_body, (
+                "Node radius should start at minimum 8 pixels"
+            )
+
+            # For priority 10, should return 30 (8 + 22)
+            # Formula: 8 + (priority / 10) * 22
+            assert "* 22" in function_body, (
+                "Node radius should scale with factor of 22 to reach max 30px at priority 10"
+            )
+
+            # Should use priority in calculation
+            assert "priority" in function_body.lower(), (
+                "Node radius should be based on priority"
+            )
+
+            found_function = True
+            break
+
+    assert found_function, "Could not find getNodeRadius function"
+
+
 def test_graph_viewer_has_available_task_highlighting(graph_viewer_path):
     """Test that available tasks are visually highlighted."""
     content = graph_viewer_path.read_text()
