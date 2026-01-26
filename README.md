@@ -199,12 +199,12 @@ for collaboration, merges, and rehydrating local state.
 task snapshot-export
 ```
 
-By default this writes `tasktree.snapshot.jsonl` at the repo root. You can override the
-location with `TASKTREE_SNAPSHOT_PATH=/absolute/path/to/tasktree.snapshot.jsonl`.
+By default this writes `.tasktree/tasktree.snapshot.jsonl` in the repo. You can override
+the location with `TASKTREE_SNAPSHOT_PATH=/absolute/path/to/tasktree.snapshot.jsonl`.
 
 ### Merge Workflow
 
-1. Run `task snapshot-export` and commit `tasktree.snapshot.jsonl`.
+1. Run `task snapshot-export` and commit `.tasktree/tasktree.snapshot.jsonl`.
 2. Merge or rebase as usual; resolve any JSONL conflicts line-by-line.
 3. Rehydrate your local database from the merged snapshot.
 

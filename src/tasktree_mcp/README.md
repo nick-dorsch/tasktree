@@ -58,8 +58,8 @@ task snapshot-export
 task snapshot-import
 ```
 
-Snapshots are written to `tasktree.snapshot.jsonl` in the repo root by default. Override
-the location with `TASKTREE_SNAPSHOT_PATH=/absolute/path/to/tasktree.snapshot.jsonl`. Import
+Snapshots are written to `.tasktree/tasktree.snapshot.jsonl` by default. Override the
+location with `TASKTREE_SNAPSHOT_PATH=/absolute/path/to/tasktree.snapshot.jsonl`. Import
 overwrites the local database by default; set `OVERWRITE=false` to skip overwriting.
 
 ## Integration with Claude Desktop

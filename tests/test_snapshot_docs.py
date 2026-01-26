@@ -15,7 +15,7 @@ def test_root_readme_snapshot_workflow() -> None:
     assert "Snapshot Workflow" in contents
     assert "task snapshot-export" in contents
     assert "task snapshot-import" in contents
-    assert "tasktree.snapshot.jsonl" in contents
+    assert ".tasktree/tasktree.snapshot.jsonl" in contents
     assert "TASKTREE_SNAPSHOT_PATH" in contents
     assert ".tasktree/tasktree.db" in contents
 
@@ -28,4 +28,5 @@ def test_mcp_readme_snapshot_workflow() -> None:
     assert "Snapshot Workflow" in contents
     assert "task snapshot-export" in contents
     assert "task snapshot-import" in contents
+    assert ".tasktree/tasktree.snapshot.jsonl" in contents
     assert ".tasktree/tasktree.db" in contents

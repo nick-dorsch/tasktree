@@ -305,13 +305,13 @@ class TestGetSnapshotPath:
         monkeypatch.delenv("TASKTREE_SNAPSHOT_PATH", raising=False)
 
         result = get_snapshot_path()
-        expected = repo_root / "tasktree.snapshot.jsonl"
+        expected = repo_root / ".tasktree" / "tasktree.snapshot.jsonl"
 
         assert result == expected
         assert result.is_absolute()
 
-    def test_get_snapshot_path_fallback_to_cwd(self, tmp_path, monkeypatch):
-        """Test fallback to cwd when not in a git repo."""
+    def test_get_snapshot_path_fallback_to_home(self, tmp_path, monkeypatch):
+        """Test fallback to home when not in a git repo."""
         non_repo = tmp_path / "not_a_repo"
         non_repo.mkdir()
 
@@ -319,7 +319,7 @@ class TestGetSnapshotPath:
         monkeypatch.delenv("TASKTREE_SNAPSHOT_PATH", raising=False)
 
         result = get_snapshot_path()
-        expected = non_repo.resolve() / "tasktree.snapshot.jsonl"
+        expected = Path.home() / ".tasktree" / "tasktree.snapshot.jsonl"
 
         assert result == expected
         assert result.is_absolute()
