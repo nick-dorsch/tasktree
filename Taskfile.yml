@@ -16,7 +16,7 @@ tasks:
       SEED: '{{.SEED | default "false"}}'
     cmds:
       - echo "Recreating database..."
-      - rm -f data/tasktree.db
+      - rm -f .tasktree/tasktree.db
       - task create-db
       - '{{if eq .SEED "true"}}task seed-db{{end}}'
       - task refresh-views
@@ -28,7 +28,7 @@ tasks:
     cmds:
       - echo "Creating SQLite database schemas..."
       - mkdir -p data
-      - cat sql/schemas/*.sql | sqlite3 data/tasktree.db
+      - cat sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
     generates:
       - data/tasktree.db
     silent: true
@@ -37,7 +37,7 @@ tasks:
     desc: Seed database with test data
     cmds:
       - echo "Seeding database..."
-      - sqlite3 data/tasktree.db < sql/seed.sql
+      - sqlite3 .tasktree/tasktree.db < sql/seed.sql
     silent: true
 
   refresh-views:
@@ -45,7 +45,7 @@ tasks:
     aliases: [rv]
     cmds:
       - echo "Refreshing database views..."
-      - cat sql/views/*.sql | sqlite3 data/tasktree.db
+      - cat sql/views/*.sql | sqlite3 .tasktree/tasktree.db
     silent: true
 
   graph-json:
@@ -53,14 +53,14 @@ tasks:
     aliases: [json]
     cmds:
       - echo "Generating dependency graph JSON..."
-      - sqlite3 data/tasktree.db "SELECT graph_json FROM v_graph_json" | jq .
+      - sqlite3 .tasktree/tasktree.db "SELECT graph_json FROM v_graph_json" | jq .
     silent: true
 
   draw:
     desc: Draw the task dependency graph in the terminal with colored highlighting
     cmds:
       - echo "Drawing dependency graph..."
-      - ./scripts/draw-graph.sh data/tasktree.db
+      - ./scripts/draw-graph.sh .tasktree/tasktree.db
     silent: true
 
   graph:
@@ -69,7 +69,7 @@ tasks:
       - echo "Starting graph server and opening browser..."
       - |
         # Start the server in the background
-        uv run python scripts/graph-server.py --port 8000 --db data/tasktree.db &
+        uv run python scripts/graph-server.py --port 8000 --db .tasktree/tasktree.db &
         SERVER_PID=$!
         
         # Wait for server to be ready

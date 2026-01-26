@@ -10,7 +10,7 @@ Usage:
 
 Default:
     Port: 8000
-    Database: data/tasktree.db
+    Database: .tasktree/tasktree.db
 """
 
 import argparse

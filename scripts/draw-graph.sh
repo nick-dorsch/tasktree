@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-DB_PATH="${1:-data/tasktree.db}"
+DB_PATH="${1:-.tasktree/tasktree.db}"
 
 # Get list of available task names
 AVAILABLE_TASKS=$(sqlite3 "$DB_PATH" "SELECT name FROM v_available_tasks" | tr '\n' '|' | sed 's/|$//')
