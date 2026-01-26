@@ -259,7 +259,7 @@ def test_api_graph_endpoint_cors_header(mock_db_path, server_thread):
 
 
 def test_root_endpoint_returns_html(server_thread):
-    """Test that the root endpoint returns HTML documentation."""
+    """Test that the root endpoint returns HTML with visualization."""
     port = server_thread
 
     conn = HTTPConnection("localhost", port)
@@ -271,7 +271,7 @@ def test_root_endpoint_returns_html(server_thread):
         assert response.getheader("Content-type") == "text/html"
 
         html = response.read().decode()
-        assert "TaskTree Graph API" in html
+        assert "TaskTree Graph Visualization" in html
         assert "/api/graph" in html
     finally:
         conn.close()
@@ -376,5 +376,183 @@ def test_graph_endpoint_json_formatting(mock_db_path, server_thread):
         # Should be valid JSON
         data = json.loads(raw_json)
         assert isinstance(data, dict)
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_includes_task_panel(mock_db_path, server_thread):
+    """Test that the root endpoint includes the task list panel."""
+    port = server_thread
+
+    # Add some tasks with different statuses and priorities
+    TaskRepository.add_task("high-priority-task", "High priority", priority=10)
+    TaskRepository.add_task("low-priority-task", "Low priority", priority=2)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for task panel structure
+        assert "task-panel" in html
+        assert "panel-header" in html
+        assert "task-list" in html
+
+        # Check for glassmorphism styling
+        assert "backdrop-filter: blur" in html
+        assert "rgba(0, 0, 0, 0.6)" in html
+
+        # Check for task items
+        assert "high-priority-task" in html
+        assert "low-priority-task" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_panel_priority_sorting(mock_db_path, server_thread):
+    """Test that tasks in the panel are sorted by priority (descending)."""
+    port = server_thread
+
+    # Add tasks with different priorities
+    TaskRepository.add_task("priority-3", "Task 3", priority=3)
+    TaskRepository.add_task("priority-8", "Task 8", priority=8)
+    TaskRepository.add_task("priority-5", "Task 5", priority=5)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Find positions of task names in HTML
+        pos_3 = html.find("priority-3")
+        pos_5 = html.find("priority-5")
+        pos_8 = html.find("priority-8")
+
+        # Higher priority should appear earlier in the HTML
+        assert pos_8 < pos_5 < pos_3
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
+    """Test that task panel shows correct status color coding."""
+    port = server_thread
+
+    # Add tasks with different statuses
+    TaskRepository.add_task("pending-task", "Pending", status="pending")
+    TaskRepository.add_task("in-progress-task", "In Progress", status="in_progress")
+    TaskRepository.add_task("completed-task", "Completed", status="completed")
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for status colors (these match the STATUS_COLORS in the viewer)
+        assert "#2196F3" in html  # Pending - Blue
+        assert "#FFC107" in html  # In Progress - Yellow/Amber
+        assert "#4CAF50" in html  # Completed - Green
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_panel_overall_times(mock_db_path, server_thread):
+    """Test that task panel header shows overall started_at and completed_at."""
+    port = server_thread
+
+    # Add tasks with started_at and completed_at times
+    TaskRepository.add_task("task-1", "Task 1", status="pending")
+    TaskRepository.update_task("task-1", status="in_progress")
+
+    TaskRepository.add_task("task-2", "Task 2", status="pending")
+    TaskRepository.update_task("task-2", status="in_progress")
+    TaskRepository.complete_task("task-2")
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for time metadata in panel header
+        assert "Started:" in html
+        # Should show a timestamp since we have started tasks
+        assert "2026-" in html or "202" in html  # Year prefix
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_panel_empty_state(server_thread):
+    """Test that task panel shows appropriate message when no tasks exist."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for empty state message
+        assert "No tasks available" in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_task_panel_truncates_long_descriptions(
+    mock_db_path, server_thread
+):
+    """Test that long task descriptions are truncated in the panel."""
+    port = server_thread
+
+    # Add task with a very long description
+    long_desc = "A" * 150  # 150 characters
+    TaskRepository.add_task("long-desc-task", long_desc)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Description should be truncated with ellipsis
+        assert "..." in html
+        # Full description should not appear (it's truncated at 80 chars)
+        assert long_desc not in html
+    finally:
+        conn.close()
+
+
+def test_root_endpoint_includes_graph_visualization(server_thread):
+    """Test that root endpoint includes the D3.js graph visualization."""
+    port = server_thread
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for D3.js script
+        assert "d3js.org/d3.v7.min.js" in html
+
+        # Check for graph container
+        assert 'id="graph"' in html
+
+        # Check for force simulation code
+        assert "forceSimulation" in html
+        assert "forceLink" in html
+
+        # Check for API endpoint reference
+        assert "/api/graph" in html
     finally:
         conn.close()
