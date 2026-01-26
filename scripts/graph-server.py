@@ -18,21 +18,40 @@ import json
 import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 
 class GraphAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for the graph API."""
 
     db_path: Path
+    assets_dir: Path = (Path(__file__).parent / "graph-server").resolve()
+
+    mime_types = {
+        ".css": "text/css; charset=utf-8",
+        ".html": "text/html; charset=utf-8",
+        ".ico": "image/x-icon",
+        ".jpeg": "image/jpeg",
+        ".jpg": "image/jpeg",
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".txt": "text/plain; charset=utf-8",
+    }
 
     def do_GET(self) -> None:
         """Handle GET requests."""
-        if self.path == "/api/graph":
+        request_path = urlparse(self.path).path
+
+        if request_path == "/api/graph":
             self._handle_graph_request()
-        elif self.path == "/api/tasks":
+        elif request_path == "/api/tasks":
             self._handle_tasks_request()
-        elif self.path == "/":
+        elif request_path == "/":
             self._handle_root_request()
+        elif request_path.startswith("/static/"):
+            self._handle_static_request(request_path)
         else:
             self._send_error(404, "Not Found")
 
@@ -1043,6 +1062,30 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 </body>
 </html>"""
         self._send_html_response(200, html)
+
+    def _handle_static_request(self, request_path: str) -> None:
+        """Serve static assets under /static."""
+        relative_path = request_path.removeprefix("/static/")
+
+        if not relative_path or relative_path.endswith("/"):
+            self._send_error(404, "Not Found")
+            return
+
+        safe_path = Path(unquote(relative_path))
+        asset_path = (self.assets_dir / safe_path).resolve()
+
+        if not asset_path.is_file() or not asset_path.is_relative_to(self.assets_dir):
+            self._send_error(404, "Not Found")
+            return
+
+        content_type = self.mime_types.get(
+            asset_path.suffix.lower(), "application/octet-stream"
+        )
+
+        self.send_response(200)
+        self.send_header("Content-type", content_type)
+        self.end_headers()
+        self.wfile.write(asset_path.read_bytes())
 
     def _get_graph_json(self) -> dict:
         """
