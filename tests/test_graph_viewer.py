@@ -87,6 +87,81 @@ def test_graph_viewer_has_tooltip(graph_viewer_path):
     assert "tooltip" in content.lower()
 
 
+def test_graph_viewer_tooltip_shows_task_name(graph_viewer_path):
+    """Test that tooltip displays task name."""
+    content = graph_viewer_path.read_text()
+
+    # Check for task name in tooltip
+    assert "d.name" in content
+
+
+def test_graph_viewer_tooltip_shows_description(graph_viewer_path):
+    """Test that tooltip displays task description."""
+    content = graph_viewer_path.read_text()
+
+    # Check for description in tooltip
+    assert "d.description" in content or "Description:" in content
+
+
+def test_graph_viewer_tooltip_shows_status(graph_viewer_path):
+    """Test that tooltip displays task status."""
+    content = graph_viewer_path.read_text()
+
+    # Check for status in tooltip
+    assert "d.status" in content or "Status:" in content
+
+
+def test_graph_viewer_tooltip_shows_priority(graph_viewer_path):
+    """Test that tooltip displays task priority."""
+    content = graph_viewer_path.read_text()
+
+    # Check for priority in tooltip
+    assert "d.priority" in content or "Priority:" in content
+
+
+def test_graph_viewer_tooltip_has_hover_events(graph_viewer_path):
+    """Test that tooltip is triggered by hover events."""
+    content = graph_viewer_path.read_text()
+
+    # Check for mouseover event to show tooltip
+    assert "mouseover" in content.lower() or "mouseenter" in content.lower()
+
+    # Check for mouseout event to hide tooltip
+    assert "mouseout" in content.lower() or "mouseleave" in content.lower()
+
+
+def test_graph_viewer_tooltip_has_show_function(graph_viewer_path):
+    """Test that tooltip has a show function."""
+    content = graph_viewer_path.read_text()
+
+    # Check for showTooltip function
+    assert "showTooltip" in content or "show_tooltip" in content.lower()
+
+
+def test_graph_viewer_tooltip_has_hide_function(graph_viewer_path):
+    """Test that tooltip has a hide function."""
+    content = graph_viewer_path.read_text()
+
+    # Check for hideTooltip function
+    assert "hideTooltip" in content or "hide_tooltip" in content.lower()
+
+
+def test_graph_viewer_tooltip_element_exists(graph_viewer_path):
+    """Test that tooltip HTML element is defined."""
+    content = graph_viewer_path.read_text()
+
+    # Check for tooltip element in HTML
+    assert 'id="tooltip"' in content or "id='tooltip'" in content
+
+
+def test_graph_viewer_tooltip_styling(graph_viewer_path):
+    """Test that tooltip has CSS styling."""
+    content = graph_viewer_path.read_text()
+
+    # Check for tooltip class in CSS
+    assert ".tooltip" in content
+
+
 def test_graph_viewer_has_node_rendering(graph_viewer_path):
     """Test that node rendering is implemented."""
     content = graph_viewer_path.read_text()
