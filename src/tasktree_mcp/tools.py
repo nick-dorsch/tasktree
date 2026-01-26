@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 
+from . import session
 from .database import DependencyRepository, TaskRepository
 from .models import (
     AddDependencyRequest,
@@ -196,29 +197,59 @@ def register_task_tools(mcp: FastMCP) -> None:
         """
         Start a task by setting its status to 'in_progress'.
 
+        Resets the session counter when a task is successfully started.
+        Blocks if the session counter has reached the maximum (1 completed task).
+
         Args:
             name: Name of the task to start
 
         Returns:
-            Updated task dictionary if found, None otherwise
+            Updated task dictionary with session_counter field
+
+        Raises:
+            ValueError: If session counter is at maximum
         """
+        # Check session counter before proceeding
+        if session.get_counter() >= session.MAX_COUNTER_VALUE:
+            raise ValueError(
+                f"Cannot start new task: session limit reached "
+                f"({session.MAX_COUNTER_VALUE} task completed). "
+                f"The current session has completed the maximum number of tasks."
+            )
+
         validate_task_name(name)
-        return TaskRepository.update_task(name=name, status="in_progress")
+        result = TaskRepository.update_task(name=name, status="in_progress")
+
+        if result:
+            # Reset counter on successful start
+            session.reset_counter()
+            result["session_counter"] = session.get_counter()
+
+        return result
 
     @mcp.tool()
     def complete_task(name: str) -> Optional[Dict[str, Any]]:
         """
         Complete a task by setting its status to 'completed'.
 
+        Increments the session counter (max 1) when a task is completed.
+
         Args:
             name: Name of the task to complete
 
         Returns:
-            Updated task dictionary if found, None otherwise
+            Updated task dictionary with session_counter field
         """
         request = CompleteTaskRequest(name=name)
         validate_task_name(request.name)
-        return TaskRepository.complete_task(request.name)
+        result = TaskRepository.complete_task(request.name)
+
+        if result:
+            # Increment counter (capped at MAX_COUNTER_VALUE)
+            new_counter = session.increment_counter()
+            result["session_counter"] = new_counter
+
+        return result
 
 
 def register_dependency_tools(mcp: FastMCP) -> None:
