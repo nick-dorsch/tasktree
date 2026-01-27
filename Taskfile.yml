@@ -2,6 +2,12 @@ version: '3'
 
 tasks:
 
+  test:
+    desc: Run all pytests
+    silent: true
+    cmds:
+      - uv run pytest
+
   mcp:
     desc: Start the tasktree MCP Server
     silent: true
@@ -9,23 +15,14 @@ tasks:
       - echo "Starting MCP server..."
       - uv run python src/tasktree/mcp/server.py
 
-  test:
-    desc: Run all pytests
-    silent: true
-    cmds:
-      - uv run pytest
-
   init-db:
     desc: Recreate database (use SEED=true to seed with test data)
     silent: true
     aliases: [init]
-    vars:
-      SEED: '{{.SEED | default "false"}}'
     cmds:
       - echo "Recreating database..."
       - rm -f .tasktree/tasktree.db
       - task create-db
-      - '{{if eq .SEED "true"}}task seed-db{{end}}'
       - task refresh-views
       - echo "Complete!"
 
@@ -38,13 +35,6 @@ tasks:
       - cat src/tasktree/sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
     generates:
       - data/tasktree.db
-
-  seed-db:
-    desc: Seed database with test data
-    silent: true
-    cmds:
-      - echo "Seeding database..."
-      - sqlite3 .tasktree/tasktree.db < sql/seed.sql
 
   refresh-views:
     desc: Refresh all database views
