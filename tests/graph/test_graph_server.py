@@ -14,8 +14,8 @@ from time import sleep
 
 import pytest
 
-import tasktree.graph_server as graph_server
-from tasktree.database import DependencyRepository, TaskRepository
+import tasktree.graph.server as graph_server
+from tasktree.core.database import DependencyRepository, TaskRepository
 
 GraphAPIHandler = graph_server.GraphAPIHandler
 run_server = graph_server.run_server
@@ -29,7 +29,7 @@ def mock_db_path(test_db: Path, monkeypatch):
     This fixture modifies the database.DB_PATH to point to the test database,
     ensuring all repository operations use the isolated test database.
     """
-    import tasktree.database as db_module
+    import tasktree.core.database as db_module
 
     monkeypatch.setattr(db_module, "DB_PATH", test_db)
     return test_db

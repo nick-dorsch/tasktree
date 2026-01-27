@@ -60,7 +60,7 @@ tasks:
     cmds:
       - echo "Exporting snapshot..."
       - |
-          uv run python -c "from tasktree.paths import get_db_path, get_snapshot_path; from tasktree.snapshot import export_snapshot; export_snapshot(get_db_path(), get_snapshot_path())"
+          uv run python -c "from tasktree.core.paths import get_db_path, get_snapshot_path; from tasktree.io.snapshot import export_snapshot; export_snapshot(get_db_path(), get_snapshot_path())"
       - echo "Snapshot export complete."
 
   snapshot-import:
@@ -71,7 +71,7 @@ tasks:
     cmds:
       - echo "Importing snapshot..."
       - |
-          uv run python -c "from tasktree.paths import get_db_path, get_snapshot_path; from tasktree.snapshot import import_snapshot; overwrite='{{.OVERWRITE}}'.lower()=='true'; import_snapshot(get_db_path(), get_snapshot_path(), overwrite=overwrite)"
+          uv run python -c "from tasktree.core.paths import get_db_path, get_snapshot_path; from tasktree.io.snapshot import import_snapshot; overwrite='{{.OVERWRITE}}'.lower()=='true'; import_snapshot(get_db_path(), get_snapshot_path(), overwrite=overwrite)"
       - echo "Snapshot import complete."
 
   graph-json:

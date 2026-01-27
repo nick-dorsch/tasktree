@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tasktree.db_init import (
+from tasktree.db.init import (
     apply_schemas,
     apply_views,
     get_sql_files,

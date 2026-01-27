@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple
 
-from .db_init import initialize_database
+from ..db.init import initialize_database
 
 SNAPSHOT_SCHEMA_VERSION = "1"
 RECORD_ORDER: Tuple[str, ...] = ("meta", "feature", "task", "dependency")

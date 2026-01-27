@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tasktree.paths import find_repo_root, get_db_path, get_snapshot_path
+from tasktree.core.paths import find_repo_root, get_db_path, get_snapshot_path
 
 
 class TestFindRepoRoot:
@@ -239,7 +239,7 @@ class TestPathResolutionIntegration:
         """Test that we correctly identify the tasktree repo root."""
         # We're running in the tasktree repo itself
         # Find the actual repo root
-        from tasktree.paths import find_repo_root
+        from tasktree.core.paths import find_repo_root
 
         repo_root = find_repo_root()
 
@@ -280,7 +280,7 @@ class TestGetSnapshotPath:
 
     def test_get_snapshot_path_with_env_override(self, tmp_path, monkeypatch):
         """Test that TASKTREE_SNAPSHOT_PATH environment variable takes priority."""
-        snapshot_path = tmp_path / "snapshots" / "tasktree.snapshot.jsonl"
+        snapshot_path = tmp_path / "snapshots" / "tasktree.io.snapshot.jsonl"
         monkeypatch.setenv("TASKTREE_SNAPSHOT_PATH", str(snapshot_path))
 
         result = get_snapshot_path()
@@ -305,7 +305,7 @@ class TestGetSnapshotPath:
         monkeypatch.delenv("TASKTREE_SNAPSHOT_PATH", raising=False)
 
         result = get_snapshot_path()
-        expected = repo_root / ".tasktree" / "tasktree.snapshot.jsonl"
+        expected = repo_root / ".tasktree" / "tasktree.io.snapshot.jsonl"
 
         assert result == expected
         assert result.is_absolute()
@@ -319,7 +319,7 @@ class TestGetSnapshotPath:
         monkeypatch.delenv("TASKTREE_SNAPSHOT_PATH", raising=False)
 
         result = get_snapshot_path()
-        expected = Path.home() / ".tasktree" / "tasktree.snapshot.jsonl"
+        expected = Path.home() / ".tasktree" / "tasktree.io.snapshot.jsonl"
 
         assert result == expected
         assert result.is_absolute()

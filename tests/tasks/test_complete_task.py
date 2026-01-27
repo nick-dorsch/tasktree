@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-import tasktree.database as db
-from tasktree.database import TaskRepository
+import tasktree.core.database as db
+from tasktree.core.database import TaskRepository
 
 
 def test_complete_task_success(test_db: Path, monkeypatch):
@@ -97,7 +97,7 @@ def test_complete_task_with_dependencies(test_db: Path, monkeypatch):
     )
 
     # Add dependency
-    from tasktree.database import DependencyRepository
+    from tasktree.core.database import DependencyRepository
 
     DependencyRepository.add_dependency(
         task_name="dependent-task", depends_on_task_name="dependency-task"

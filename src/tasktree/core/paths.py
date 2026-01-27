@@ -101,8 +101,8 @@ def get_snapshot_path() -> Path:
     Get the snapshot path using the following priority:
 
     1. TASKTREE_SNAPSHOT_PATH environment variable (if set, must be absolute)
-    2. .tasktree/tasktree.snapshot.jsonl in repository root (if in a git repo)
-    3. ~/.tasktree/tasktree.snapshot.jsonl (fallback for non-repo usage)
+    2. .tasktree/tasktree.io.snapshot.jsonl in repository root (if in a git repo)
+    3. ~/.tasktree/tasktree.io.snapshot.jsonl (fallback for non-repo usage)
 
     Returns:
         Path: Absolute path to the snapshot file
@@ -129,11 +129,11 @@ def get_snapshot_path() -> Path:
     if repo_root:
         snapshot_dir = repo_root / ".tasktree"
         _ensure_dir_exists(snapshot_dir)
-        return snapshot_dir / "tasktree.snapshot.jsonl"
+        return snapshot_dir / "tasktree.io.snapshot.jsonl"
 
     home_dir = Path.home() / ".tasktree"
     _ensure_dir_exists(home_dir)
-    return home_dir / "tasktree.snapshot.jsonl"
+    return home_dir / "tasktree.io.snapshot.jsonl"
 
 
 def _ensure_dir_exists(dir_path: Path) -> None:
