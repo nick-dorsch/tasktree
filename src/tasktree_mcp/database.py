@@ -71,7 +71,7 @@ class TaskRepository:
             query = (
                 "SELECT t.*, f.name AS feature_name "
                 "FROM tasks t "
-                "LEFT JOIN features f ON t.feature_id = f.id"
+                "JOIN features f ON t.feature_id = f.id"
             )
             params = []
 
@@ -121,7 +121,7 @@ class TaskRepository:
                 """
                 SELECT t.*, f.name AS feature_name
                 FROM tasks t
-                LEFT JOIN features f ON t.feature_id = f.id
+                JOIN features f ON t.feature_id = f.id
                 WHERE t.name = ?
                 ORDER BY t.created_at ASC
                 LIMIT 1

@@ -45,26 +45,75 @@ def test_export_snapshot_writes_ordered_jsonl(test_db: Path, tmp_path: Path) -> 
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO features (name, description, enabled) VALUES (?, ?, ?)",
-            ("analytics", "Analytics feature", True),
+            """
+            INSERT INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            (
+                "analytics",
+                "Analytics feature",
+                "Analytics feature specification",
+            ),
         )
         cursor.execute(
             """
-            INSERT INTO tasks (name, description, feature_name, priority, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO tasks (
+                feature_id,
+                name,
+                description,
+                specification,
+                tests_required,
+                priority,
+                status
+            )
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("alpha", "Alpha task", "default", 3, "pending"),
+            (
+                "alpha",
+                "Alpha task",
+                "Alpha task",
+                1,
+                3,
+                "pending",
+                "misc",
+            ),
         )
         cursor.execute(
             """
-            INSERT INTO tasks (name, description, feature_name, priority, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO tasks (
+                feature_id,
+                name,
+                description,
+                specification,
+                tests_required,
+                priority,
+                status
+            )
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("beta", "Beta task", "analytics", 2, "pending"),
+            (
+                "beta",
+                "Beta task",
+                "Beta task",
+                1,
+                2,
+                "pending",
+                "analytics",
+            ),
         )
         cursor.execute(
-            "INSERT INTO dependencies (task_name, depends_on_task_name) VALUES (?, ?)",
-            ("beta", "alpha"),
+            """
+            INSERT INTO dependencies (task_id, depends_on_task_id)
+            SELECT t.id, d.id
+            FROM tasks t
+            JOIN tasks d ON d.name = ?
+            WHERE t.name = ?
+            """,
+            ("alpha", "beta"),
         )
         conn.commit()
     finally:
@@ -109,15 +158,36 @@ def test_export_snapshot_falls_back_without_json1(
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO features (name, description, enabled) VALUES (?, ?, ?)",
-            ("gamma", "Gamma feature", True),
+            """
+            INSERT INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("gamma", "Gamma feature", "Gamma feature specification"),
         )
         cursor.execute(
             """
-            INSERT INTO tasks (name, description, feature_name, priority, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO tasks (
+                feature_id,
+                name,
+                description,
+                specification,
+                tests_required,
+                priority,
+                status
+            )
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("delta", "Delta task", "gamma", 4, "pending"),
+            (
+                "delta",
+                "Delta task",
+                "Delta task",
+                1,
+                4,
+                "pending",
+                "gamma",
+            ),
         )
         conn.commit()
     finally:
@@ -145,26 +215,75 @@ def test_import_snapshot_overwrite_restores_data(test_db: Path, tmp_path: Path) 
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO features (name, description, enabled) VALUES (?, ?, ?)",
-            ("analytics", "Analytics feature", True),
+            """
+            INSERT INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            (
+                "analytics",
+                "Analytics feature",
+                "Analytics feature specification",
+            ),
         )
         cursor.execute(
             """
-            INSERT INTO tasks (name, description, feature_name, priority, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO tasks (
+                feature_id,
+                name,
+                description,
+                specification,
+                tests_required,
+                priority,
+                status
+            )
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("alpha", "Alpha task", "default", 3, "pending"),
+            (
+                "alpha",
+                "Alpha task",
+                "Alpha task",
+                1,
+                3,
+                "pending",
+                "misc",
+            ),
         )
         cursor.execute(
             """
-            INSERT INTO tasks (name, description, feature_name, priority, status)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO tasks (
+                feature_id,
+                name,
+                description,
+                specification,
+                tests_required,
+                priority,
+                status
+            )
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("beta", "Beta task", "analytics", 2, "pending"),
+            (
+                "beta",
+                "Beta task",
+                "Beta task",
+                1,
+                2,
+                "pending",
+                "analytics",
+            ),
         )
         cursor.execute(
-            "INSERT INTO dependencies (task_name, depends_on_task_name) VALUES (?, ?)",
-            ("beta", "alpha"),
+            """
+            INSERT INTO dependencies (task_id, depends_on_task_id)
+            SELECT t.id, d.id
+            FROM tasks t
+            JOIN tasks d ON d.name = ?
+            WHERE t.name = ?
+            """,
+            ("alpha", "beta"),
         )
         conn.commit()
     finally:

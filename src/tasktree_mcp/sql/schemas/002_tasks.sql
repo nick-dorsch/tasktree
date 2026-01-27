@@ -1,7 +1,7 @@
 -- Each task is a node in the dependency graph
 CREATE TABLE IF NOT EXISTS tasks (
   id CHAR(32) PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
-  feature_id CHAR(32) REFERENCES features(id),
+  feature_id CHAR(32) NOT NULL REFERENCES features(id),
 
   name VARCHAR(55) NOT NULL,
   description TEXT NOT NULL,

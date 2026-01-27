@@ -110,7 +110,7 @@ svg.call(zoom);
 
 // Initialize force simulation
 const simulation = d3.forceSimulation()
-    .force('link', d3.forceLink().id(d => d.name).distance(150))
+    .force('link', d3.forceLink().id(d => d.id).distance(150))
     .force('charge', d3.forceManyBody().strength(-400))
     .force('center', d3.forceCenter(WIDTH / 2, HEIGHT / 2))
     .force('collision', d3.forceCollide().radius(30));
@@ -173,7 +173,7 @@ function updateGraph(graphData) {
     const positionCache = new Map();
     if (node) {
         node.each(d => {
-            positionCache.set(d.name, {
+            positionCache.set(d.id, {
                 x: d.x,
                 y: d.y,
                 vx: d.vx || 0,
@@ -199,8 +199,8 @@ function updateGraph(graphData) {
     // Update links (stable key function handles D3 mutation)
     link = linkGroup.selectAll('.link')
         .data(links, d => {
-            const source = typeof d.source === 'object' ? d.source.name : d.source;
-            const target = typeof d.target === 'object' ? d.target.name : d.target;
+            const source = typeof d.source === 'object' ? d.source.id : d.source;
+            const target = typeof d.target === 'object' ? d.target.id : d.target;
             return `${source}-${target}`;
         });
 
@@ -214,7 +214,7 @@ function updateGraph(graphData) {
 
     // Update nodes
     node = nodeGroup.selectAll('.node')
-        .data(nodes, d => d.name);
+        .data(nodes, d => d.id);
 
     node.exit().remove();
 
@@ -232,7 +232,7 @@ function updateGraph(graphData) {
 
     // Restore positions for existing nodes AFTER data join
     node.each(d => {
-        const cached = positionCache.get(d.name);
+        const cached = positionCache.get(d.id);
         if (cached) {
             d.x = cached.x;
             d.y = cached.y;
@@ -252,7 +252,7 @@ function updateGraph(graphData) {
 
     // Update labels
     label = labelGroup.selectAll('.node-label')
-        .data(nodes, d => d.name);
+        .data(nodes, d => d.id);
 
     label.exit().remove();
 
@@ -408,9 +408,9 @@ function updateTaskList(tasks) {
             '<div class="task-details-row"><span class="task-details-label">Description:</span>' +
             '<div class="task-details-value">' + (task.description || 'None') + '</div></div>';
 
-        if (task.details) {
+        if (task.specification && task.specification !== task.description) {
             detailsHtml += '<div class="task-details-row"><span class="task-details-label">Details:</span>' +
-                '<div class="task-details-value">' + task.details + '</div></div>';
+                '<div class="task-details-value">' + task.specification + '</div></div>';
         }
 
         detailsHtml += '<div class="task-details-row"><span class="task-details-label">Created:</span> ' + (task.created_at || 'None') + '</div>';

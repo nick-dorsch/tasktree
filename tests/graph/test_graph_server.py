@@ -4,6 +4,8 @@ Tests for the graph server (scripts/graph-server.py).
 Tests the HTTP API endpoints for retrieving task dependency graphs.
 """
 
+# Import the server module dynamically
+import importlib.util
 import json
 import socket
 from http.client import HTTPConnection
@@ -14,10 +16,6 @@ from time import sleep
 import pytest
 
 from tasktree_mcp.database import DependencyRepository, TaskRepository
-
-
-# Import the server module dynamically
-import importlib.util
 
 scripts_root = Path(__file__).resolve().parents[2]
 scripts_dir = scripts_root / "scripts"
@@ -67,7 +65,7 @@ def server_thread(test_db: Path):
     thread.start()
 
     # Give server time to start
-    sleep(0.5)
+    sleep(0.1)
 
     yield port
 
@@ -84,6 +82,21 @@ def fetch_graph_js(port: int) -> str:
         return response.read().decode()
     finally:
         conn.close()
+
+
+def fetch_task_ids(db_path: Path, *names: str) -> dict:
+    """Fetch task IDs by name from the database."""
+    if not names:
+        return {}
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    placeholders = ",".join("?" for _ in names)
+    cursor.execute(f"SELECT name, id FROM tasks WHERE name IN ({placeholders})", names)
+    rows = cursor.fetchall()
+    conn.close()
+    return {row[0]: row[1] for row in rows}
 
 
 def test_graph_api_handler_class_exists():
@@ -140,8 +153,10 @@ def test_get_graph_json_with_tasks(mock_db_path):
 
     # Verify node content
     node_names = {node["name"] for node in graph["nodes"]}
+    node_ids = {node["id"] for node in graph["nodes"]}
     assert "task-1" in node_names
     assert "task-2" in node_names
+    assert len(node_ids) == 2
 
 
 def test_get_graph_json_with_dependencies(mock_db_path):
@@ -165,8 +180,9 @@ def test_get_graph_json_with_dependencies(mock_db_path):
     # Verify edges
     assert len(graph["edges"]) == 1
     edge = graph["edges"][0]
-    assert edge["from"] == "dependent-task"
-    assert edge["to"] == "base-task"
+    task_ids = fetch_task_ids(mock_db_path, "dependent-task", "base-task")
+    assert edge["from"] == task_ids["dependent-task"]
+    assert edge["to"] == task_ids["base-task"]
 
 
 def test_get_graph_json_includes_all_fields(mock_db_path):
@@ -188,11 +204,14 @@ def test_get_graph_json_includes_all_fields(mock_db_path):
     node = graph["nodes"][0]
 
     # Verify all expected fields are present
+    assert "id" in node
     assert "name" in node
     assert "description" in node
     assert "status" in node
     assert "priority" in node
     assert "completed_at" in node
+    assert "started_at" in node
+    assert "completion_minutes" in node
     assert "is_available" in node
 
     # Verify values
@@ -650,7 +669,7 @@ def test_root_endpoint_task_items_collapsed_by_default(mock_db_path, server_thre
         "Test description",
         priority=5,
         status="pending",
-        details="Additional details about the task",
+        specification="Additional details about the task",
     )
 
     conn = HTTPConnection("localhost", port)
@@ -685,7 +704,7 @@ def test_root_endpoint_task_details_section_content(mock_db_path, server_thread)
         "Full description",
         priority=7,
         status="pending",
-        details="Implementation details here",
+        specification="Implementation details here",
     )
     TaskRepository.update_task("detailed-task", status="in_progress")
 
@@ -903,7 +922,10 @@ def test_root_endpoint_description_scrollable_container(mock_db_path, server_thr
     long_details = "These are extensive details. " * 30  # ~900 characters
 
     TaskRepository.add_task(
-        "long-content-task", long_description, priority=5, details=long_details
+        "long-content-task",
+        long_description,
+        priority=5,
+        specification=long_details,
     )
 
     conn = HTTPConnection("localhost", port)
@@ -940,7 +962,10 @@ def test_root_endpoint_description_details_new_lines(mock_db_path, server_thread
     port = server_thread
 
     TaskRepository.add_task(
-        "test-task", "Task description text", priority=5, details="Task details text"
+        "test-task",
+        "Task description text",
+        priority=5,
+        specification="Task details text",
     )
 
     conn = HTTPConnection("localhost", port)
@@ -1061,8 +1086,10 @@ def test_api_tasks_endpoint_with_tasks(mock_db_path, server_thread):
         assert "created_at" in task
         assert "started_at" in task
         assert "completed_at" in task
-        assert "details" in task
+        assert "specification" in task
         assert "feature_name" in task
+        assert "tests_required" in task
+        assert "updated_at" in task
     finally:
         conn.close()
 
@@ -1123,7 +1150,7 @@ def test_root_endpoint_renders_template_placeholders(mock_db_path, server_thread
         assert "{{FEATURE_OPTIONS}}" not in html
         assert "{{TASK_ITEMS}}" not in html
         assert "templated-task" in html
-        assert "default" in html
+        assert "misc" in html
     finally:
         conn.close()
 

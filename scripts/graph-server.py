@@ -81,26 +81,36 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Get all distinct feature names for the dropdown
+        # Get all feature names for the dropdown
         cursor.execute("""
-            SELECT DISTINCT feature_name 
-            FROM tasks 
-            ORDER BY feature_name
+            SELECT name
+            FROM features
+            ORDER BY name
         """)
         features = [row[0] for row in cursor.fetchall()]
 
         # Get all tasks sorted by status, priority (descending), then name
         cursor.execute("""
-            SELECT name, description, status, priority, created_at, started_at, completed_at, details, feature_name
-            FROM tasks
-            ORDER BY CASE status 
-                         WHEN 'blocked' THEN 1 
-                         WHEN 'in_progress' THEN 2 
-                         WHEN 'pending' THEN 3 
-                         WHEN 'completed' THEN 4 
+            SELECT
+                t.name,
+                t.description,
+                t.status,
+                t.priority,
+                t.created_at,
+                t.started_at,
+                t.completed_at,
+                t.specification,
+                f.name AS feature_name
+            FROM tasks t
+            JOIN features f ON t.feature_id = f.id
+            ORDER BY CASE t.status
+                         WHEN 'blocked' THEN 1
+                         WHEN 'in_progress' THEN 2
+                         WHEN 'pending' THEN 3
+                         WHEN 'completed' THEN 4
                      END,
-                     priority DESC,
-                     name
+                     t.priority DESC,
+                     t.name
         """)
         tasks = cursor.fetchall()
 
@@ -117,7 +127,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 created_at,
                 started_at,
                 completed_at,
-                details,
+                specification,
                 feature_name,
             ) = task
 
@@ -139,11 +149,11 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     <div class="task-details-value">{description if description else "None"}</div>
                 </div>"""
 
-            if details:
+            if specification and specification != description:
                 details_html += f"""
                 <div class="task-details-row">
                     <span class="task-details-label">Details:</span>
-                    <div class="task-details-value">{details}</div>
+                    <div class="task-details-value">{specification}</div>
                 </div>"""
 
             details_html += f"""
@@ -249,16 +259,28 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 
         try:
             cursor.execute("""
-                SELECT name, description, status, priority, created_at, started_at, completed_at, details, feature_name
-                FROM tasks
-                ORDER BY CASE status 
-                             WHEN 'blocked' THEN 1 
-                             WHEN 'in_progress' THEN 2 
-                             WHEN 'pending' THEN 3 
-                             WHEN 'completed' THEN 4 
+                SELECT
+                    t.name,
+                    t.description,
+                    t.status,
+                    t.priority,
+                    t.created_at,
+                    t.started_at,
+                    t.completed_at,
+                    t.specification,
+                    t.tests_required,
+                    f.name AS feature_name,
+                    t.updated_at
+                FROM tasks t
+                JOIN features f ON t.feature_id = f.id
+                ORDER BY CASE t.status
+                             WHEN 'blocked' THEN 1
+                             WHEN 'in_progress' THEN 2
+                             WHEN 'pending' THEN 3
+                             WHEN 'completed' THEN 4
                          END,
-                         priority DESC,
-                         name
+                         t.priority DESC,
+                         t.name
             """)
             rows = cursor.fetchall()
 
@@ -273,8 +295,10 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                         "created_at": row[4],
                         "started_at": row[5],
                         "completed_at": row[6],
-                        "details": row[7],
-                        "feature_name": row[8],
+                        "specification": row[7],
+                        "tests_required": bool(row[8]),
+                        "feature_name": row[9],
+                        "updated_at": row[10],
                     }
                 )
 
