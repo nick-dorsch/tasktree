@@ -428,19 +428,24 @@ class DependencyRepository:
             try:
                 cursor.execute(
                     """
-                    WITH task AS (
-                        SELECT id FROM tasks WHERE name = ? LIMIT 1
-                    ),
-                    depends_on AS (
-                        SELECT id FROM tasks WHERE name = ? LIMIT 1
-                    )
-                    INSERT INTO dependencies (task_id, depends_on_task_id)
-                    SELECT task.id, depends_on.id FROM task, depends_on
+                    SELECT name, id
+                    FROM tasks
+                    WHERE name IN (?, ?)
                     """,
                     (task_name, depends_on_task_name),
                 )
-                if cursor.rowcount == 0:
+                rows = cursor.fetchall()
+                task_ids = {row["name"]: row["id"] for row in rows}
+                if task_name not in task_ids or depends_on_task_name not in task_ids:
                     raise ValueError("Both tasks must exist to create a dependency")
+
+                cursor.execute(
+                    """
+                    INSERT INTO dependencies (task_id, depends_on_task_id)
+                    VALUES (?, ?)
+                    """,
+                    (task_ids[task_name], task_ids[depends_on_task_name]),
+                )
                 conn.commit()
 
                 return DependencyResponse(
