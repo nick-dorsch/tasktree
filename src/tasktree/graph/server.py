@@ -6,7 +6,7 @@ A simple HTTP server that provides an API endpoint to retrieve the task dependen
 graph as JSON. Uses Python's built-in http.server module.
 
 Usage:
-    python src/tasktree/graph_server.py [--port PORT] [--db DB_PATH]
+    python src/tasktree/graph/server.py [--port PORT] [--db DB_PATH]
 
 Default:
     Port: 8000
