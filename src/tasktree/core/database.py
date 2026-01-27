@@ -2,15 +2,21 @@
 Database operations for TaskTree.
 """
 
+import logging
+import os
 import sqlite3
 from contextlib import contextmanager
 from typing import List, Optional
 
+from ..io.snapshot import export_snapshot
 from .models import DependencyResponse, FeatureResponse, TaskResponse
-from .paths import get_db_path
+from .paths import get_db_path, get_snapshot_path
 from .validators import validate_specification
 
 DB_PATH = get_db_path()
+AUTO_EXPORT_ENV_VAR = "TASKTREE_AUTO_EXPORT_SNAPSHOT"
+_TRUTHY_VALUES = {"1", "true", "yes", "on"}
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -44,6 +50,18 @@ def _ensure_tests_required_column(conn: sqlite3.Connection) -> None:
         "CHECK (tests_required IN (0, 1))"
     )
     conn.commit()
+
+
+def _auto_export_snapshot_if_enabled() -> None:
+    """Export the JSONL snapshot if auto-export is enabled."""
+    flag = os.getenv(AUTO_EXPORT_ENV_VAR, "").strip().lower()
+    if flag not in _TRUTHY_VALUES:
+        return
+
+    try:
+        export_snapshot(DB_PATH, get_snapshot_path())
+    except Exception as exc:
+        logger.warning("Snapshot export failed: %s", exc)
 
 
 class TaskRepository:
@@ -206,6 +224,8 @@ class TaskRepository:
                     raise ValueError(f"Feature '{feature_name}' does not exist")
                 conn.commit()
 
+                _auto_export_snapshot_if_enabled()
+
                 cursor.execute(
                     """
                     SELECT t.*, f.name AS feature_name
@@ -274,6 +294,8 @@ class TaskRepository:
             cursor.execute(query, params)
             conn.commit()
 
+            _auto_export_snapshot_if_enabled()
+
             return TaskRepository.get_task(name)
 
     @staticmethod
@@ -311,6 +333,7 @@ class TaskRepository:
             deleted = cursor.rowcount > 0
 
             conn.commit()
+            _auto_export_snapshot_if_enabled()
             return deleted
 
     @staticmethod
@@ -344,6 +367,8 @@ class FeatureRepository:
                     (name, description, specification),
                 )
                 conn.commit()
+
+                _auto_export_snapshot_if_enabled()
 
                 cursor.execute("SELECT * FROM features WHERE name = ?", (name,))
                 row = cursor.fetchone()
@@ -463,6 +488,8 @@ class DependencyRepository:
                 )
                 conn.commit()
 
+                _auto_export_snapshot_if_enabled()
+
                 return DependencyResponse(
                     task_name=task_name,
                     depends_on_task_name=depends_on_task_name,
@@ -488,6 +515,7 @@ class DependencyRepository:
             )
             deleted = cursor.rowcount > 0
             conn.commit()
+            _auto_export_snapshot_if_enabled()
             return deleted
 
     @staticmethod
