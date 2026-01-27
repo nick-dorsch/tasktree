@@ -13,7 +13,7 @@ tasks:
     silent: true
     cmds:
       - echo "Starting MCP server..."
-      - uv run python src/tasktree/mcp/server.py
+      - uv run tasktree mcp
 
   init-db:
     desc: Recreate database (use SEED=true to seed with test data)
