@@ -203,7 +203,9 @@ def test_add_dependency_affects_available_tasks(mock_db_path):
 def test_add_dependency_with_completed_dependency(mock_db_path):
     """Test adding a dependency where the dependency task is already completed."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A", specification="Spec", status="completed")
+    TaskRepository.add_task(
+        "task-a", "Task A", specification="Spec", status="completed"
+    )
     TaskRepository.add_task("task-b", "Task B", specification="Spec", status="pending")
 
     # Add dependency: B depends on A (which is already completed)

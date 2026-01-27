@@ -246,7 +246,9 @@ def test_delete_task_with_different_statuses(mock_db_path):
 
     for status in statuses:
         task_name = f"task-{status}"
-        TaskRepository.add_task(task_name, f"Task with {status} status", specification="Spec", status=status)
+        TaskRepository.add_task(
+            task_name, f"Task with {status} status", specification="Spec", status=status
+        )
 
         # Delete it
         deleted = TaskRepository.delete_task(task_name)

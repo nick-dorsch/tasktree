@@ -36,11 +36,26 @@ def test_get_available_tasks_empty_database(mock_db_path):
 def test_get_available_tasks_no_dependencies(mock_db_path):
     """Test that all pending tasks are available when there are no dependencies."""
     # Create tasks with different priorities
-    TaskRepository.add_task("low-priority", "Low priority task", specification="Spec", priority=1, status="pending"
+    TaskRepository.add_task(
+        "low-priority",
+        "Low priority task",
+        specification="Spec",
+        priority=1,
+        status="pending",
     )
-    TaskRepository.add_task("high-priority", "High priority task", specification="Spec", priority=10, status="pending"
+    TaskRepository.add_task(
+        "high-priority",
+        "High priority task",
+        specification="Spec",
+        priority=10,
+        status="pending",
     )
-    TaskRepository.add_task("medium-priority", "Medium priority task", specification="Spec", priority=5, status="pending"
+    TaskRepository.add_task(
+        "medium-priority",
+        "Medium priority task",
+        specification="Spec",
+        priority=5,
+        status="pending",
     )
 
     available = DependencyRepository.get_available_tasks()
@@ -59,9 +74,17 @@ def test_get_available_tasks_no_dependencies(mock_db_path):
 
 def test_get_available_tasks_excludes_completed(mock_db_path):
     """Test that only pending tasks are available."""
-    TaskRepository.add_task("completed-task", "Already done", specification="Spec", status="completed")
-    TaskRepository.add_task("pending-task", "Not yet done", specification="Spec", status="pending")
-    TaskRepository.add_task("in-progress-task", "Currently working", specification="Spec", status="in_progress"
+    TaskRepository.add_task(
+        "completed-task", "Already done", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "pending-task", "Not yet done", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress-task",
+        "Currently working",
+        specification="Spec",
+        status="in_progress",
     )
 
     available = DependencyRepository.get_available_tasks()
@@ -77,9 +100,15 @@ def test_get_available_tasks_excludes_completed(mock_db_path):
 def test_get_available_tasks_simple_dependency_chain(mock_db_path):
     """Test that tasks with uncompleted dependencies are not available."""
     # Create a simple chain: task-a -> task-b -> task-c
-    TaskRepository.add_task("task-a", "First task", specification="Spec", status="pending")
-    TaskRepository.add_task("task-b", "Second task", specification="Spec", status="pending")
-    TaskRepository.add_task("task-c", "Third task", specification="Spec", status="pending")
+    TaskRepository.add_task(
+        "task-a", "First task", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "task-b", "Second task", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "task-c", "Third task", specification="Spec", status="pending"
+    )
 
     # task-b depends on task-a, task-c depends on task-b
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -110,10 +139,20 @@ def test_get_available_tasks_simple_dependency_chain(mock_db_path):
 def test_get_available_tasks_multiple_dependencies(mock_db_path):
     """Test that tasks with multiple dependencies are only available when all are completed."""
     # Create tasks
-    TaskRepository.add_task("dep-1", "First dependency", specification="Spec", status="pending")
-    TaskRepository.add_task("dep-2", "Second dependency", specification="Spec", status="pending")
-    TaskRepository.add_task("dep-3", "Third dependency", specification="Spec", status="pending")
-    TaskRepository.add_task("main-task", "Task with multiple dependencies", specification="Spec", status="pending"
+    TaskRepository.add_task(
+        "dep-1", "First dependency", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "dep-2", "Second dependency", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "dep-3", "Third dependency", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "main-task",
+        "Task with multiple dependencies",
+        specification="Spec",
+        status="pending",
     )
 
     # main-task depends on all three deps
@@ -151,11 +190,21 @@ def test_get_available_tasks_multiple_dependencies(mock_db_path):
 def test_get_available_tasks_priority_ordering(mock_db_path):
     """Test that available tasks are ordered by priority (highest first)."""
     # Create tasks with different priorities, all available
-    TaskRepository.add_task("priority-1", "Priority 1", specification="Spec", priority=1)
-    TaskRepository.add_task("priority-10", "Priority 10", specification="Spec", priority=10)
-    TaskRepository.add_task("priority-5", "Priority 5", specification="Spec", priority=5)
-    TaskRepository.add_task("priority-7", "Priority 7", specification="Spec", priority=7)
-    TaskRepository.add_task("priority-3", "Priority 3", specification="Spec", priority=3)
+    TaskRepository.add_task(
+        "priority-1", "Priority 1", specification="Spec", priority=1
+    )
+    TaskRepository.add_task(
+        "priority-10", "Priority 10", specification="Spec", priority=10
+    )
+    TaskRepository.add_task(
+        "priority-5", "Priority 5", specification="Spec", priority=5
+    )
+    TaskRepository.add_task(
+        "priority-7", "Priority 7", specification="Spec", priority=7
+    )
+    TaskRepository.add_task(
+        "priority-3", "Priority 3", specification="Spec", priority=3
+    )
 
     available = DependencyRepository.get_available_tasks()
 
@@ -172,7 +221,9 @@ def test_get_available_tasks_created_at_secondary_sort(mock_db_path):
     """Test that tasks with same priority are ordered by created_at (oldest first)."""
     # Create tasks with same priority
     TaskRepository.add_task("task-1", "First created", specification="Spec", priority=5)
-    TaskRepository.add_task("task-2", "Second created", specification="Spec", priority=5)
+    TaskRepository.add_task(
+        "task-2", "Second created", specification="Spec", priority=5
+    )
     TaskRepository.add_task("task-3", "Third created", specification="Spec", priority=5)
 
     available = DependencyRepository.get_available_tasks()
@@ -193,10 +244,18 @@ def test_get_available_tasks_complex_dependency_graph(mock_db_path):
     #      \    /
     #       top
 
-    TaskRepository.add_task("base", "Base task", specification="Spec", status="completed", priority=5)
-    TaskRepository.add_task("left", "Left branch", specification="Spec", status="pending", priority=10)
-    TaskRepository.add_task("right", "Right branch", specification="Spec", status="pending", priority=8)
-    TaskRepository.add_task("top", "Top task", specification="Spec", status="pending", priority=9)
+    TaskRepository.add_task(
+        "base", "Base task", specification="Spec", status="completed", priority=5
+    )
+    TaskRepository.add_task(
+        "left", "Left branch", specification="Spec", status="pending", priority=10
+    )
+    TaskRepository.add_task(
+        "right", "Right branch", specification="Spec", status="pending", priority=8
+    )
+    TaskRepository.add_task(
+        "top", "Top task", specification="Spec", status="pending", priority=9
+    )
 
     DependencyRepository.add_dependency("left", "base")
     DependencyRepository.add_dependency("right", "base")
@@ -229,8 +288,12 @@ def test_get_available_tasks_complex_dependency_graph(mock_db_path):
 
 def test_get_available_tasks_in_progress_dependencies(mock_db_path):
     """Test that tasks with in_progress dependencies are not available."""
-    TaskRepository.add_task("dep-task", "Dependency", specification="Spec", status="in_progress")
-    TaskRepository.add_task("main-task", "Main task", specification="Spec", status="pending")
+    TaskRepository.add_task(
+        "dep-task", "Dependency", specification="Spec", status="in_progress"
+    )
+    TaskRepository.add_task(
+        "main-task", "Main task", specification="Spec", status="pending"
+    )
 
     DependencyRepository.add_dependency("main-task", "dep-task")
 
@@ -241,9 +304,18 @@ def test_get_available_tasks_in_progress_dependencies(mock_db_path):
 
 def test_get_available_tasks_no_uncompleted_dependencies_only(mock_db_path):
     """Test that a task with some completed and some uncompleted dependencies is not available."""
-    TaskRepository.add_task("completed-dep", "Completed dependency", specification="Spec", status="completed")
-    TaskRepository.add_task("pending-dep", "Pending dependency", specification="Spec", status="pending")
-    TaskRepository.add_task("main-task", "Main task", specification="Spec", status="pending")
+    TaskRepository.add_task(
+        "completed-dep",
+        "Completed dependency",
+        specification="Spec",
+        status="completed",
+    )
+    TaskRepository.add_task(
+        "pending-dep", "Pending dependency", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "main-task", "Main task", specification="Spec", status="pending"
+    )
 
     DependencyRepository.add_dependency("main-task", "completed-dep")
     DependencyRepository.add_dependency("main-task", "pending-dep")
@@ -257,12 +329,26 @@ def test_get_available_tasks_no_uncompleted_dependencies_only(mock_db_path):
 
 def test_get_available_tasks_handles_orphaned_tasks(mock_db_path):
     """Test that only pending orphans are available."""
-    TaskRepository.add_task("orphan-1", "Orphan task 1", specification="Spec", status="pending", priority=5)
-    TaskRepository.add_task("orphan-2", "Orphan task 2", specification="Spec", status="in_progress", priority=3
+    TaskRepository.add_task(
+        "orphan-1", "Orphan task 1", specification="Spec", status="pending", priority=5
     )
-    TaskRepository.add_task("with-deps", "Task with deps", specification="Spec", status="pending", priority=10
+    TaskRepository.add_task(
+        "orphan-2",
+        "Orphan task 2",
+        specification="Spec",
+        status="in_progress",
+        priority=3,
     )
-    TaskRepository.add_task("dep", "Dependency", specification="Spec", status="pending", priority=1)
+    TaskRepository.add_task(
+        "with-deps",
+        "Task with deps",
+        specification="Spec",
+        status="pending",
+        priority=10,
+    )
+    TaskRepository.add_task(
+        "dep", "Dependency", specification="Spec", status="pending", priority=1
+    )
 
     DependencyRepository.add_dependency("with-deps", "dep")
 
@@ -278,9 +364,15 @@ def test_get_available_tasks_handles_orphaned_tasks(mock_db_path):
 
 def test_get_available_tasks_all_completed(mock_db_path):
     """Test that when all tasks are completed, no tasks are available."""
-    TaskRepository.add_task("task-1", "Task 1", specification="Spec", status="completed")
-    TaskRepository.add_task("task-2", "Task 2", specification="Spec", status="completed")
-    TaskRepository.add_task("task-3", "Task 3", specification="Spec", status="completed")
+    TaskRepository.add_task(
+        "task-1", "Task 1", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "task-2", "Task 2", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "task-3", "Task 3", specification="Spec", status="completed"
+    )
 
     available = DependencyRepository.get_available_tasks()
     assert len(available) == 0

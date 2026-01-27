@@ -10,7 +10,7 @@ You are an autonomous coding agent working with tasktree.
 4. Create tests for that task consistent with current testing patterns
 5. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
 6. If checks pass, commit ALL changes to this branch with the name of the task completed
-7. Mark the task complete with `tasktree_update_task(status="completed")`
+7. Mark the task complete with `tasktree_complete_task(task_name)`
 
 ## Quality Requirements
 

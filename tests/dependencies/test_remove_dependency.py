@@ -371,8 +371,12 @@ def test_remove_dependency_long_chain(mock_db_path):
 def test_remove_dependency_with_completed_tasks(mock_db_path):
     """Test removing a dependency where tasks are completed."""
     # Create tasks with different statuses
-    TaskRepository.add_task("task-a", "Task A", specification="Spec", status="completed")
-    TaskRepository.add_task("task-b", "Task B", specification="Spec", status="in_progress")
+    TaskRepository.add_task(
+        "task-a", "Task A", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "task-b", "Task B", specification="Spec", status="in_progress"
+    )
 
     # Add dependency
     DependencyRepository.add_dependency("task-b", "task-a")
