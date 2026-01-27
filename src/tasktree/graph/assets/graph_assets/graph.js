@@ -155,8 +155,8 @@ function getNodeRadius(d) {
 }
 
 function getNodeStroke(d) {
-    // Highlight available tasks with a bright border
-    return d.is_available ? '#00FF00' : '#333';
+    // Highlight available tasks with gold border (same as in-progress)
+    return d.is_available ? '#FFC107' : '#333';
 }
 
 function getNodeStrokeWidth(d) {
@@ -246,7 +246,7 @@ function updateGraph(graphData) {
         .attr('fill', getNodeColor)
         .attr('stroke', getNodeStroke)
         .attr('stroke-width', getNodeStrokeWidth)
-        .attr('filter', d => d.is_available ? 'url(#glow)' : null);
+        .attr('filter', d => d.is_available || d.status === 'in_progress' ? 'url(#glow)' : null);
 
     // Update labels
     label = labelGroup.selectAll('.node-label')
