@@ -420,6 +420,31 @@ class FeatureRepository:
                 else None
             )
 
+    @staticmethod
+    def delete_feature(name: str) -> bool:
+        """
+        Delete a feature from the database.
+
+        Args:
+            name: Feature name to delete
+
+        Returns:
+            True if deleted, False if not found
+
+        Raises:
+            ValueError: If trying to delete the 'misc' feature
+        """
+        if name == "misc":
+            raise ValueError("The 'misc' feature cannot be deleted")
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM features WHERE name = ?", (name,))
+            deleted = cursor.rowcount > 0
+            conn.commit()
+            _auto_export_snapshot_if_enabled()
+            return deleted
+
 
 class DependencyRepository:
     """Repository class for dependency operations."""
