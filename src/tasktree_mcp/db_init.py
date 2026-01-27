@@ -6,15 +6,9 @@ using bundled SQL assets (schemas and views).
 """
 
 import sqlite3
+from importlib.resources import files
 from pathlib import Path
 from typing import List
-
-try:
-    # Python 3.9+
-    from importlib.resources import files
-except ImportError:
-    # Python 3.8 fallback
-    from importlib_resources import files  # type: ignore
 
 
 def get_sql_files(resource_package: str) -> List[tuple[str, str]]:
