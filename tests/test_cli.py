@@ -225,6 +225,30 @@ class TestCLIReset:
             assert "Operation cancelled" in result.stdout
 
 
+class TestCLIMCP:
+    """Test CLI mcp command."""
+
+    def test_mcp_stdio_transport(self):
+        """Test that mcp command starts with stdio transport by default."""
+        with patch("tasktree.mcp.server.mcp.run") as mock_run:
+            result = runner.invoke(cli, ["mcp"])
+
+            assert result.exit_code == 0
+            assert "Starting MCP server with stdio transport" in result.output
+            mock_run.assert_called_once_with(transport="stdio")
+
+    def test_mcp_sse_transport(self):
+        """Test that mcp command starts with SSE transport when port is provided."""
+        with patch("tasktree.mcp.server.mcp.run") as mock_run:
+            result = runner.invoke(cli, ["mcp", "--port", "8001"])
+
+            assert result.exit_code == 0
+            assert (
+                "Starting MCP server with SSE transport on port 8001" in result.output
+            )
+            mock_run.assert_called_once_with(transport="sse", port=8001)
+
+
 class TestCLIGeneral:
     """Test general CLI behavior."""
 

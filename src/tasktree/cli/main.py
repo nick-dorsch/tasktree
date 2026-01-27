@@ -181,5 +181,30 @@ def reset(
         raise typer.Exit(1)
 
 
+@cli.command()
+def mcp(
+    port: Optional[int] = typer.Option(
+        None,
+        "--port",
+        "-p",
+        help="Port for SSE transport (runs in stdio mode if not specified)",
+    ),
+) -> None:
+    """
+    Start the Model Context Protocol (MCP) server.
+
+    By default, runs using stdio transport. If --port is provided,
+    runs using SSE transport on the specified port.
+    """
+    from tasktree.mcp.server import mcp as mcp_app
+
+    if port:
+        typer.echo(f"Starting MCP server with SSE transport on port {port}", err=True)
+        mcp_app.run(transport="sse", port=port)
+    else:
+        typer.echo("Starting MCP server with stdio transport", err=True)
+        mcp_app.run(transport="stdio")
+
+
 if __name__ == "__main__":
     cli()
