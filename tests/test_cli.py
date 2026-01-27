@@ -2,6 +2,7 @@
 Tests for TaskTree CLI commands.
 """
 
+import json
 import sqlite3
 import tempfile
 from pathlib import Path
@@ -15,6 +16,14 @@ from tasktree.cli.main import cli
 
 # Test runner for Typer CLI
 runner = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def mock_snapshot_path():
+    """Mock get_snapshot_path to return a non-existent path by default."""
+    with patch("tasktree.cli.main.get_snapshot_path") as mock:
+        mock.return_value = Path("/non/existent/snapshot.jsonl")
+        yield mock
 
 
 @pytest.fixture(scope="function")
@@ -257,3 +266,114 @@ class TestCLIEntryPoint:
         assert "init" in result.stdout
         assert "start" in result.stdout
         assert "reset" in result.stdout
+
+
+class TestCLIInitSnapshot:
+    """Test CLI init command with snapshot integration."""
+
+    @pytest.fixture(scope="function")
+    def temp_paths(self) -> Generator[tuple[Path, Path], None, None]:
+        """
+        Create temporary test database and snapshot paths.
+
+        Yields:
+            tuple[Path, Path]: (db_path, snapshot_path)
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            db_path = temp_dir_path / "test.db"
+            snapshot_path = temp_dir_path / "snapshot.jsonl"
+            yield db_path, snapshot_path
+
+    def test_init_restores_from_snapshot(self, temp_paths: tuple[Path, Path]):
+        """Test that init restores data if snapshot exists."""
+        db_path, snapshot_path = temp_paths
+
+        # Create a valid snapshot file
+        snapshot_data = [
+            {
+                "record_type": "meta",
+                "schema_version": "1",
+                "generated_at": "2026-01-27T22:00:00Z",
+            },
+            {
+                "record_type": "feature",
+                "name": "feat1",
+                "description": "desc1",
+                "specification": "spec1",
+                "created_at": "2026-01-27T22:00:00Z",
+                "updated_at": "2026-01-27T22:00:00Z",
+            },
+            {
+                "record_type": "task",
+                "name": "task1",
+                "description": "desc1",
+                "specification": "spec1",
+                "priority": 5,
+                "status": "pending",
+                "feature_name": "feat1",
+                "created_at": "2026-01-27T22:00:00Z",
+                "updated_at": "2026-01-27T22:00:00Z",
+                "tests_required": True,
+            },
+        ]
+
+        with snapshot_path.open("w", encoding="utf-8") as f:
+            for record in snapshot_data:
+                f.write(json.dumps(record) + "\n")
+
+        with (
+            patch("tasktree.cli.main.get_db_path", return_value=db_path),
+            patch("tasktree.cli.main.get_snapshot_path", return_value=snapshot_path),
+        ):
+            result = runner.invoke(cli, ["init"])
+
+            assert result.exit_code == 0
+            assert "Database initialized successfully!" in result.stdout
+            assert f"Restoring database from snapshot: {snapshot_path}" in result.stdout
+            assert "✓ Database restored from snapshot." in result.stdout
+            assert db_path.exists()
+
+            # Verify database contains records from snapshot
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT name, description FROM features")
+            features = cursor.fetchall()
+            feature_names = [f["name"] for f in features]
+            assert "feat1" in feature_names
+            assert "misc" in feature_names
+            assert len(features) == 2
+
+            cursor.execute("SELECT name, description, priority FROM tasks")
+            tasks = cursor.fetchall()
+            assert len(tasks) == 1
+            assert tasks[0]["name"] == "task1"
+            assert tasks[0]["priority"] == 5
+
+            conn.close()
+
+    def test_init_works_without_snapshot(self, temp_paths: tuple[Path, Path]):
+        """Test that init works fine if no snapshot exists."""
+        db_path, snapshot_path = temp_paths
+        # Ensure snapshot path does NOT exist
+        assert not snapshot_path.exists()
+
+        with (
+            patch("tasktree.cli.main.get_db_path", return_value=db_path),
+            patch("tasktree.cli.main.get_snapshot_path", return_value=snapshot_path),
+        ):
+            result = runner.invoke(cli, ["init"])
+
+            assert result.exit_code == 0
+            assert "Database initialized successfully!" in result.stdout
+            assert "Restoring database from snapshot" not in result.stdout
+            assert db_path.exists()
+
+            # Verify database is empty but schema exists
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM tasks")
+            assert cursor.fetchone()[0] == 0
+            conn.close()

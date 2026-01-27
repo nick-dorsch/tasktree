@@ -192,7 +192,7 @@ def _insert_features(
 
     conn.executemany(
         """
-        INSERT INTO features (name, description, specification, created_at, updated_at)
+        INSERT OR IGNORE INTO features (name, description, specification, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?)
         """,
         rows,

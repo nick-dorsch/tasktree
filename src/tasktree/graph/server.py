@@ -250,7 +250,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             "</div>"
         )
 
-        template_path = files("tasktree.graph.assets") / "graph_viewer.html"
+        template_path = files("tasktree.graph.assets.graph_assets") / "index.html"
         template_html = template_path.read_text(encoding="utf-8")
         html = template_html.replace("{{TASK_ITEMS}}", task_items_rendered)
         self._send_html_response(200, html)

@@ -14,8 +14,9 @@ from typing import Optional
 
 import typer
 
-from tasktree.core.paths import get_db_path
+from tasktree.core.paths import get_db_path, get_snapshot_path
 from tasktree.db.init import initialize_database
+from tasktree.io.snapshot import import_snapshot
 
 # Create the main CLI app
 cli = typer.Typer(
@@ -60,6 +61,17 @@ def init(
         typer.echo(f"Initializing database at: {db_path}")
         initialize_database(db_path, apply_views_flag=True)
         typer.echo("✓ Database initialized successfully!")
+
+        # Restore from snapshot if it exists
+        snapshot_path = get_snapshot_path()
+        if snapshot_path.exists():
+            typer.echo(f"Restoring database from snapshot: {snapshot_path}")
+            try:
+                import_snapshot(db_path, snapshot_path, overwrite=False)
+                typer.echo("✓ Database restored from snapshot.")
+            except ValueError as e:
+                typer.echo(f"Error importing snapshot: {e}", err=True)
+                raise typer.Exit(1)
 
         if seed:
             typer.echo("Seed data functionality not yet implemented.")
