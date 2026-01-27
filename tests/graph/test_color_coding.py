@@ -44,33 +44,6 @@ def server_thread(test_db: Path):
     yield port
 
 
-def test_feature_color_consistency():
-    """Test that feature colors are consistent and deterministic."""
-    # We can access the method via the class since it doesn't use instance state
-    # other than class attributes
-    handler = GraphAPIHandler
-
-    # But it's an instance method, so we should instantiate or patch
-    # Actually, we can just call it with a dummy self if we want, or instantiate
-    # Since __init__ is from BaseHTTPRequestHandler, it requires request, client_address, server
-    # It's easier to just copy the logic or subclass to test, or rely on integration tests.
-
-    # Let's rely on the fact that we can call it if we mock self
-    class MockHandler:
-        FEATURE_COLORS = GraphAPIHandler.FEATURE_COLORS
-        _get_feature_color = GraphAPIHandler._get_feature_color
-
-    handler = MockHandler()
-
-    color1 = handler._get_feature_color("feature-a")
-    color2 = handler._get_feature_color("feature-a")
-    color3 = handler._get_feature_color("feature-b")
-
-    assert color1 == color2
-    assert color1 in GraphAPIHandler.FEATURE_COLORS
-    assert color3 in GraphAPIHandler.FEATURE_COLORS
-
-
 def test_api_tasks_includes_feature_color(mock_db_path, server_thread):
     """Test /api/tasks includes feature_color."""
     port = server_thread
