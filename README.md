@@ -89,7 +89,7 @@ task web-graph
 ```
 
 `task web-graph` launches a small server and opens a browser view. The static HTML
-viewer is available at `scripts/graph-viewer.html`.
+viewer is available at `src/tasktree/graph_viewer.html`.
 
 ## Development
 
@@ -103,10 +103,10 @@ uv run ruff format .
 
 ```
 tasktree/
-├── src/tasktree_mcp/          # MCP server implementation
+├── src/tasktree/              # TaskTree package
 │   ├── database.py            # Repositories and DB access
 │   ├── models.py              # Pydantic models
-│   ├── tools.py               # MCP tool registration
+│   ├── mcp/                   # MCP tool registration
 │   ├── sql/                   # Schemas and views
 │   └── snapshot.py            # JSONL snapshot IO
 ├── tests/                     # Pytest suite

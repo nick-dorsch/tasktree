@@ -10,7 +10,7 @@ from typing import Generator, Iterator
 
 import pytest
 
-from tasktree_mcp.db_init import initialize_database
+from tasktree.db_init import initialize_database
 
 
 @pytest.fixture(scope="session")
@@ -68,11 +68,11 @@ def _db_transaction(test_db: Path, monkeypatch) -> Iterator[None]:
     """
     Wrap each test in a transaction and roll back after.
 
-    This fixture monkeypatches tasktree_mcp.database.get_db_connection to
+    This fixture monkeypatches tasktree.database.get_db_connection to
     always return the same connection (with commits disabled), so tests are
     isolated via rollback while using a session-scoped database.
     """
-    import tasktree_mcp.database as db_module
+    import tasktree.database as db_module
 
     conn = sqlite3.connect(test_db, check_same_thread=False)
     conn.row_factory = sqlite3.Row

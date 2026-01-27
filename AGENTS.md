@@ -51,7 +51,7 @@ uv run pytest tests/test_database.py::test_list_tasks
 uv run pytest -v
 
 # Run with coverage (if configured)
-uv run pytest --cov=src/tasktree_mcp
+uv run pytest --cov=src/tasktree
 ```
 
 ### Linting and Formatting
@@ -243,7 +243,7 @@ def add_task(name: str, description: str, priority: int = 0) -> Dict[str, Any]:
 def test_add_task(test_db: Path):
     """Test adding a task to the database."""
     # Arrange
-    import tasktree_mcp.database as db
+    import tasktree.database as db
     import monkeypatch
     monkeypatch.setattr(db, "DB_PATH", test_db)
     
@@ -263,8 +263,8 @@ def test_add_task(test_db: Path):
 
 When modifying SQL:
 
-1. **Schema changes**: Edit files in `sql/schemas/` (numbered: `001_tasks.sql`, `002_dependencies.sql`)
-2. **View changes**: Edit files in `sql/views/` (numbered: `001_available_tasks.sql`, etc.)
+1. **Schema changes**: Edit files in `src/tasktree/sql/schemas/` (numbered: `001_tasks.sql`, `002_dependencies.sql`)
+2. **View changes**: Edit files in `src/tasktree/sql/views/` (numbered: `001_available_tasks.sql`, etc.)
 3. **After changes**: Run `task refresh-views` to update the database
 4. **Constraints**: Use SQLite constraints for data integrity (UNIQUE, FOREIGN KEY, CHECK)
 
@@ -277,18 +277,16 @@ When modifying SQL:
 
 ```
 tasktree/
-├── src/tasktree_mcp/      # Main Python package
+├── src/tasktree/          # Main Python package
 │   ├── database.py        # Repository classes, DB connection
 │   ├── models.py          # Pydantic models
-│   ├── tools.py           # FastMCP tool registration
+│   ├── mcp/               # FastMCP tool registration
+│   ├── server.py          # MCP server entry point
+│   ├── sql/               # SQL-first architecture
 │   └── validators.py      # Input validation helpers
-├── sql/                   # SQL-first architecture
-│   ├── schemas/           # Database schema definitions
-│   └── views/             # SQL views for complex queries
 ├── tests/                 # Pytest test suite
 │   └── conftest.py        # Test fixtures
 ├── data/                  # Runtime database (gitignored)
-├── server.py              # MCP server entry point
 └── pyproject.toml         # Project configuration
 ```
 
@@ -299,7 +297,7 @@ tasktree/
 1. Define request/response models in `models.py`
 2. Add validation logic in `validators.py` (if needed)
 3. Implement repository method in `database.py`
-4. Register tool in `tools.py` using `@mcp.tool()` decorator
+4. Register tool in `src/tasktree/mcp/tools.py` using `@mcp.tool()` decorator
 5. Add tests in `tests/`
 
 ### Working with Dependencies

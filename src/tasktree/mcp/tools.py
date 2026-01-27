@@ -6,8 +6,8 @@ from typing import List, Optional
 
 from fastmcp import FastMCP
 
-from .database import DependencyRepository, FeatureRepository, TaskRepository
-from .models import (
+from ..database import DependencyRepository, FeatureRepository, TaskRepository
+from ..models import (
     AddDependencyRequest,
     AddFeatureRequest,
     AddTaskRequest,
@@ -27,7 +27,7 @@ from .models import (
     TaskStatus,
     UpdateTaskRequest,
 )
-from .validators import (
+from ..validators import (
     validate_description,
     validate_feature_name,
     validate_priority,

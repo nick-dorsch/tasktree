@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tasktree_mcp.database import TaskRepository
+from tasktree.database import TaskRepository
 
 
 @pytest.fixture
@@ -17,7 +17,7 @@ def mock_db_path(test_db: Path, monkeypatch):
     This fixture modifies the database.DB_PATH to point to the test database,
     ensuring all repository operations use the isolated test database.
     """
-    import tasktree_mcp.database as db_module
+    import tasktree.database as db_module
 
     monkeypatch.setattr(db_module, "DB_PATH", test_db)
     return test_db
@@ -346,7 +346,7 @@ def test_list_tasks_none_parameters(mock_db_path):
 def test_list_tasks_filter_by_feature_name(mock_db_path):
     """Test filtering tasks by feature_name."""
     # Create test features first
-    from tasktree_mcp.database import get_db_connection
+    from tasktree.database import get_db_connection
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -381,7 +381,7 @@ def test_list_tasks_filter_by_feature_name(mock_db_path):
 def test_list_tasks_filter_by_feature_name_no_matches(mock_db_path):
     """Test filtering by feature_name with no matching tasks."""
     # Create test features first
-    from tasktree_mcp.database import get_db_connection
+    from tasktree.database import get_db_connection
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -406,7 +406,7 @@ def test_list_tasks_filter_by_feature_name_no_matches(mock_db_path):
 def test_list_tasks_filter_by_feature_and_status(mock_db_path):
     """Test filtering by both feature_name and status."""
     # Create test features first
-    from tasktree_mcp.database import get_db_connection
+    from tasktree.database import get_db_connection
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -450,7 +450,7 @@ def test_list_tasks_filter_by_feature_and_status(mock_db_path):
 def test_list_tasks_filter_by_feature_priority_and_status(mock_db_path):
     """Test filtering by feature_name, priority_min, and status."""
     # Create test features first
-    from tasktree_mcp.database import get_db_connection
+    from tasktree.database import get_db_connection
 
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -497,7 +497,7 @@ def test_list_tasks_filter_by_feature_priority_and_status(mock_db_path):
 def test_list_tasks_filter_by_default_feature(mock_db_path):
     """Test filtering tasks by the default feature."""
     # Create test features first
-    from tasktree_mcp.database import get_db_connection
+    from tasktree.database import get_db_connection
 
     with get_db_connection() as conn:
         cursor = conn.cursor()

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from tasktree_mcp.db_init import (
+from tasktree.db_init import (
     apply_schemas,
     apply_views,
     get_sql_files,
@@ -19,7 +19,7 @@ from tasktree_mcp.db_init import (
 
 def test_get_sql_files_schemas():
     """Test getting schema SQL files from bundled resources."""
-    files = get_sql_files("tasktree_mcp.sql.schemas")
+    files = get_sql_files("tasktree.sql.schemas")
 
     # Should have at least 3 schema files
     assert len(files) >= 3
@@ -37,7 +37,7 @@ def test_get_sql_files_schemas():
 
 def test_get_sql_files_views():
     """Test getting view SQL files from bundled resources."""
-    files = get_sql_files("tasktree_mcp.sql.views")
+    files = get_sql_files("tasktree.sql.views")
 
     # Should have at least 6 view files
     assert len(files) >= 6

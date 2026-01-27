@@ -7,7 +7,7 @@ in the TaskTree SQLite database.
 
 from fastmcp import FastMCP
 
-from tasktree_mcp.tools import register_all_tools
+from tasktree.mcp.tools import register_all_tools
 
 # Initialize MCP server
 mcp = FastMCP("tasktree")

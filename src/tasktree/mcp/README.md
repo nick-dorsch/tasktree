@@ -7,7 +7,6 @@ A Model Context Protocol (MCP) server that provides tools for querying and manag
 1. Ensure `uv` is installed on your system
 2. Install dependencies:
 ```bash
-cd src/mcp
 uv sync
 ```
 
@@ -38,14 +37,12 @@ Use `tests_required=False` when a task does not involve testable code (for examp
 
 ### Running the Server
 ```bash
-cd src/mcp
-uv run python server.py
+uv run python src/tasktree/server.py
 ```
 
 ### Testing the Server
 ```bash
-cd src/mcp
-uv run python server.py --test
+uv run python src/tasktree/server.py --test
 ```
 
 ## Snapshot Workflow
@@ -71,8 +68,8 @@ Add to your Claude Desktop configuration:
   "mcpServers": {
     "tasktree": {
       "command": "uv",
-      "args": ["run", "python", "/path/to/tasktree/src/mcp/server.py"],
-      "cwd": "/path/to/tasktree/src/mcp"
+       "args": ["run", "python", "/path/to/tasktree/src/tasktree/server.py"],
+       "cwd": "/path/to/tasktree"
     }
   }
 }

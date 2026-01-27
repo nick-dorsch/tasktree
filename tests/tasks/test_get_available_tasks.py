@@ -10,7 +10,7 @@ These tests verify:
 
 import pytest
 
-from tasktree_mcp.database import DependencyRepository, TaskRepository
+from tasktree.database import DependencyRepository, TaskRepository
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def mock_db_path(test_db, monkeypatch):
     This fixture modifies the database.DB_PATH to point to the test database,
     ensuring all repository operations use the isolated test database.
     """
-    import tasktree_mcp.database as db_module
+    import tasktree.database as db_module
 
     monkeypatch.setattr(db_module, "DB_PATH", test_db)
     return test_db

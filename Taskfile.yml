@@ -7,7 +7,7 @@ tasks:
     silent: true
     cmds:
       - echo "Starting MCP server..."
-      - uv run server.py
+      - uv run python src/tasktree/server.py
 
   test:
     desc: Run all pytests
@@ -35,7 +35,7 @@ tasks:
     cmds:
       - echo "Creating SQLite database schemas..."
       - mkdir -p data
-      - cat src/tasktree_mcp/sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
+      - cat src/tasktree/sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
     generates:
       - data/tasktree.db
 
@@ -52,7 +52,7 @@ tasks:
     aliases: [rv]
     cmds:
       - echo "Refreshing database views..."
-      - cat src/tasktree_mcp/sql/views/*.sql | sqlite3 .tasktree/tasktree.db
+      - cat src/tasktree/sql/views/*.sql | sqlite3 .tasktree/tasktree.db
 
   snapshot-export:
     desc: Export database to JSONL snapshot
@@ -60,7 +60,7 @@ tasks:
     cmds:
       - echo "Exporting snapshot..."
       - |
-          uv run python -c "from tasktree_mcp.paths import get_db_path, get_snapshot_path; from tasktree_mcp.snapshot import export_snapshot; export_snapshot(get_db_path(), get_snapshot_path())"
+          uv run python -c "from tasktree.paths import get_db_path, get_snapshot_path; from tasktree.snapshot import export_snapshot; export_snapshot(get_db_path(), get_snapshot_path())"
       - echo "Snapshot export complete."
 
   snapshot-import:
@@ -71,7 +71,7 @@ tasks:
     cmds:
       - echo "Importing snapshot..."
       - |
-          uv run python -c "from tasktree_mcp.paths import get_db_path, get_snapshot_path; from tasktree_mcp.snapshot import import_snapshot; overwrite='{{.OVERWRITE}}'.lower()=='true'; import_snapshot(get_db_path(), get_snapshot_path(), overwrite=overwrite)"
+          uv run python -c "from tasktree.paths import get_db_path, get_snapshot_path; from tasktree.snapshot import import_snapshot; overwrite='{{.OVERWRITE}}'.lower()=='true'; import_snapshot(get_db_path(), get_snapshot_path(), overwrite=overwrite)"
       - echo "Snapshot import complete."
 
   graph-json:
@@ -90,7 +90,7 @@ tasks:
       - echo "Starting graph server and opening browser..."
       - |
         # Start the server in the background
-        uv run python scripts/graph-server.py --port 8000 --db .tasktree/tasktree.db &
+        uv run python src/tasktree/graph_server.py --port 8000 --db .tasktree/tasktree.db &
         SERVER_PID=$!
         
         # Wait for server to be ready
@@ -109,7 +109,7 @@ tasks:
         
         echo "Graph server running on http://localhost:8000"
         echo "Browser should open automatically. If not, open http://localhost:8000/"
-        echo "Static viewer (no task panel): scripts/graph-viewer.html"
+        echo "Static viewer (no task panel): src/tasktree/graph_viewer.html"
         echo "Press Ctrl+C to stop the server"
         
         # Wait for the server process

@@ -6,7 +6,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from tasktree_mcp.snapshot import export_snapshot, import_snapshot
+from tasktree.snapshot import export_snapshot, import_snapshot
 
 
 def _load_snapshot_records(snapshot_path: Path) -> list[dict]:

@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-import tasktree_mcp.database as db
-from tasktree_mcp.database import TaskRepository
+import tasktree.database as db
+from tasktree.database import TaskRepository
 
 
 def test_update_task_description_only(test_db: Path, monkeypatch):

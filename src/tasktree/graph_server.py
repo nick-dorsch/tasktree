@@ -6,7 +6,7 @@ A simple HTTP server that provides an API endpoint to retrieve the task dependen
 graph as JSON. Uses Python's built-in http.server module.
 
 Usage:
-    python scripts/graph-server.py [--port PORT] [--db DB_PATH]
+    python src/tasktree/graph_server.py [--port PORT] [--db DB_PATH]
 
 Default:
     Port: 8000
@@ -25,7 +25,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for the graph API."""
 
     db_path: Path
-    assets_dir: Path = (Path(__file__).parent / "graph-server").resolve()
+    assets_dir: Path = (Path(__file__).parent / "graph_assets").resolve()
 
     mime_types = {
         ".css": "text/css; charset=utf-8",
@@ -382,8 +382,8 @@ def main() -> None:
     parser.add_argument(
         "--db",
         type=Path,
-        default=Path("data/tasktree.db"),
-        help="Path to SQLite database (default: data/tasktree.db)",
+        default=Path(".tasktree/tasktree.db"),
+        help="Path to SQLite database (default: .tasktree/tasktree.db)",
     )
 
     args = parser.parse_args()

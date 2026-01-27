@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tasktree-mcp"
+name = "tasktree"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -21,7 +21,13 @@ dev = [
 ]
 
 [tool.hatch.build]
-packages = ["src/tasktree_mcp"]
+packages = ["src/tasktree"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tasktree_mcp"]
+packages = ["src/tasktree"]
+include = [
+    "src/tasktree/sql/**",
+    "src/tasktree/graph_assets/**",
+    "src/tasktree/graph_viewer.html",
+    "src/tasktree/mcp/README.md",
+]

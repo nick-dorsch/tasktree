@@ -16,7 +16,7 @@ def get_sql_files(resource_package: str) -> List[tuple[str, str]]:
     Get SQL files from a resource package.
 
     Args:
-        resource_package: Package path (e.g., "tasktree_mcp.sql.schemas")
+        resource_package: Package path (e.g., "tasktree.sql.schemas")
 
     Returns:
         List of tuples (filename, content) sorted by filename
@@ -46,7 +46,7 @@ def apply_schemas(conn: sqlite3.Connection) -> None:
     Raises:
         sqlite3.Error: If schema application fails
     """
-    schema_files = get_sql_files("tasktree_mcp.sql.schemas")
+    schema_files = get_sql_files("tasktree.sql.schemas")
 
     for filename, content in schema_files:
         conn.executescript(content)
@@ -64,7 +64,7 @@ def apply_views(conn: sqlite3.Connection) -> None:
     Raises:
         sqlite3.Error: If view application fails
     """
-    view_files = get_sql_files("tasktree_mcp.sql.views")
+    view_files = get_sql_files("tasktree.sql.views")
 
     for filename, content in view_files:
         conn.executescript(content)
@@ -78,8 +78,8 @@ def initialize_database(db_path: Path, apply_views_flag: bool = True) -> None:
 
     This function:
     1. Creates the database file if it doesn't exist
-    2. Applies all schema files from tasktree_mcp.sql.schemas
-    3. Optionally applies all view files from tasktree_mcp.sql.views
+    2. Applies all schema files from tasktree.sql.schemas
+    3. Optionally applies all view files from tasktree.sql.views
     4. Enables foreign key constraints
 
     Args:

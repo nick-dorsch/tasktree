@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-import tasktree_mcp.database as db
-from tasktree_mcp.database import DependencyRepository, TaskRepository
+import tasktree.database as db
+from tasktree.database import DependencyRepository, TaskRepository
 
 
 def test_start_task_success(test_db: Path, monkeypatch):

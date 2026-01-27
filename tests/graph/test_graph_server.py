@@ -1,11 +1,10 @@
 """
-Tests for the graph server (scripts/graph-server.py).
+Tests for the graph server (tasktree/graph_server.py).
 
 Tests the HTTP API endpoints for retrieving task dependency graphs.
 """
 
-# Import the server module dynamically
-import importlib.util
+# Import the server module
 import json
 import socket
 from http.client import HTTPConnection
@@ -15,17 +14,8 @@ from time import sleep
 
 import pytest
 
-from tasktree_mcp.database import DependencyRepository, TaskRepository
-
-scripts_root = Path(__file__).resolve().parents[2]
-scripts_dir = scripts_root / "scripts"
-graph_server_path = scripts_dir / "graph-server.py"
-
-spec = importlib.util.spec_from_file_location("graph_server", graph_server_path)
-if spec is None or spec.loader is None:
-    raise RuntimeError("Unable to load graph-server module")
-graph_server = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(graph_server)
+import tasktree.graph_server as graph_server
+from tasktree.database import DependencyRepository, TaskRepository
 
 GraphAPIHandler = graph_server.GraphAPIHandler
 run_server = graph_server.run_server
@@ -39,7 +29,7 @@ def mock_db_path(test_db: Path, monkeypatch):
     This fixture modifies the database.DB_PATH to point to the test database,
     ensuring all repository operations use the isolated test database.
     """
-    import tasktree_mcp.database as db_module
+    import tasktree.database as db_module
 
     monkeypatch.setattr(db_module, "DB_PATH", test_db)
     return test_db

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tasktree_mcp.paths import find_repo_root, get_db_path, get_snapshot_path
+from tasktree.paths import find_repo_root, get_db_path, get_snapshot_path
 
 
 class TestFindRepoRoot:
@@ -239,7 +239,7 @@ class TestPathResolutionIntegration:
         """Test that we correctly identify the tasktree repo root."""
         # We're running in the tasktree repo itself
         # Find the actual repo root
-        from tasktree_mcp.paths import find_repo_root
+        from tasktree.paths import find_repo_root
 
         repo_root = find_repo_root()
 
