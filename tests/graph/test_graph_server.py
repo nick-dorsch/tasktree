@@ -19,7 +19,8 @@ from tasktree_mcp.database import DependencyRepository, TaskRepository
 # Import the server module dynamically
 import importlib.util
 
-scripts_dir = Path(__file__).parent.parent / "scripts"
+scripts_root = Path(__file__).resolve().parents[2]
+scripts_dir = scripts_root / "scripts"
 graph_server_path = scripts_dir / "graph-server.py"
 
 spec = importlib.util.spec_from_file_location("graph_server", graph_server_path)
