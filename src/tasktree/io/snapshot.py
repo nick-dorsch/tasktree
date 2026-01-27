@@ -17,8 +17,6 @@ def export_snapshot(db_path: Path, snapshot_path: Path) -> None:
     """
     Export the TaskTree database to a deterministic JSONL snapshot.
     """
-    with open("/tmp/tasktree_export_debug.log", "a") as f:
-        f.write(f"export_snapshot called with {db_path} and {snapshot_path}\n")
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
@@ -191,6 +189,7 @@ def _insert_features(
                 updated_at,
             )
         )
+
     conn.executemany(
         """
         INSERT INTO features (name, description, specification, created_at, updated_at)
@@ -221,6 +220,7 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
                 record["feature_name"],
             )
         )
+
     conn.executemany(
         """
         INSERT INTO tasks (
@@ -263,6 +263,7 @@ def _insert_dependencies(
     rows = []
     for record in dependencies:
         rows.append((record["task_name"], record["depends_on_task_name"]))
+
     conn.executemany(
         """
         INSERT INTO dependencies (task_id, depends_on_task_id)
