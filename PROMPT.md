@@ -31,5 +31,7 @@ pick up the next round) DO NOT PICK UP ANOTHER TASK.
 
 ## Important
 
-- Work on ONE implementation only 
-- Only stop when the tests for that iteration are all passing
+- Work on ONE task only
+- Only stop when the tests for that task are all passing
+- The feature is provided for context only. Do not implement anything outside of the
+task scope!
