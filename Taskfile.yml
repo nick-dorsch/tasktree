@@ -77,7 +77,7 @@ tasks:
       - echo "Starting graph server and opening browser..."
       - |
         # Start the server in the background
-        uv run python src/tasktree/graph/server.py --port 8000 --db .tasktree/tasktree.db &
+        uv run tasktree start --port 8000 --db .tasktree/tasktree.db &
         SERVER_PID=$!
         
         # Wait for server to be ready
