@@ -25,31 +25,33 @@ def test_features_table_schema(test_db_connection: sqlite3.Connection):
     columns = {row["name"]: row for row in cursor.fetchall()}
 
     expected_columns = {
+        "id",
         "name",
         "description",
-        "enabled",
+        "specification",
         "created_at",
+        "updated_at",
     }
     assert expected_columns.issubset(set(columns.keys()))
 
-    # Verify name is the primary key
-    assert columns["name"]["pk"] == 1
-
-    # Verify enabled column has correct type
-    assert "BOOLEAN" in columns["enabled"]["type"].upper()
+    # Verify id is the primary key
+    assert columns["id"]["pk"] == 1
 
 
 def test_default_feature_is_seeded(test_db_connection: sqlite3.Connection):
     """Test that the default feature is automatically seeded."""
     cursor = test_db_connection.cursor()
 
-    cursor.execute("SELECT * FROM features WHERE name = 'default'")
+    cursor.execute("SELECT * FROM features WHERE name = 'misc'")
     result = cursor.fetchone()
 
     assert result is not None
-    assert result["name"] == "default"
-    assert result["description"] == "Default feature set for basic task management"
-    assert result["enabled"] == 1
+    assert result["name"] == "misc"
+    assert result["description"] == "Default feature for uncategorized tasks"
+    assert (
+        result["specification"]
+        == "Use this feature in cases where a task is minimal and does not require a feature, such as minor hotfixes, tweaks etc."
+    )
 
 
 def test_features_name_is_primary_key(test_db_connection: sqlite3.Connection):
@@ -58,16 +60,24 @@ def test_features_name_is_primary_key(test_db_connection: sqlite3.Connection):
 
     # Try to insert a duplicate feature name
     cursor.execute(
-        "INSERT INTO features (name, description) VALUES (?, ?)",
-        ("test-feature", "First insert"),
+        "INSERT INTO features (name, description, specification) VALUES (?, ?, ?)",
+        (
+            "test-feature",
+            "First insert",
+            "First feature specification",
+        ),
     )
     test_db_connection.commit()
 
     # Attempt to insert duplicate should fail
     try:
         cursor.execute(
-            "INSERT INTO features (name, description) VALUES (?, ?)",
-            ("test-feature", "Duplicate insert"),
+            "INSERT INTO features (name, description, specification) VALUES (?, ?, ?)",
+            (
+                "test-feature",
+                "Duplicate insert",
+                "Duplicate feature specification",
+            ),
         )
         test_db_connection.commit()
         assert False, "Expected IntegrityError for duplicate feature name"
@@ -76,39 +86,16 @@ def test_features_name_is_primary_key(test_db_connection: sqlite3.Connection):
         pass
 
 
-def test_enabled_values_round_trip(test_db_connection: sqlite3.Connection):
-    """Test that enabled values are stored as provided."""
+def test_specification_is_required(test_db_connection: sqlite3.Connection):
+    """Test that specification is required for new features."""
     cursor = test_db_connection.cursor()
 
-    cursor.execute(
-        "INSERT INTO features (name, enabled) VALUES (?, ?)",
-        ("enabled-feature", 1),
-    )
-    cursor.execute(
-        "INSERT INTO features (name, enabled) VALUES (?, ?)",
-        ("disabled-feature", 0),
-    )
-    test_db_connection.commit()
-
-    cursor.execute(
-        "SELECT name, enabled FROM features WHERE name IN (?, ?)",
-        ("enabled-feature", "disabled-feature"),
-    )
-    rows = {row["name"]: row["enabled"] for row in cursor.fetchall()}
-    assert rows["enabled-feature"] == 1
-    assert rows["disabled-feature"] == 0
-
-
-def test_default_enabled_value(test_db_connection: sqlite3.Connection):
-    """Test that enabled defaults to 1 (enabled) when not specified."""
-    cursor = test_db_connection.cursor()
-
-    cursor.execute(
-        "INSERT INTO features (name, description) VALUES (?, ?)",
-        ("auto-enabled", "Should default to enabled"),
-    )
-    test_db_connection.commit()
-
-    cursor.execute("SELECT enabled FROM features WHERE name = ?", ("auto-enabled",))
-    result = cursor.fetchone()
-    assert result["enabled"] == 1
+    try:
+        cursor.execute(
+            "INSERT INTO features (name, description) VALUES (?, ?)",
+            ("missing-spec", "No specification provided"),
+        )
+        test_db_connection.commit()
+        assert False, "Expected IntegrityError for missing specification"
+    except sqlite3.IntegrityError:
+        pass
