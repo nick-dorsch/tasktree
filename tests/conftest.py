@@ -57,6 +57,12 @@ class _ConnectionProxy:
         return getattr(self._conn, name)
 
 
+class _SharedConnectionProxy(_ConnectionProxy):
+    def close(self) -> None:
+        """No-op close to keep the shared connection open."""
+        return None
+
+
 @pytest.fixture(scope="function", autouse=True)
 def _db_transaction(test_db: Path, monkeypatch) -> Iterator[None]:
     """
@@ -68,18 +74,33 @@ def _db_transaction(test_db: Path, monkeypatch) -> Iterator[None]:
     """
     import tasktree_mcp.database as db_module
 
-    conn = sqlite3.connect(test_db)
+    conn = sqlite3.connect(test_db, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("BEGIN")
 
     proxy = _ConnectionProxy(conn)
+    shared_proxy = _SharedConnectionProxy(conn)
+
+    sqlite3_connect = sqlite3.connect
+
+    def _shared_connect(database, *args, **kwargs):
+        try:
+            db_path = Path(database)
+        except TypeError:
+            db_path = None
+
+        if db_path == test_db or str(database) == str(test_db):
+            return shared_proxy
+
+        return sqlite3_connect(database, *args, **kwargs)
 
     @contextmanager
     def _get_db_connection() -> Iterator[_ConnectionProxy]:
         yield proxy
 
     monkeypatch.setattr(db_module, "get_db_connection", _get_db_connection)
+    monkeypatch.setattr(sqlite3, "connect", _shared_connect)
 
     try:
         yield
