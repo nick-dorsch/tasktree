@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "tasktree"
 version = "0.1.0"
-description = "Add your description here"
+description = "SQL-first task execution system with complex dependency tracking"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -30,8 +30,7 @@ packages = ["src/tasktree"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/tasktree"]
 include = [
-    "src/tasktree/sql/**",
-    "src/tasktree/graph_assets/**",
-    "src/tasktree/graph_viewer.html",
+    "src/tasktree/sql/**/*.sql",
+    "src/tasktree/graph/assets/**/*",
     "src/tasktree/mcp/README.md",
 ]

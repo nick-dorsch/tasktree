@@ -16,6 +16,7 @@ Default:
 import argparse
 import hashlib
 import json
+from importlib.resources import files
 import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -26,7 +27,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for the graph API."""
 
     db_path: Path
-    assets_dir: Path = (Path(__file__).parent / "assets" / "graph_assets").resolve()
+    assets_dir = files("tasktree.graph.assets.graph_assets")
 
     mime_types = {
         ".css": "text/css; charset=utf-8",
@@ -166,6 +167,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             tasks_by_feature.keys(), key=lambda x: feature_order.get(x, 999)
         ):
             feature_tasks_html = ""
+            feature_color = self._get_feature_color(feature_name)
             for task in tasks_by_feature[feature_name]:
                 (
                     name,
@@ -210,7 +212,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     <div class="task-details-row"><span class="task-details-label">Completed:</span> {completed_at}</div>"""
 
                 feature_tasks_html += f"""
-                <div class="task-item" data-status="{status}" data-feature="{feature_name}" data-task-name="{name}">
+                <div class="task-item" data-status="{status}" data-feature="{feature_name}" data-task-name="{name}" style="background-color: {feature_color}1A;">
                     <div class="task-header" onclick="toggleTaskDetails(this)">
                         <span class="task-status-dot" style="background: {status_color};"></span>
                         <span class="task-name" title="{name}">{name}</span>
@@ -222,7 +224,6 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 </div>"""
 
             feature_info_detail = feature_info[feature_name]
-            feature_color = self._get_feature_color(feature_name)
             task_items_html += f"""
             <div class="feature-group" data-feature="{feature_name}">
                 <div class="feature-header" onclick="toggleFeatureTasks(this)" style="border-left: 4px solid {feature_color}; background-color: {feature_color}1A;">
@@ -249,8 +250,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             "</div>"
         )
 
-        template_path = self.assets_dir / "index.html"
-        template_html = template_path.read_text()
+        template_path = files("tasktree.graph.assets") / "graph_viewer.html"
+        template_html = template_path.read_text(encoding="utf-8")
         html = template_html.replace("{{TASK_ITEMS}}", task_items_rendered)
         self._send_html_response(200, html)
 
@@ -263,9 +264,9 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             return
 
         safe_path = Path(unquote(relative_path))
-        asset_path = (self.assets_dir / safe_path).resolve()
+        asset_path = self.assets_dir / str(safe_path)
 
-        if not asset_path.is_file() or not asset_path.is_relative_to(self.assets_dir):
+        if not asset_path.is_file():
             self._send_error(404, "Not Found")
             return
 

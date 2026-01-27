@@ -3,7 +3,7 @@ Database path resolution for TaskTree.
 
 This module handles the strategy for locating the TaskTree database file:
 1. Check TASKTREE_DB_PATH environment variable (absolute override)
-2. Walk up from cwd to find repo root (look for .git directory)
+2. Walk up from cwd to find repo root (look for .git, pyproject.toml, or uv.lock)
 3. Use .tasktree/tasktree.db relative to repo root
 4. Fall back to user home directory if no repo found
 
@@ -28,19 +28,22 @@ def find_repo_root(start_path: Optional[Path] = None) -> Optional[Path]:
         start_path: Directory to start searching from (defaults to cwd)
 
     Returns:
-        Path to the repository root directory (parent of .git), or None if not found
+        Path to the repository root directory (project root), or None if not found
 
     Example:
         /home/user/repos/myproject/src/module/file.py
-        -> walks up to /home/user/repos/myproject (if .git exists there)
+        -> walks up to /home/user/repos/myproject (if project markers exist there)
     """
     current = start_path or Path.cwd()
     current = current.resolve()  # Resolve symlinks and make absolute
 
     # Walk up the directory tree until we find .git or hit the root
     while True:
-        git_dir = current / ".git"
-        if git_dir.exists() and git_dir.is_dir():
+        if (
+            (current / ".git").is_dir()
+            or (current / "pyproject.toml").exists()
+            or (current / "uv.lock").exists()
+        ):
             return current
 
         # Check if we've reached the filesystem root

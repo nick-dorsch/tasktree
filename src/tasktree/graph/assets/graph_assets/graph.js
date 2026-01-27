@@ -468,7 +468,7 @@ function updateTaskList(tasks) {
             const displayStyle = shouldExpand ? 'block' : 'none';
             const expandedAttr = shouldExpand ? ' data-expanded="true"' : '';
 
-            featureTasksHtml += '<div class="task-item" data-status="' + task.status + '" data-feature="' + task.feature_name + '" data-task-name="' + task.name + '"' + expandedAttr + '>' +
+            featureTasksHtml += '<div class="task-item" data-status="' + task.status + '" data-feature="' + task.feature_name + '" data-task-name="' + task.name + '"' + expandedAttr + ' style="background-color: ' + featureColor + '1A;">' +
                 '<div class="task-header" onclick="toggleTaskDetails(this)">' +
                 '<span class="task-status-dot" style="background: ' + statusColor + ';"></span>' +
                 '<span class="task-name" title="' + task.name + '">' + task.name + '</span>' +
