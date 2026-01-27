@@ -288,6 +288,14 @@ class AddFeatureRequest(BaseModel):
     )
 
 
+class DeleteFeatureRequest(BaseModel):
+    """Request model for delete_feature function."""
+
+    name: str = Field(
+        ..., min_length=1, max_length=55, description="Name of the feature to delete"
+    )
+
+
 # Response models for function returns
 class TaskResponse(BaseModel):
     """Response model for task data."""
@@ -430,3 +438,11 @@ class FeatureCreateResponse(BaseModel):
     """Response model for feature creation."""
 
     feature: FeatureResponse = Field(..., description="Created feature")
+
+
+class FeatureDeleteResponse(BaseModel):
+    """Response model for feature deletion."""
+
+    deleted: bool = Field(
+        ..., description="True if feature was deleted, False if not found"
+    )
