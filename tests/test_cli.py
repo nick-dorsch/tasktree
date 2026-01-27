@@ -237,3 +237,23 @@ class TestCLIGeneral:
         # (vs exit code 0 for explicit --help flag)
         assert result.exit_code == 2
         assert "TaskTree CLI" in result.stdout or "Usage:" in result.stdout
+
+
+class TestCLIEntryPoint:
+    """Test console script entry point."""
+
+    def test_console_script_entry_point(self):
+        """Test that the tasktree console script entry point is correctly configured."""
+        # Test that the CLI app is importable and has the expected structure
+        from tasktree.cli.main import cli
+
+        # Verify it's a Typer app
+        assert hasattr(cli, "registered_commands") or hasattr(cli, "info")
+
+        # Verify the main commands are registered by invoking with --help
+        # This is a more reliable way to test that commands are available
+        result = runner.invoke(cli, ["--help"])
+        assert result.exit_code == 0
+        assert "init" in result.stdout
+        assert "start" in result.stdout
+        assert "reset" in result.stdout
