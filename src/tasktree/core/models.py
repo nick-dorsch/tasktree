@@ -70,9 +70,10 @@ class Feature(BaseModel):
     """Feature model with validation."""
 
     name: str = Field(..., min_length=1, max_length=55)
-    description: Optional[str] = Field(None, description="Feature description")
-    enabled: bool = Field(default=True)
+    description: str = Field(..., min_length=1, description="Feature description")
+    specification: str = Field(..., min_length=1, description="Feature specification")
     created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 # Request models for function arguments
@@ -201,6 +202,32 @@ class ListDependenciesRequest(BaseModel):
     )
 
 
+class AddDependenciesRequest(BaseModel):
+    """Request model for add_dependencies function."""
+
+    task_name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Name of the task that depends on other tasks",
+    )
+    depends_on_task_names: List[str] = Field(
+        ...,
+        description="List of task names that must be completed first",
+    )
+
+    @field_validator("depends_on_task_names")
+    @classmethod
+    def validate_depends_on_task_names(cls, v: List[str], info) -> List[str]:
+        """Ensure dependencies are not empty or self-referential."""
+        if any(not name or not name.strip() for name in v):
+            raise ValueError("Dependency task name cannot be empty")
+        task_name = info.data.get("task_name")
+        if task_name and any(dep_name == task_name for dep_name in v):
+            raise ValueError("A task cannot depend on itself")
+        return v
+
+
 class AddDependencyRequest(BaseModel):
     """Request model for add_dependency function."""
 
@@ -251,14 +278,12 @@ class AddFeatureRequest(BaseModel):
     name: str = Field(
         ..., min_length=1, max_length=55, description="Unique name for the feature"
     )
-    description: Optional[str] = Field(None, description="Description of the feature")
-    enabled: bool = Field(default=True, description="Whether the feature is enabled")
-
-
-class ListFeaturesRequest(BaseModel):
-    """Request model for list_features function."""
-
-    enabled: Optional[bool] = Field(None, description="Filter by enabled state")
+    description: str = Field(
+        ..., min_length=1, description="Description of the feature"
+    )
+    specification: str = Field(
+        ..., min_length=1, description="Specification for the feature"
+    )
 
 
 # Response models for function returns
@@ -368,9 +393,10 @@ class FeatureResponse(BaseModel):
     """Response model for feature data."""
 
     name: str = Field(..., description="Feature name")
-    description: Optional[str] = Field(None, description="Feature description")
-    enabled: bool = Field(..., description="Whether the feature is enabled")
+    description: str = Field(..., description="Feature description")
+    specification: str = Field(..., description="Feature specification")
     created_at: Optional[str] = Field(None, description="Creation timestamp")
+    updated_at: Optional[str] = Field(None, description="Update timestamp")
 
     model_config = {"from_attributes": True}
 

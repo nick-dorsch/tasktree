@@ -7,7 +7,7 @@ tasks:
     silent: true
     cmds:
       - echo "Starting MCP server..."
-      - uv run python src/tasktree/server.py
+      - uv run python src/tasktree/mcp/server.py
 
   test:
     desc: Run all pytests
@@ -90,7 +90,7 @@ tasks:
       - echo "Starting graph server and opening browser..."
       - |
         # Start the server in the background
-        uv run python src/tasktree/graph_server.py --port 8000 --db .tasktree/tasktree.db &
+        uv run python src/tasktree/graph/server.py --port 8000 --db .tasktree/tasktree.db &
         SERVER_PID=$!
         
         # Wait for server to be ready

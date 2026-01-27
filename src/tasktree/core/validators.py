@@ -36,6 +36,12 @@ def validate_description(description: Optional[str]) -> None:
         raise ValueError("Description cannot be empty")
 
 
+def validate_specification(specification: Optional[str]) -> None:
+    """Validate specification if provided."""
+    if specification is not None and not specification.strip():
+        raise ValueError("Specification cannot be empty")
+
+
 def validate_feature_name(feature_name: Optional[str]) -> None:
     """Validate feature name if provided."""
     if feature_name is None:

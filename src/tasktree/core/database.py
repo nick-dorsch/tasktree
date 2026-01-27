@@ -328,8 +328,8 @@ class FeatureRepository:
     @staticmethod
     def add_feature(
         name: str,
-        description: Optional[str] = None,
-        enabled: bool = True,
+        description: str,
+        specification: str,
     ) -> FeatureResponse:
         """Add a new feature to the database."""
         with get_db_connection() as conn:
@@ -338,10 +338,10 @@ class FeatureRepository:
             try:
                 cursor.execute(
                     """
-                    INSERT INTO features (name, description, enabled)
+                    INSERT INTO features (name, description, specification)
                     VALUES (?, ?, ?)
                     """,
-                    (name, description, enabled),
+                    (name, description, specification),
                 )
                 conn.commit()
 
@@ -358,21 +358,12 @@ class FeatureRepository:
                 raise ValueError(f"Feature with name '{name}' already exists") from e
 
     @staticmethod
-    def list_features(enabled: Optional[bool] = None) -> List[FeatureResponse]:
-        """List features from the database with optional filtering."""
+    def list_features() -> List[FeatureResponse]:
+        """List features from the database."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            query = "SELECT * FROM features"
-            params = []
-
-            if enabled is not None:
-                query += " WHERE enabled = ?"
-                params.append(enabled)
-
-            query += " ORDER BY name ASC"
-
-            cursor.execute(query, params)
+            cursor.execute("SELECT * FROM features ORDER BY name ASC")
             rows = cursor.fetchall()
 
             return [

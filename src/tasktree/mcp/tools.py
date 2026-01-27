@@ -8,7 +8,7 @@ from fastmcp import FastMCP
 
 from ..core.database import DependencyRepository, FeatureRepository, TaskRepository
 from ..core.models import (
-    AddDependencyRequest,
+    AddDependenciesRequest,
     AddFeatureRequest,
     AddTaskRequest,
     CompleteTaskRequest,
@@ -19,7 +19,6 @@ from ..core.models import (
     FeatureResponse,
     GetTaskRequest,
     ListDependenciesRequest,
-    ListFeaturesRequest,
     ListTasksRequest,
     RemoveDependencyRequest,
     Task,
@@ -32,6 +31,7 @@ from ..core.validators import (
     validate_feature_name,
     validate_priority,
     validate_status,
+    validate_specification,
     validate_task_name,
 )
 
@@ -93,7 +93,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         specification: Optional[str] = None,
         feature_name: str = "misc",
         tests_required: bool = True,
-    ) -> TaskResponse:
+    ) -> bool:
         """
         Add a new task to the database.
 
@@ -111,7 +111,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             tests_required: Whether tests are required for this task
 
         Returns:
-            TaskResponse model with the created task data
+            True if the task was created successfully
         """
         request = AddTaskRequest(
             name=name,
@@ -144,7 +144,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         )
 
         # Create the task
-        created_task = TaskRepository.add_task(
+        TaskRepository.add_task(
             name=task.name,
             description=task.description,
             priority=task.priority,
@@ -162,7 +162,7 @@ def register_task_tools(mcp: FastMCP) -> None:
                     depends_on_task_name=dep_name,
                 )
 
-        return created_task
+        return True
 
     @mcp.tool()
     def update_task(
@@ -272,28 +272,42 @@ def register_dependency_tools(mcp: FastMCP) -> None:
         return DependencyRepository.list_dependencies(task_name=request.task_name)
 
     @mcp.tool()
-    def add_dependency(task_name: str, depends_on_task_name: str) -> DependencyResponse:
+    def add_dependencies(task_name: str, depends_on_task_names: List[str]) -> bool:
         """
-        Add a dependency relationship between tasks.
+        Add dependency relationships between tasks.
 
         Args:
-            task_name: Name of the task that depends on another task
-            depends_on_task_name: Name of the task that must be completed first
+            task_name: Name of the task that depends on other tasks
+            depends_on_task_names: List of task names that must be completed first
 
         Returns:
-            DependencyResponse model with the created dependency relationship data
+            True if all dependencies were created successfully
         """
-        request = AddDependencyRequest(
-            task_name=task_name, depends_on_task_name=depends_on_task_name
+        request = AddDependenciesRequest(
+            task_name=task_name, depends_on_task_names=depends_on_task_names
         )
-        dependency = Dependency(
-            task_name=request.task_name,
-            depends_on_task_name=request.depends_on_task_name,
-        )
-        return DependencyRepository.add_dependency(
-            task_name=dependency.task_name,
-            depends_on_task_name=dependency.depends_on_task_name,
-        )
+        failures = []
+        for depends_on_task_name in request.depends_on_task_names:
+            dependency = Dependency(
+                task_name=request.task_name,
+                depends_on_task_name=depends_on_task_name,
+            )
+            try:
+                DependencyRepository.add_dependency(
+                    task_name=dependency.task_name,
+                    depends_on_task_name=dependency.depends_on_task_name,
+                )
+            except ValueError as exc:
+                failures.append(f"{depends_on_task_name} ({exc})")
+
+        if failures:
+            failure_list = ", ".join(failures)
+            raise ValueError(
+                "Failed to add dependencies for task "
+                f"'{request.task_name}': {failure_list}"
+            )
+
+        return True
 
     @mcp.tool()
     def remove_dependency(task_name: str, depends_on_task_name: str) -> bool:
@@ -340,53 +354,51 @@ def register_feature_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     def add_feature(
         name: str,
-        description: Optional[str] = None,
-        enabled: bool = True,
-    ) -> FeatureResponse:
+        description: str,
+        specification: str,
+    ) -> bool:
         """
         Add a new feature to the database.
 
         Args:
             name: Unique name for the feature
-            description: Description of the feature (optional)
-            enabled: Whether the feature is enabled
+            description: Description of the feature
+            specification: Detailed feature specification
 
         Returns:
-            FeatureResponse model with the created feature data
+            True if the feature was created successfully
         """
         request = AddFeatureRequest(
             name=name,
             description=description,
-            enabled=enabled,
+            specification=specification,
         )
         validate_feature_name(request.name)
         validate_description(request.description)
+        validate_specification(request.specification)
 
         feature = Feature(
             name=request.name,
             description=request.description,
-            enabled=request.enabled,
+            specification=request.specification,
         )
 
-        return FeatureRepository.add_feature(
+        FeatureRepository.add_feature(
             name=feature.name,
             description=feature.description,
-            enabled=feature.enabled,
+            specification=feature.specification,
         )
+        return True
 
     @mcp.tool()
-    def list_features(enabled: Optional[bool] = None) -> List[FeatureResponse]:
+    def list_features() -> List[FeatureResponse]:
         """
-        List features from the database with optional filtering.
-
-        Args:
-            enabled: Filter by enabled state (optional)
+        List features from the database.
 
         Returns:
             List of FeatureResponse models with feature data
         """
-        request = ListFeaturesRequest(enabled=enabled)
-        return FeatureRepository.list_features(enabled=request.enabled)
+        return FeatureRepository.list_features()
 
 
 def register_all_tools(mcp: FastMCP) -> None:
