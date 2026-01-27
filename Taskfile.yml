@@ -9,6 +9,12 @@ tasks:
       - echo "Starting MCP server..."
       - uv run server.py
 
+  test:
+    desc: Run all pytests
+    silent: true
+    cmds:
+      - uv run pytest
+
   init-db:
     desc: Recreate database (use SEED=true to seed with test data)
     silent: true

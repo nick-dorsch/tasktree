@@ -65,8 +65,8 @@ UNION ALL
 
 SELECT
   3 AS record_order,
-  d.task_id AS sort_name,
-  d.depends_on_task_id AS sort_secondary,
+  t.name AS sort_name,
+  dep.name AS sort_secondary,
   json_object(
     'record_type', 'dependency',
     'task_name', t.name,

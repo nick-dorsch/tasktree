@@ -5,7 +5,7 @@ JSONL snapshot export/import utilities for TaskTree.
 import json
 import sqlite3
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Sequence, Tuple
 
 from .db_init import initialize_database
 
@@ -36,14 +36,7 @@ def export_snapshot(db_path: Path, snapshot_path: Path) -> None:
 
     try:
         with snapshot_path.open("w", encoding="utf-8", newline="\n") as handle:
-            if _json1_available(conn):
-                try:
-                    _write_snapshot_from_view(conn, handle)
-                    return
-                except sqlite3.OperationalError as exc:
-                    if "v_snapshot_jsonl_lines" not in str(exc):
-                        raise
-            _write_snapshot_fallback(conn, handle)
+            _write_snapshot_from_view(conn, handle)
     finally:
         conn.close()
 
@@ -90,23 +83,6 @@ def import_snapshot(db_path: Path, snapshot_path: Path, overwrite: bool = True) 
         conn.close()
 
 
-def _get_current_timestamp(conn: sqlite3.Connection) -> str:
-    cursor = conn.cursor()
-    cursor.execute("SELECT CURRENT_TIMESTAMP")
-    row = cursor.fetchone()
-    if row is None or row[0] is None:
-        raise RuntimeError("Failed to retrieve current timestamp")
-    return str(row[0])
-
-
-def _json1_available(conn: sqlite3.Connection) -> bool:
-    try:
-        conn.execute("SELECT json('null')")
-    except sqlite3.OperationalError:
-        return False
-    return True
-
-
 def _write_snapshot_from_view(conn: sqlite3.Connection, handle) -> None:
     cursor = conn.cursor()
     cursor.execute(
@@ -121,131 +97,12 @@ def _write_snapshot_from_view(conn: sqlite3.Connection, handle) -> None:
         handle.write(f"{json_line}\n")
 
 
-def _write_snapshot_fallback(conn: sqlite3.Connection, handle) -> None:
-    generated_at = _get_current_timestamp(conn)
-    meta_record = {
-        "record_type": "meta",
-        "schema_version": SNAPSHOT_SCHEMA_VERSION,
-        "generated_at": generated_at,
-        "source": "sqlite",
-    }
-
-    features = _fetch_features(conn)
-    tasks = _fetch_tasks(conn)
-    dependencies = _fetch_dependencies(conn)
-
-    _write_record(handle, meta_record)
-    for record in features:
-        _write_record(handle, record)
-    for record in tasks:
-        _write_record(handle, record)
-    for record in dependencies:
-        _write_record(handle, record)
-
-
-def _write_record(handle, record: Dict[str, Any]) -> None:
-    line = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
-    handle.write(f"{line}\n")
-
-
-def _fetch_features(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT name, description, specification, created_at, updated_at
-        FROM features
-        ORDER BY name ASC
-        """
-    )
-    rows = cursor.fetchall()
-    records: List[Dict[str, Any]] = []
-    for row in rows:
-        records.append(
-            {
-                "record_type": "feature",
-                "name": row["name"],
-                "description": row["description"],
-                "specification": row["specification"],
-                "created_at": row["created_at"],
-                "updated_at": row["updated_at"],
-            }
-        )
-    return records
-
-
-def _fetch_tasks(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT
-            t.name,
-            t.description,
-            t.specification,
-            f.name AS feature_name,
-            t.tests_required,
-            t.priority,
-            t.status,
-            t.created_at,
-            t.updated_at,
-            t.started_at,
-            t.completed_at
-        FROM tasks t
-        LEFT JOIN features f ON t.feature_id = f.id
-        ORDER BY t.name ASC
-        """
-    )
-    rows = cursor.fetchall()
-    records: List[Dict[str, Any]] = []
-    for row in rows:
-        records.append(
-            {
-                "record_type": "task",
-                "name": row["name"],
-                "description": row["description"],
-                "specification": row["specification"],
-                "feature_name": row["feature_name"],
-                "tests_required": bool(row["tests_required"]),
-                "priority": row["priority"],
-                "status": row["status"],
-                "created_at": row["created_at"],
-                "updated_at": row["updated_at"],
-                "started_at": row["started_at"],
-                "completed_at": row["completed_at"],
-            }
-        )
-    return records
-
-
-def _fetch_dependencies(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT t.name AS task_name, d.name AS depends_on_task_name
-        FROM dependencies dep
-        JOIN tasks t ON dep.task_id = t.id
-        JOIN tasks d ON dep.depends_on_task_id = d.id
-        ORDER BY t.name ASC, d.name ASC
-        """
-    )
-    rows = cursor.fetchall()
-    records: List[Dict[str, Any]] = []
-    for row in rows:
-        records.append(
-            {
-                "record_type": "dependency",
-                "task_name": row["task_name"],
-                "depends_on_task_name": row["depends_on_task_name"],
-            }
-        )
-    return records
-
-
 def _parse_snapshot(
     snapshot_path: Path,
 ) -> Tuple[
     Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]
 ]:
-    meta_record: Optional[Dict[str, Any]] = None
+    meta_record: Dict[str, Any] | None = None
     features: List[Dict[str, Any]] = []
     tasks: List[Dict[str, Any]] = []
     dependencies: List[Dict[str, Any]] = []
@@ -267,7 +124,11 @@ def _parse_snapshot(
                     f"Snapshot record on line {line_number} must be an object"
                 )
 
-            record_type = _require_str_field(record, "record_type", line_number)
+            record_type = record.get("record_type")
+            if not isinstance(record_type, str) or not record_type:
+                raise ValueError(
+                    f"Field 'record_type' must be a non-empty string on line {line_number}"
+                )
             if record_type not in RECORD_ORDER:
                 raise ValueError(
                     f"Invalid record_type '{record_type}' on line {line_number}"
@@ -285,13 +146,10 @@ def _parse_snapshot(
                     raise ValueError("Snapshot must contain only one meta record")
                 meta_record = record
             elif record_type == "feature":
-                _validate_feature(record, line_number)
                 features.append(record)
             elif record_type == "task":
-                _validate_task(record, line_number)
                 tasks.append(record)
             elif record_type == "dependency":
-                _validate_dependency(record, line_number)
                 dependencies.append(record)
 
             current_index = max(current_index, index)
@@ -309,72 +167,6 @@ def _validate_meta(meta_record: Dict[str, Any]) -> None:
     generated_at = meta_record.get("generated_at")
     if not isinstance(generated_at, str) or not generated_at:
         raise ValueError("Meta record must include generated_at")
-
-
-def _validate_feature(record: Dict[str, Any], line_number: int) -> None:
-    _require_str_field(record, "name", line_number)
-    _require_nullable_str_field(record, "description", line_number)
-    _require_nullable_str_field(record, "specification", line_number)
-    _require_str_field(record, "created_at", line_number)
-    _require_nullable_str_field(record, "updated_at", line_number)
-
-
-def _validate_task(record: Dict[str, Any], line_number: int) -> None:
-    _require_str_field(record, "name", line_number)
-    _require_str_field(record, "description", line_number)
-    _require_nullable_str_field(record, "specification", line_number)
-    _require_str_field(record, "feature_name", line_number)
-    if "tests_required" in record:
-        _require_bool_field(record, "tests_required", line_number)
-    _require_int_field(record, "priority", line_number)
-    _require_str_field(record, "status", line_number)
-    _require_str_field(record, "created_at", line_number)
-    _require_str_field(record, "updated_at", line_number)
-    _require_nullable_str_field(record, "started_at", line_number)
-    _require_nullable_str_field(record, "completed_at", line_number)
-
-
-def _validate_dependency(record: Dict[str, Any], line_number: int) -> None:
-    _require_str_field(record, "task_name", line_number)
-    _require_str_field(record, "depends_on_task_name", line_number)
-
-
-def _require_str_field(record: Dict[str, Any], field: str, line_number: int) -> str:
-    value = record.get(field)
-    if not isinstance(value, str) or not value:
-        raise ValueError(
-            f"Field '{field}' must be a non-empty string on line {line_number}"
-        )
-    return value
-
-
-def _require_nullable_str_field(
-    record: Dict[str, Any], field: str, line_number: int
-) -> Optional[str]:
-    value = record.get(field)
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise ValueError(
-            f"Field '{field}' must be a string or null on line {line_number}"
-        )
-    return value
-
-
-def _require_int_field(record: Dict[str, Any], field: str, line_number: int) -> int:
-    value = record.get(field)
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"Field '{field}' must be an integer on line {line_number}")
-    return value
-
-
-def _require_bool_field(record: Dict[str, Any], field: str, line_number: int) -> bool:
-    value = record.get(field)
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, int) and value in (0, 1):
-        return bool(value)
-    raise ValueError(f"Field '{field}' must be a boolean on line {line_number}")
 
 
 def _clear_database(conn: sqlite3.Connection) -> None:

@@ -6,7 +6,6 @@ import json
 import sqlite3
 from pathlib import Path
 
-from tasktree_mcp import snapshot as snapshot_module
 from tasktree_mcp.snapshot import export_snapshot, import_snapshot
 
 
@@ -147,65 +146,6 @@ def test_export_snapshot_writes_ordered_jsonl(test_db: Path, tmp_path: Path) -> 
         if r["record_type"] == "dependency"
     ]
     assert dependency_pairs == sorted(dependency_pairs)
-
-
-def test_export_snapshot_falls_back_without_json1(
-    test_db: Path, tmp_path: Path, monkeypatch
-) -> None:
-    """Export falls back to Python serialization when JSON1 is unavailable."""
-    conn = sqlite3.connect(test_db)
-    conn.execute("PRAGMA foreign_keys = ON")
-    try:
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO features (name, description, specification)
-            VALUES (?, ?, ?)
-            """,
-            ("gamma", "Gamma feature", "Gamma feature specification"),
-        )
-        cursor.execute(
-            """
-            INSERT INTO tasks (
-                feature_id,
-                name,
-                description,
-                specification,
-                tests_required,
-                priority,
-                status
-            )
-            SELECT id, ?, ?, ?, ?, ?, ?
-            FROM features
-            WHERE name = ?
-            """,
-            (
-                "delta",
-                "Delta task",
-                "Delta task",
-                1,
-                4,
-                "pending",
-                "gamma",
-            ),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-
-    snapshot_path = tmp_path / "snapshot.jsonl"
-    monkeypatch.setattr(snapshot_module, "_json1_available", lambda _: False)
-    export_snapshot(test_db, snapshot_path)
-
-    raw_lines = snapshot_path.read_text(encoding="utf-8").splitlines()
-    for line in raw_lines:
-        if not line.strip():
-            continue
-        record = json.loads(line)
-        expected = json.dumps(
-            record, sort_keys=True, separators=(",", ":"), ensure_ascii=True
-        )
-        assert line == expected
 
 
 def test_import_snapshot_overwrite_restores_data(test_db: Path, tmp_path: Path) -> None:
@@ -361,9 +301,11 @@ def test_import_snapshot_overwrite_restores_data(test_db: Path, tmp_path: Path) 
 
         cursor.execute(
             """
-            SELECT task_name, depends_on_task_name
-            FROM dependencies
-            ORDER BY task_name, depends_on_task_name
+            SELECT t.name AS task_name, d.name AS depends_on_task_name
+            FROM dependencies dep
+            JOIN tasks t ON dep.task_id = t.id
+            JOIN tasks d ON dep.depends_on_task_id = d.id
+            ORDER BY t.name, d.name
             """
         )
         dependencies = [
