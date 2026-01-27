@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Model to use for opencode runs
-MODEL="openai/gpt-5.2-codex"
+MODEL="opencode/glm-4.7"
 
 # Run agent in a loop with stop condition
 if [ -f "PROMPT.md" ]; then
