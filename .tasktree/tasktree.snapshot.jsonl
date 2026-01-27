@@ -1,2 +1,0 @@
-{"record_type":"meta","schema_version":"1","generated_at":"2026-01-27 04:37:22","source":"sqlite"}
-{"record_type":"feature","name":"misc","description":"Default feature for uncategorized tasks","specification":"Use this feature in cases where a task is minimal and does not require a feature, such as minor hotfixes, tweaks etc.","created_at":"2026-01-27 03:57:39","updated_at":"2026-01-27 03:57:39"}
