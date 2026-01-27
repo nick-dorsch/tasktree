@@ -6,24 +6,24 @@ import sqlite3
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Iterator
 
 import pytest
 
 from tasktree_mcp.db_init import initialize_database
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def test_db() -> Generator[Path, None, None]:
     """
-    Create a temporary test database with schema and views for each test.
+    Create a temporary test database with schema and views for the session.
 
     This fixture:
     1. Creates a temporary SQLite database file
     2. Applies the database schema from sql/schemas/
     3. Applies the database views from sql/views/
-    4. Provides an isolated database for each test
-    5. Automatically cleans up after the test
+    4. Provides a shared database for the test session
+    5. Automatically cleans up after the test session
 
     Yields:
         Path: Path to the temporary test database file
@@ -44,6 +44,48 @@ def test_db() -> Generator[Path, None, None]:
         # Clean up: remove the temporary database file
         if db_path.exists():
             db_path.unlink()
+
+
+class _ConnectionProxy:
+    def __init__(self, conn: sqlite3.Connection) -> None:
+        self._conn = conn
+
+    def commit(self) -> None:
+        """No-op commit to keep transaction open for rollback."""
+
+    def __getattr__(self, name: str):
+        return getattr(self._conn, name)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def _db_transaction(test_db: Path, monkeypatch) -> Iterator[None]:
+    """
+    Wrap each test in a transaction and roll back after.
+
+    This fixture monkeypatches tasktree_mcp.database.get_db_connection to
+    always return the same connection (with commits disabled), so tests are
+    isolated via rollback while using a session-scoped database.
+    """
+    import tasktree_mcp.database as db_module
+
+    conn = sqlite3.connect(test_db)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("BEGIN")
+
+    proxy = _ConnectionProxy(conn)
+
+    @contextmanager
+    def _get_db_connection() -> Iterator[_ConnectionProxy]:
+        yield proxy
+
+    monkeypatch.setattr(db_module, "get_db_connection", _get_db_connection)
+
+    try:
+        yield
+    finally:
+        conn.rollback()
+        conn.close()
 
 
 @pytest.fixture(scope="function")
