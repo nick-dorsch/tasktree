@@ -12,6 +12,7 @@ dependencies = [
     "fastmcp>=2.14.4",
     "pydantic>=2.0.0",
     "ruff>=0.14.14",
+    "typer>=0.21.1",
 ]
 
 [dependency-groups]

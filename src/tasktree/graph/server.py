@@ -319,7 +319,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                              WHEN 'completed' THEN 4
                          END,
                          t.priority DESC,
-                         t.name
+                         t.created_at ASC
             """)
             rows = cursor.fetchall()
 

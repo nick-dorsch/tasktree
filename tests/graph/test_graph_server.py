@@ -1087,16 +1087,21 @@ def test_api_tasks_endpoint_with_tasks(mock_db_path, server_thread):
 
 
 def test_api_tasks_endpoint_sorting(mock_db_path, server_thread):
-    """Test that /api/tasks returns tasks sorted by status, priority, name."""
+    """Test that /api/tasks returns tasks sorted by status, priority, created_at."""
     port = server_thread
 
-    # Add tasks with different statuses and priorities
+    # Add tasks with different statuses, priorities, and created_at times
     TaskRepository.add_task("completed-high", "Done", priority=10, status="completed")
     TaskRepository.add_task("pending-high", "Pending", priority=9, status="pending")
     TaskRepository.add_task(
         "in-progress-low", "Working", priority=5, status="in_progress"
     )
     TaskRepository.add_task("blocked-medium", "Blocked", priority=7, status="blocked")
+
+    # Add two tasks with same status and priority but different created_at to test created_at ordering
+    TaskRepository.add_task("pending-old", "Old pending", priority=9, status="pending")
+    # This one should come after pending-old due to later created_at
+    TaskRepository.add_task("pending-new", "New pending", priority=9, status="pending")
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -1107,10 +1112,17 @@ def test_api_tasks_endpoint_sorting(mock_db_path, server_thread):
 
         task_names = [task["name"] for task in data["tasks"]]
 
+        # Debug: print the actual task names
+        print(f"Actual task names: {task_names}")
+
         # Order should be: blocked, in_progress, pending, completed
         assert task_names.index("blocked-medium") < task_names.index("in-progress-low")
         assert task_names.index("in-progress-low") < task_names.index("pending-high")
         assert task_names.index("pending-high") < task_names.index("completed-high")
+
+        # For same status and priority, should be ordered by created_at ASC
+        # pending-old should come before pending-new
+        assert task_names.index("pending-old") < task_names.index("pending-new")
     finally:
         conn.close()
 

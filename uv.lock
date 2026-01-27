@@ -1615,6 +1615,7 @@ dependencies = [
     { name = "fastmcp" },
     { name = "pydantic" },
     { name = "ruff" },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -1628,6 +1629,7 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=2.14.4" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "ruff", specifier = ">=0.14.14" },
+    { name = "typer", specifier = ">=0.21.1" },
 ]
 
 [package.metadata.requires-dev]
