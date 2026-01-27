@@ -1078,6 +1078,7 @@ def test_api_tasks_endpoint_with_tasks(mock_db_path, server_thread):
         assert "completed_at" in task
         assert "specification" in task
         assert "feature_name" in task
+        assert "feature_description" in task
         assert "feature_created_at" in task
         assert "tests_required" in task
         assert "updated_at" in task
@@ -1146,6 +1147,39 @@ def test_root_endpoint_renders_template_placeholders(mock_db_path, server_thread
         conn.close()
 
 
+def test_root_endpoint_feature_header_includes_description_and_created_at(
+    mock_db_path, server_thread
+):
+    """Test that feature headers include description and created_at."""
+    port = server_thread
+
+    # Add a task to get the default 'misc' feature
+    TaskRepository.add_task("test-task", "Test task", priority=5)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/")
+        response = conn.getresponse()
+
+        html = response.read().decode()
+
+        # Check for feature description and created_at in the HTML
+        assert "feature-description" in html or 'class="feature-description"' in html
+        assert "feature-created-at" in html or 'class="feature-created-at"' in html
+
+        # Check that the default misc feature description is present
+        assert "Default feature for uncategorized tasks" in html
+
+        # Check that feature meta info CSS classes exist
+        assert "feature-main-info" in html
+        assert "feature-meta-info" in html
+
+        # Check that created_at timestamp format is present (year prefix)
+        assert "202" in html  # Should contain a year like 2026-XX-XX
+    finally:
+        conn.close()
+
+
 def test_root_endpoint_includes_fetch_tasks_function(server_thread):
     """Test that fetchTasks function is defined in the HTML."""
     port = server_thread
@@ -1189,6 +1223,35 @@ def test_root_endpoint_auto_refresh_includes_tasks(server_thread):
 
     assert "fetchGraph" in interval_block
     assert "fetchTasks" in interval_block
+
+
+def test_api_tasks_endpoint_includes_feature_info(mock_db_path, server_thread):
+    """Test /api/tasks includes feature description and created_at."""
+    port = server_thread
+
+    # Add a task to get default 'misc' feature
+    TaskRepository.add_task("test-task", "Test task", priority=5)
+
+    conn = HTTPConnection("localhost", port)
+    try:
+        conn.request("GET", "/api/tasks")
+        response = conn.getresponse()
+
+        data = json.loads(response.read().decode())
+
+        assert len(data["tasks"]) == 1
+        task = data["tasks"][0]
+
+        # Check feature info is present
+        assert "feature_description" in task
+        assert "feature_created_at" in task
+
+        # Check values are reasonable (misc feature from seed data)
+        assert task["feature_name"] == "misc"
+        assert task["feature_description"] == "Default feature for uncategorized tasks"
+        assert task["feature_created_at"] is not None
+    finally:
+        conn.close()
 
 
 def test_update_task_list_preserves_expanded_state(server_thread):

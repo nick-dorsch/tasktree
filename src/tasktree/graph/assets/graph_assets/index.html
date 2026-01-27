@@ -91,15 +91,29 @@
     }
 
     .feature-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
       cursor: pointer;
       user-select: none;
       background: rgba(255, 255, 255, 0.05);
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       transition: background 0.2s;
+    }
+
+    .feature-main-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+
+    .feature-meta-info {
+      padding: 0 12px 10px 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .feature-header.expanded .feature-meta-info {
+      display: block;
     }
 
     .feature-header:hover {
@@ -134,6 +148,20 @@
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-description {
+      font-size: 11px;
+      color: #ccc;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      word-wrap: break-word;
+    }
+
+    .feature-created-at {
+      font-size: 10px;
+      color: #888;
+      font-family: monospace;
     }
 
     .feature-tasks {

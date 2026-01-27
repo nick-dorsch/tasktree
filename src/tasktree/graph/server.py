@@ -93,6 +93,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 t.completed_at,
                 t.specification,
                 f.name AS feature_name,
+                f.description AS feature_description,
                 f.created_at AS feature_created_at
             FROM tasks t
             JOIN features f ON t.feature_id = f.id
@@ -118,8 +119,20 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 
         # Build task list HTML grouped by feature
         tasks_by_feature: dict[str, list[tuple]] = {}
+        # Store feature info for each feature
+        feature_info = {}
+
         for task in tasks:
-            feature_name = task[-2]  # feature_name is now second to last
+            feature_name = task[-3]  # feature_name is now third to last
+            feature_description = task[-2]  # feature_description is second to last
+            feature_created_at = task[-1]  # feature_created_at is last
+
+            if feature_name not in feature_info:
+                feature_info[feature_name] = {
+                    "description": feature_description,
+                    "created_at": feature_created_at,
+                }
+
             tasks_by_feature.setdefault(feature_name, []).append(task)
 
         task_items_html = ""
@@ -145,6 +158,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     completed_at,
                     specification,
                     _feature_name,
+                    _feature_description,
                     _feature_created_at,
                 ) = task
 
@@ -188,12 +202,19 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     </div>
                 </div>"""
 
+            feature_info_detail = feature_info[feature_name]
             task_items_html += f"""
             <div class="feature-group" data-feature="{feature_name}">
                 <div class="feature-header" onclick="toggleFeatureTasks(this)">
-                    <span class="feature-chevron">▶</span>
-                    <span class="feature-name" title="{feature_name}">{feature_name}</span>
-                    <span class="feature-count">{len(tasks_by_feature[feature_name])}</span>
+                    <div class="feature-main-info">
+                        <span class="feature-chevron">▶</span>
+                        <span class="feature-name" title="{feature_name}">{feature_name}</span>
+                        <span class="feature-count">{len(tasks_by_feature[feature_name])}</span>
+                    </div>
+                    <div class="feature-meta-info">
+                        <div class="feature-description">{feature_info_detail["description"]}</div>
+                        <div class="feature-created-at">{feature_info_detail["created_at"]}</div>
+                    </div>
                 </div>
                 <div class="feature-tasks" style="display: none;">
                     {feature_tasks_html}
@@ -286,6 +307,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     t.specification,
                     t.tests_required,
                     f.name AS feature_name,
+                    f.description AS feature_description,
                     f.created_at AS feature_created_at,
                     t.updated_at
                 FROM tasks t
@@ -315,8 +337,9 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                         "specification": row[7],
                         "tests_required": bool(row[8]),
                         "feature_name": row[9],
-                        "feature_created_at": row[10],
-                        "updated_at": row[11],
+                        "feature_description": row[10],
+                        "feature_created_at": row[11],
+                        "updated_at": row[12],
                     }
                 )
 
