@@ -1,5 +1,20 @@
 window.tasktreeGraphServerAssetsLoaded = true;
 
+// Feature list toggle functionality
+function toggleFeatureTasks(headerElement) {
+    const featureGroup = headerElement.parentElement;
+    const tasksContainer = featureGroup.querySelector('.feature-tasks');
+    const isExpanding = tasksContainer.style.display === 'none';
+
+    if (isExpanding) {
+        tasksContainer.style.display = 'block';
+        headerElement.classList.add('expanded');
+    } else {
+        tasksContainer.style.display = 'none';
+        headerElement.classList.remove('expanded');
+    }
+}
+
 // Task list toggle functionality
 function toggleTaskDetails(headerElement) {
     const taskItem = headerElement.parentElement;
@@ -9,40 +24,23 @@ function toggleTaskDetails(headerElement) {
     // Check if this task is currently expanded
     const isExpanding = detailsDiv.style.display === 'none';
 
-    if (isExpanding) {
-        // Close all other expanded tasks first
-        document.querySelectorAll('.task-details').forEach(details => {
-            details.style.display = 'none';
-        });
-        document.querySelectorAll('.task-expand-icon').forEach(icon => {
-            icon.classList.remove('expanded');
-        });
+    // Close all other expanded tasks first
+    document.querySelectorAll('.task-details').forEach(details => {
+        details.style.display = 'none';
+    });
+    document.querySelectorAll('.task-expand-icon').forEach(icon => {
+        icon.classList.remove('expanded');
+    });
+    document.querySelectorAll('.task-item').forEach(item => {
+        item.removeAttribute('data-expanded');
+    });
 
+    if (isExpanding) {
         // Now expand this task
         detailsDiv.style.display = 'block';
         expandIcon.classList.add('expanded');
-    } else {
-        // Collapse this task
-        detailsDiv.style.display = 'none';
-        expandIcon.classList.remove('expanded');
+        taskItem.setAttribute('data-expanded', 'true');
     }
-}
-
-// Feature filter functionality
-function filterTasksByFeature() {
-    const selectedFeature = document.getElementById('feature-dropdown').value;
-    const taskItems = document.querySelectorAll('.task-item');
-
-    taskItems.forEach(item => {
-        const taskFeature = item.getAttribute('data-feature');
-
-        // Show all if no feature selected, otherwise only show matching feature
-        if (selectedFeature === '' || taskFeature === selectedFeature) {
-            item.style.display = 'block';
-        } else {
-            item.style.display = 'none';
-        }
-    });
 }
 
 // Configuration
@@ -381,11 +379,29 @@ function updateTaskList(tasks) {
 
     // Store currently expanded task names
     const expandedTasks = new Set();
+    document.querySelectorAll('.task-item[data-expanded="true"]').forEach((taskItem) => {
+        const taskName = taskItem.getAttribute('data-task-name');
+        if (taskName) {
+            expandedTasks.add(taskName);
+        }
+    });
     document.querySelectorAll('.task-details').forEach((details) => {
         if (details.style.display === 'block') {
             const taskItem = details.parentElement;
             const taskName = taskItem.querySelector('.task-name').textContent;
             expandedTasks.add(taskName);
+        }
+    });
+
+    // Store currently expanded features
+    const expandedFeatures = new Set();
+    document.querySelectorAll('.feature-group').forEach((group) => {
+        const tasksContainer = group.querySelector('.feature-tasks');
+        if (tasksContainer && tasksContainer.style.display === 'block') {
+            const featureName = group.getAttribute('data-feature');
+            if (featureName) {
+                expandedFeatures.add(featureName);
+            }
         }
     });
 
@@ -397,46 +413,80 @@ function updateTaskList(tasks) {
         blocked: '#F44336',
     };
 
-    // Build task items HTML
+    // Group tasks by feature
+    const tasksByFeature = new Map();
+    tasks.forEach(task => {
+        if (!tasksByFeature.has(task.feature_name)) {
+            tasksByFeature.set(task.feature_name, []);
+        }
+        tasksByFeature.get(task.feature_name).push(task);
+    });
+
+    const sortedFeatures = Array.from(tasksByFeature.keys()).sort((a, b) =>
+        a.localeCompare(b)
+    );
+
+    // Build feature groups HTML
     let taskItemsHtml = '';
 
-    tasks.forEach(task => {
-        const statusColor = statusColors[task.status] || '#999';
+    sortedFeatures.forEach(featureName => {
+        const featureTasks = tasksByFeature.get(featureName) || [];
+        const isExpanded = expandedFeatures.has(featureName);
+        const featureDisplay = isExpanded ? 'block' : 'none';
+        const featureClass = isExpanded ? 'expanded' : '';
 
-        let detailsHtml = '<div class="task-details-row"><span class="task-details-label">Status:</span> ' + task.status + '</div>' +
-            '<div class="task-details-row"><span class="task-details-label">Priority:</span> ' + task.priority + '</div>' +
-            '<div class="task-details-row"><span class="task-details-label">Description:</span>' +
-            '<div class="task-details-value">' + (task.description || 'None') + '</div></div>';
+        let featureTasksHtml = '';
 
-        if (task.specification && task.specification !== task.description) {
-            detailsHtml += '<div class="task-details-row"><span class="task-details-label">Details:</span>' +
-                '<div class="task-details-value">' + task.specification + '</div></div>';
-        }
+        featureTasks.forEach(task => {
+            const statusColor = statusColors[task.status] || '#999';
 
-        detailsHtml += '<div class="task-details-row"><span class="task-details-label">Created:</span> ' + (task.created_at || 'None') + '</div>';
+            let detailsHtml = '<div class="task-details-row"><span class="task-details-label">Status:</span> ' + task.status + '</div>' +
+                '<div class="task-details-row"><span class="task-details-label">Priority:</span> ' + task.priority + '</div>' +
+                '<div class="task-details-row"><span class="task-details-label">Description:</span>' +
+                '<div class="task-details-value">' + (task.description || 'None') + '</div></div>';
 
-        if (task.started_at) {
-            detailsHtml += '<div class="task-details-row"><span class="task-details-label">Started:</span> ' + task.started_at + '</div>';
-        }
+            if (task.specification && task.specification !== task.description) {
+                detailsHtml += '<div class="task-details-row"><span class="task-details-label">Details:</span>' +
+                    '<div class="task-details-value">' + task.specification + '</div></div>';
+            }
 
-        if (task.completed_at) {
-            detailsHtml += '<div class="task-details-row"><span class="task-details-label">Completed:</span> ' + task.completed_at + '</div>';
-        }
+            detailsHtml += '<div class="task-details-row"><span class="task-details-label">Created:</span> ' + (task.created_at || 'None') + '</div>';
 
-        // Check if this task should be expanded
-        const shouldExpand = expandedTasks.has(task.name);
-        const expandIcon = '▶';
-        const expandClass = shouldExpand ? 'expanded' : '';
-        const displayStyle = shouldExpand ? 'block' : 'none';
+            if (task.started_at) {
+                detailsHtml += '<div class="task-details-row"><span class="task-details-label">Started:</span> ' + task.started_at + '</div>';
+            }
 
-        taskItemsHtml += '<div class="task-item" data-status="' + task.status + '" data-feature="' + task.feature_name + '">' +
-            '<div class="task-header" onclick="toggleTaskDetails(this)">' +
-            '<span class="task-status-dot" style="background: ' + statusColor + ';"></span>' +
-            '<span class="task-name" title="' + task.name + '">' + task.name + '</span>' +
-            '<span class="task-expand-icon ' + expandClass + '">' + expandIcon + '</span>' +
+            if (task.completed_at) {
+                detailsHtml += '<div class="task-details-row"><span class="task-details-label">Completed:</span> ' + task.completed_at + '</div>';
+            }
+
+            // Check if this task should be expanded
+            const shouldExpand = expandedTasks.has(task.name);
+            const expandIcon = '▶';
+            const expandClass = shouldExpand ? 'expanded' : '';
+            const displayStyle = shouldExpand ? 'block' : 'none';
+            const expandedAttr = shouldExpand ? ' data-expanded="true"' : '';
+
+            featureTasksHtml += '<div class="task-item" data-status="' + task.status + '" data-feature="' + task.feature_name + '" data-task-name="' + task.name + '"' + expandedAttr + '>' +
+                '<div class="task-header" onclick="toggleTaskDetails(this)">' +
+                '<span class="task-status-dot" style="background: ' + statusColor + ';"></span>' +
+                '<span class="task-name" title="' + task.name + '">' + task.name + '</span>' +
+                '<span class="task-expand-icon ' + expandClass + '">' + expandIcon + '</span>' +
+                '</div>' +
+                '<div class="task-details" style="display: ' + displayStyle + ';">' +
+                detailsHtml +
+                '</div>' +
+                '</div>';
+        });
+
+        taskItemsHtml += '<div class="feature-group" data-feature="' + featureName + '">' +
+            '<div class="feature-header ' + featureClass + '" onclick="toggleFeatureTasks(this)">' +
+            '<span class="feature-chevron">▶</span>' +
+            '<span class="feature-name" title="' + featureName + '">' + featureName + '</span>' +
+            '<span class="feature-count">' + featureTasks.length + '</span>' +
             '</div>' +
-            '<div class="task-details" style="display: ' + displayStyle + ';">' +
-            detailsHtml +
+            '<div class="feature-tasks" style="display: ' + featureDisplay + ';">' +
+            featureTasksHtml +
             '</div>' +
             '</div>';
     });

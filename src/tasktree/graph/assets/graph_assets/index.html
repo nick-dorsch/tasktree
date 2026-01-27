@@ -58,39 +58,6 @@
       line-height: 1.4;
     }
 
-    .feature-filter {
-      margin-top: 8px;
-    }
-
-    .feature-filter select {
-      width: 100%;
-      padding: 6px 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      color: #e0e0e0;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .feature-filter select:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .feature-filter select:focus {
-      outline: none;
-      border-color: #4fc3f7;
-      box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
-    }
-
-    .feature-filter option {
-      background: #2a2a2a;
-      color: #e0e0e0;
-    }
-
     .task-list {
       overflow-y: auto;
       flex: 1;
@@ -113,6 +80,65 @@
 
     .task-list::-webkit-scrollbar-thumb:hover {
       background: rgba(255, 255, 255, 0.3);
+    }
+
+    .feature-group {
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background 0.2s;
+    }
+
+    .feature-header:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .feature-header.expanded .feature-chevron {
+      transform: rotate(90deg);
+    }
+
+    .feature-chevron {
+      font-size: 11px;
+      color: #aaa;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .feature-name {
+      font-weight: 600;
+      font-size: 12px;
+      color: #e0e0e0;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .feature-count {
+      font-size: 11px;
+      color: #aaa;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-tasks {
+      padding: 8px;
+      display: none;
     }
 
     .task-item {
@@ -380,12 +406,6 @@
   <div class="task-panel">
     <div class="panel-header">
       <div class="panel-title">TaskTree</div>
-      <div class="feature-filter">
-        <select id="feature-dropdown" onchange="filterTasksByFeature()">
-          <option value="">All Features</option>
-          {{FEATURE_OPTIONS}}
-        </select>
-      </div>
     </div>
     <div class="task-list">
       {{TASK_ITEMS}}

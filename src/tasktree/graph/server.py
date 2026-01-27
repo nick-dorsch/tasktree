@@ -81,14 +81,6 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        # Get all feature names for the dropdown
-        cursor.execute("""
-            SELECT name
-            FROM features
-            ORDER BY name
-        """)
-        features = [row[0] for row in cursor.fetchall()]
-
         # Get all tasks sorted by status, priority (descending), then name
         cursor.execute("""
             SELECT
@@ -116,72 +108,87 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 
         conn.close()
 
-        # Build task list HTML
-        task_items_html = ""
+        # Build task list HTML grouped by feature
+        tasks_by_feature: dict[str, list[tuple]] = {}
         for task in tasks:
-            (
-                name,
-                description,
-                status,
-                priority,
-                created_at,
-                started_at,
-                completed_at,
-                specification,
-                feature_name,
-            ) = task
+            feature_name = task[-1]
+            tasks_by_feature.setdefault(feature_name, []).append(task)
 
-            # Status color coding
-            status_colors = {
-                "pending": "#2196F3",
-                "in_progress": "#FFC107",
-                "completed": "#4CAF50",
-                "blocked": "#F44336",
-            }
-            status_color = status_colors.get(status, "#999")
+        task_items_html = ""
+        status_colors = {
+            "pending": "#2196F3",
+            "in_progress": "#FFC107",
+            "completed": "#4CAF50",
+            "blocked": "#F44336",
+        }
 
-            # Format details section with conditional rendering
-            details_html = f"""
-                <div class="task-details-row"><span class="task-details-label">Status:</span> {status}</div>
-                <div class="task-details-row"><span class="task-details-label">Priority:</span> {priority}</div>
-                <div class="task-details-row">
-                    <span class="task-details-label">Description:</span>
-                    <div class="task-details-value">{description if description else "None"}</div>
+        for feature_name in sorted(tasks_by_feature.keys()):
+            feature_tasks_html = ""
+            for task in tasks_by_feature[feature_name]:
+                (
+                    name,
+                    description,
+                    status,
+                    priority,
+                    created_at,
+                    started_at,
+                    completed_at,
+                    specification,
+                    _feature_name,
+                ) = task
+
+                status_color = status_colors.get(status, "#999")
+
+                details_html = f"""
+                    <div class="task-details-row"><span class="task-details-label">Status:</span> {status}</div>
+                    <div class="task-details-row"><span class="task-details-label">Priority:</span> {priority}</div>
+                    <div class="task-details-row">
+                        <span class="task-details-label">Description:</span>
+                        <div class="task-details-value">{description if description else "None"}</div>
+                    </div>"""
+
+                if specification and specification != description:
+                    details_html += f"""
+                    <div class="task-details-row">
+                        <span class="task-details-label">Details:</span>
+                        <div class="task-details-value">{specification}</div>
+                    </div>"""
+
+                details_html += f"""
+                    <div class="task-details-row"><span class="task-details-label">Created:</span> {created_at if created_at else "None"}</div>"""
+
+                if started_at:
+                    details_html += f"""
+                    <div class="task-details-row"><span class="task-details-label">Started:</span> {started_at}</div>"""
+
+                if completed_at:
+                    details_html += f"""
+                    <div class="task-details-row"><span class="task-details-label">Completed:</span> {completed_at}</div>"""
+
+                feature_tasks_html += f"""
+                <div class="task-item" data-status="{status}" data-feature="{feature_name}" data-task-name="{name}">
+                    <div class="task-header" onclick="toggleTaskDetails(this)">
+                        <span class="task-status-dot" style="background: {status_color};"></span>
+                        <span class="task-name" title="{name}">{name}</span>
+                        <span class="task-expand-icon">▶</span>
+                    </div>
+                    <div class="task-details" style="display: none;">
+                        {details_html}
+                    </div>
                 </div>"""
-
-            if specification and specification != description:
-                details_html += f"""
-                <div class="task-details-row">
-                    <span class="task-details-label">Details:</span>
-                    <div class="task-details-value">{specification}</div>
-                </div>"""
-
-            details_html += f"""
-                <div class="task-details-row"><span class="task-details-label">Created:</span> {created_at if created_at else "None"}</div>"""
-
-            if started_at:
-                details_html += f"""
-                <div class="task-details-row"><span class="task-details-label">Started:</span> {started_at}</div>"""
-
-            if completed_at:
-                details_html += f"""
-                <div class="task-details-row"><span class="task-details-label">Completed:</span> {completed_at}</div>"""
 
             task_items_html += f"""
-            <div class="task-item" data-status="{status}" data-feature="{feature_name}">
-                <div class="task-header" onclick="toggleTaskDetails(this)">
-                    <span class="task-status-dot" style="background: {status_color};"></span>
-                    <span class="task-name" title="{name}">{name}</span>
-                    <span class="task-expand-icon">▶</span>
+            <div class="feature-group" data-feature="{feature_name}">
+                <div class="feature-header" onclick="toggleFeatureTasks(this)">
+                    <span class="feature-chevron">▶</span>
+                    <span class="feature-name" title="{feature_name}">{feature_name}</span>
+                    <span class="feature-count">{len(tasks_by_feature[feature_name])}</span>
                 </div>
-                <div class="task-details" style="display: none;">
-                    {details_html}
+                <div class="feature-tasks" style="display: none;">
+                    {feature_tasks_html}
                 </div>
             </div>"""
 
-        feature_options = "".join(
-            [f'<option value="{feat}">{feat}</option>' for feat in features]
-        )
         task_items_rendered = (
             task_items_html
             if task_items_html
@@ -192,9 +199,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 
         template_path = self.assets_dir / "index.html"
         template_html = template_path.read_text()
-        html = template_html.replace("{{FEATURE_OPTIONS}}", feature_options).replace(
-            "{{TASK_ITEMS}}", task_items_rendered
-        )
+        html = template_html.replace("{{TASK_ITEMS}}", task_items_rendered)
         self._send_html_response(200, html)
 
     def _handle_static_request(self, request_path: str) -> None:

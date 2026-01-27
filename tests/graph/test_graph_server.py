@@ -1137,10 +1137,10 @@ def test_root_endpoint_renders_template_placeholders(mock_db_path, server_thread
 
         html = response.read().decode()
 
-        assert "{{FEATURE_OPTIONS}}" not in html
         assert "{{TASK_ITEMS}}" not in html
         assert "templated-task" in html
         assert "misc" in html
+        assert "feature-group" in html
     finally:
         conn.close()
 
@@ -1199,6 +1199,10 @@ def test_update_task_list_preserves_expanded_state(server_thread):
     # Check that updateTaskList stores expanded task names
     assert "expandedTasks" in graph_js
     assert "new Set()" in graph_js
+
+    # Check that updateTaskList stores expanded feature names
+    assert "expandedFeatures" in graph_js
+    assert "feature-group" in graph_js
 
     # Should check which tasks are currently expanded
     assert "style.display === 'block'" in graph_js or "display==='block'" in graph_js
