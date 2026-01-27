@@ -21,9 +21,7 @@ tasks:
     aliases: [init]
     cmds:
       - echo "Recreating database..."
-      - rm -f .tasktree/tasktree.db
-      - task create-db
-      - task refresh-views
+      - uv run tasktree init --force
       - echo "Complete!"
 
   create-db:
@@ -31,10 +29,9 @@ tasks:
     silent: true
     cmds:
       - echo "Creating SQLite database schemas..."
-      - mkdir -p data
-      - cat src/tasktree/sql/schemas/*.sql | sqlite3 .tasktree/tasktree.db
+      - uv run tasktree init --force
     generates:
-      - data/tasktree.db
+      - .tasktree/tasktree.db
 
   refresh-views:
     desc: Refresh all database views
@@ -42,7 +39,7 @@ tasks:
     aliases: [rv]
     cmds:
       - echo "Refreshing database views..."
-      - cat src/tasktree/sql/views/*.sql | sqlite3 .tasktree/tasktree.db
+      - uv run tasktree refresh-views
 
   snapshot-export:
     desc: Export database to JSONL snapshot

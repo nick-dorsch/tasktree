@@ -142,6 +142,30 @@ class TestCLIStart:
                 mock_server.assert_called_once_with(9999, cli_test_db)
 
 
+class TestCLIRefreshViews:
+    """Test CLI refresh-views command."""
+
+    def test_refresh_views_fails_on_missing_database(self, cli_test_db: Path):
+        """Test that refresh-views fails when database doesn't exist."""
+        with patch("tasktree.cli.main.get_db_path", return_value=cli_test_db):
+            result = runner.invoke(cli, ["refresh-views"])
+
+            assert result.exit_code == 1
+            assert "Database not found" in result.output
+
+    def test_refresh_views_success(self, cli_test_db: Path):
+        """Test that refresh-views works on existing database."""
+        # Initialize database first
+        with patch("tasktree.cli.main.get_db_path", return_value=cli_test_db):
+            runner.invoke(cli, ["init"])
+
+            # Call refresh-views
+            result = runner.invoke(cli, ["refresh-views"])
+
+            assert result.exit_code == 0
+            assert "Views refreshed successfully!" in result.stdout
+
+
 class TestCLIReset:
     """Test CLI reset command."""
 

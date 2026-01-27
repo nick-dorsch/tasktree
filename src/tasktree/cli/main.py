@@ -50,12 +50,16 @@ def init(
     """
     db_path = get_db_path()
 
-    if db_path.exists() and not force:
-        typer.echo(f"Database already exists: {db_path}", err=True)
-        typer.echo(
-            "Use --force to overwrite or specify a different location.", err=True
-        )
-        raise typer.Exit(1)
+    if db_path.exists():
+        if force:
+            typer.echo(f"Overwriting existing database: {db_path}")
+            db_path.unlink()
+        else:
+            typer.echo(f"Database already exists: {db_path}", err=True)
+            typer.echo(
+                "Use --force to overwrite or specify a different location.", err=True
+            )
+            raise typer.Exit(1)
 
     try:
         typer.echo(f"Initializing database at: {db_path}")
@@ -129,6 +133,38 @@ def start(
         typer.echo("\nServer stopped.")
     except Exception as e:
         typer.echo(f"Error starting server: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@cli.command()
+def refresh_views(
+    db_path: Optional[Path] = typer.Option(
+        None,
+        "--db",
+        help="Path to database file (uses default if not specified)",
+    ),
+) -> None:
+    """
+    Refresh all database views.
+
+    Drops and recreates all views from the bundled SQL assets.
+    Useful after modifying view definitions.
+    """
+    from tasktree.db.init import refresh_views as db_refresh_views
+
+    target_db_path = db_path or get_db_path()
+
+    if not target_db_path.exists():
+        typer.echo(f"Database not found: {target_db_path}", err=True)
+        typer.echo("Run 'tasktree init' to create the database first.", err=True)
+        raise typer.Exit(1)
+
+    try:
+        typer.echo(f"Refreshing views in: {target_db_path}")
+        db_refresh_views(target_db_path)
+        typer.echo("✓ Views refreshed successfully!")
+    except Exception as e:
+        typer.echo(f"Error refreshing views: {e}", err=True)
         raise typer.Exit(1)
 
 
