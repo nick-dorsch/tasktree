@@ -8,6 +8,7 @@ SELECT json_object(
     'nodes', (
         SELECT json_group_array(
             json_object(
+                'id', t.id,
                 'name', t.name,
                 'description', t.description,
                 'status', t.status,
@@ -18,7 +19,7 @@ SELECT json_object(
                     WHEN t.started_at IS NULL OR t.completed_at IS NULL THEN NULL
                     ELSE CAST((julianday(t.completed_at) - julianday(t.started_at)) * 24 * 60 AS INTEGER)
                 END,
-                'is_available', CASE WHEN t.name IN (SELECT name FROM v_available_tasks) THEN 1 ELSE 0 END
+                'is_available', CASE WHEN t.id IN (SELECT id FROM v_available_tasks) THEN 1 ELSE 0 END
             )
         )
         FROM tasks t
@@ -26,8 +27,8 @@ SELECT json_object(
     'edges', (
         SELECT json_group_array(
             json_object(
-                'from', d.task_name,
-                'to', d.depends_on_task_name
+                'from', d.task_id,
+                'to', d.depends_on_task_id
             )
         )
         FROM dependencies d

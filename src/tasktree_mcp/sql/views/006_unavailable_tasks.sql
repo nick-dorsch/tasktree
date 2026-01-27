@@ -9,8 +9,8 @@ WHERE t.status = 'pending'  -- Only pending tasks
     -- Check for any uncompleted dependencies
     SELECT 1
     FROM dependencies d
-    JOIN tasks dep_task ON d.depends_on_task_name = dep_task.name
-    WHERE d.task_name = t.name
+    JOIN tasks dep_task ON d.depends_on_task_id = dep_task.id
+    WHERE d.task_id = t.id
       AND dep_task.status != 'completed'
   )
 ORDER BY t.priority DESC, t.created_at ASC;

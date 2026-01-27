@@ -25,7 +25,7 @@ SELECT
                 END ||
                 -- Add thicker border for available tasks
                 CASE 
-                    WHEN t.name IN (SELECT name FROM v_available_tasks)
+                    WHEN t.id IN (SELECT id FROM v_available_tasks)
                     THEN ', penwidth=3'
                     ELSE ''
                 END ||
@@ -41,10 +41,12 @@ SELECT
     COALESCE(
         (
             SELECT GROUP_CONCAT(
-                '  "' || d.depends_on_task_name || '" -> "' || d.task_name || '";',
+                '  "' || parent.name || '" -> "' || child.name || '";',
                 CHAR(10)
             )
             FROM dependencies d
+            JOIN tasks parent ON parent.id = d.depends_on_task_id
+            JOIN tasks child ON child.id = d.task_id
         ),
         ''
     ) || CHAR(10) ||

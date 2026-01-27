@@ -30,6 +30,7 @@ SELECT
   '' AS sort_secondary,
   json_object(
     'record_type', 'feature',
+    'id', f.id,
     'name', f.name,
     'description', f.description,
     'enabled', json(CASE WHEN f.enabled THEN 'true' ELSE 'false' END),
@@ -46,6 +47,7 @@ SELECT
   '' AS sort_secondary,
   json_object(
     'record_type', 'task',
+    'id', t.id,
     'name', t.name,
     'description', t.description,
     'details', t.details,
@@ -64,11 +66,11 @@ UNION ALL
 
 SELECT
   3 AS record_order,
-  d.task_name AS sort_name,
-  d.depends_on_task_name AS sort_secondary,
+  d.task_id AS sort_name,
+  d.depends_on_task_id AS sort_secondary,
   json_object(
     'record_type', 'dependency',
-    'task_name', d.task_name,
-    'depends_on_task_name', d.depends_on_task_name
+    'task_id', d.task_id,
+    'depends_on_task_id', d.depends_on_task_id
   ) AS json_line
 FROM dependencies d;

@@ -3,6 +3,7 @@ CREATE VIEW IF NOT EXISTS v_dependency_tree AS
 WITH RECURSIVE task_tree AS (
     -- Root tasks (no dependencies)
     SELECT 
+        t.id,
         t.name,
         t.description,
         t.status,
@@ -14,13 +15,14 @@ WITH RECURSIVE task_tree AS (
     FROM tasks t
     WHERE NOT EXISTS (
         SELECT 1 FROM dependencies d 
-        WHERE d.task_name = t.name
+        WHERE d.task_id = t.id
     )
     
     UNION ALL
     
     -- Dependent tasks (task depends on parent)
     SELECT 
+        t.id,
         t.name,
         t.description,
         t.status,
@@ -28,10 +30,10 @@ WITH RECURSIVE task_tree AS (
         t.completed_at,
         tt.level + 1,
         tt.path || '->' || t.name,
-        d.depends_on_task_name as parent_name
+        tt.name as parent_name
     FROM tasks t
-    JOIN dependencies d ON t.name = d.task_name
-    JOIN task_tree tt ON d.depends_on_task_name = tt.name
+    JOIN dependencies d ON t.id = d.task_id
+    JOIN task_tree tt ON d.depends_on_task_id = tt.id
 )
 SELECT 
     name,
