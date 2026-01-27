@@ -28,51 +28,105 @@ def test_snapshot_jsonl_view_ordering_and_format(test_db: Path) -> None:
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO features (name, description, enabled) VALUES (?, ?, ?)",
-            ("alpha-feature", "Alpha feature", False),
+            """
+            INSERT INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("alpha-feature", "Alpha feature", "Alpha specification"),
         )
         cursor.execute(
-            "INSERT INTO features (name, description, enabled) VALUES (?, ?, ?)",
-            ("beta-feature", "Beta feature", True),
+            """
+            INSERT INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("beta-feature", "Beta feature", "Beta specification"),
         )
         cursor.execute(
             """
             INSERT INTO tasks (
-                name, description, feature_name, tests_required, priority, status
+                feature_id, name, description, specification, tests_required, priority, status
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("task-b", "Task B", "default", 0, 1, "pending"),
+            (
+                "task-b",
+                "Task B",
+                "Task B",
+                0,
+                1,
+                "pending",
+                "alpha-feature",
+            ),
         )
         cursor.execute(
             """
             INSERT INTO tasks (
-                name, description, feature_name, tests_required, priority, status
+                feature_id, name, description, specification, tests_required, priority, status
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("task-a", "Task A", "default", 1, 2, "pending"),
+            (
+                "task-a",
+                "Task A",
+                "Task A",
+                1,
+                2,
+                "pending",
+                "alpha-feature",
+            ),
         )
         cursor.execute(
             """
             INSERT INTO tasks (
-                name, description, feature_name, tests_required, priority, status
+                feature_id, name, description, specification, tests_required, priority, status
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            SELECT id, ?, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
             """,
-            ("task-c", "Task C", "default", 1, 3, "pending"),
+            (
+                "task-c",
+                "Task C",
+                "Task C",
+                1,
+                3,
+                "pending",
+                "beta-feature",
+            ),
         )
         cursor.execute(
-            "INSERT INTO dependencies (task_name, depends_on_task_name) VALUES (?, ?)",
-            ("task-b", "task-a"),
+            """
+            INSERT INTO dependencies (task_id, depends_on_task_id)
+            SELECT t.id, d.id
+            FROM tasks t
+            JOIN tasks d ON d.name = ?
+            WHERE t.name = ?
+            """,
+            ("task-a", "task-b"),
         )
         cursor.execute(
-            "INSERT INTO dependencies (task_name, depends_on_task_name) VALUES (?, ?)",
-            ("task-b", "task-c"),
+            """
+            INSERT INTO dependencies (task_id, depends_on_task_id)
+            SELECT t.id, d.id
+            FROM tasks t
+            JOIN tasks d ON d.name = ?
+            WHERE t.name = ?
+            """,
+            ("task-c", "task-b"),
         )
         cursor.execute(
-            "INSERT INTO dependencies (task_name, depends_on_task_name) VALUES (?, ?)",
-            ("task-c", "task-a"),
+            """
+            INSERT INTO dependencies (task_id, depends_on_task_id)
+            SELECT t.id, d.id
+            FROM tasks t
+            JOIN tasks d ON d.name = ?
+            WHERE t.name = ?
+            """,
+            ("task-a", "task-c"),
         )
         conn.commit()
 
@@ -116,11 +170,11 @@ def test_snapshot_jsonl_view_ordering_and_format(test_db: Path) -> None:
         if '"record_type":"feature"' in row["json_line"]
         and '"name":"alpha-feature"' in row["json_line"]
     )
-    assert '"enabled":false' in feature_line
+    assert '"specification":"Alpha specification"' in feature_line
     assert feature_line.index('"record_type"') < feature_line.index('"name"')
     assert feature_line.index('"name"') < feature_line.index('"description"')
-    assert feature_line.index('"description"') < feature_line.index('"enabled"')
-    assert feature_line.index('"enabled"') < feature_line.index('"created_at"')
+    assert feature_line.index('"description"') < feature_line.index('"specification"')
+    assert feature_line.index('"specification"') < feature_line.index('"created_at"')
     assert feature_line.index('"created_at"') < feature_line.index('"updated_at"')
 
     task_line = next(
@@ -132,8 +186,8 @@ def test_snapshot_jsonl_view_ordering_and_format(test_db: Path) -> None:
     assert '"tests_required":false' in task_line
     assert task_line.index('"record_type"') < task_line.index('"name"')
     assert task_line.index('"name"') < task_line.index('"description"')
-    assert task_line.index('"description"') < task_line.index('"details"')
-    assert task_line.index('"details"') < task_line.index('"feature_name"')
+    assert task_line.index('"description"') < task_line.index('"specification"')
+    assert task_line.index('"specification"') < task_line.index('"feature_name"')
     assert task_line.index('"feature_name"') < task_line.index('"tests_required"')
     assert task_line.index('"tests_required"') < task_line.index('"priority"')
     assert task_line.index('"priority"') < task_line.index('"status"')

@@ -26,8 +26,8 @@ class TestTaskResponse:
         data = {
             "name": "test-task",
             "description": "Test description",
-            "details": None,
-            "feature_name": "default",
+            "specification": None,
+            "feature_name": "misc",
             "tests_required": True,
             "priority": 5,
             "status": "pending",
@@ -41,8 +41,8 @@ class TestTaskResponse:
 
         assert response.name == "test-task"
         assert response.description == "Test description"
-        assert response.details is None
-        assert response.feature_name == "default"
+        assert response.specification is None
+        assert response.feature_name == "misc"
         assert response.tests_required is True
         assert response.priority == 5
         assert response.status == "pending"
@@ -56,7 +56,7 @@ class TestTaskResponse:
         data = {
             "name": "completed-task",
             "description": "A completed task",
-            "details": "Implementation details",
+            "specification": "Implementation details",
             "feature_name": "feature-a",
             "tests_required": False,
             "priority": 8,
@@ -71,7 +71,7 @@ class TestTaskResponse:
 
         assert response.name == "completed-task"
         assert response.description == "A completed task"
-        assert response.details == "Implementation details"
+        assert response.specification == "Implementation details"
         assert response.feature_name == "feature-a"
         assert response.tests_required is False
         assert response.priority == 8
@@ -86,8 +86,8 @@ class TestTaskResponse:
         data = {
             "name": "test-task",
             "description": "Test description",
-            "details": None,
-            "feature_name": "default",
+            "specification": None,
+            "feature_name": "misc",
             "tests_required": True,
             "priority": 5,
             "status": "pending",
@@ -111,7 +111,7 @@ class TestTaskResponse:
         valid_data = {
             "name": "task",
             "description": "Test",
-            "feature_name": "default",
+            "feature_name": "misc",
             "tests_required": True,
             "priority": 10,
             "status": "pending",
@@ -153,8 +153,8 @@ class TestTaskListResponse:
             {
                 "name": "task-1",
                 "description": "First task",
-                "details": None,
-                "feature_name": "default",
+                "specification": None,
+                "feature_name": "misc",
                 "tests_required": True,
                 "priority": 5,
                 "status": "pending",
@@ -177,8 +177,8 @@ class TestTaskListResponse:
             {
                 "name": "task-1",
                 "description": "First task",
-                "details": None,
-                "feature_name": "default",
+                "specification": None,
+                "feature_name": "misc",
                 "tests_required": True,
                 "priority": 5,
                 "status": "pending",
@@ -190,7 +190,7 @@ class TestTaskListResponse:
             {
                 "name": "task-2",
                 "description": "Second task",
-                "details": "Details",
+                "specification": "Details",
                 "feature_name": "feature-a",
                 "tests_required": False,
                 "priority": 8,
@@ -218,8 +218,8 @@ class TestTaskUpdateResponse:
         data = {
             "name": "updated-task",
             "description": "Updated description",
-            "details": None,
-            "feature_name": "default",
+            "specification": None,
+            "feature_name": "misc",
             "tests_required": True,
             "priority": 7,
             "status": "in_progress",

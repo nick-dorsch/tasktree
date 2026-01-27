@@ -22,11 +22,11 @@ class Task(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255)
     description: str = Field(..., min_length=1)
-    details: Optional[str] = Field(
+    specification: Optional[str] = Field(
         None,
-        description="Optional field for more detailed implementation details of the task",
+        description="Optional field for detailed task specification",
     )
-    feature_name: str = Field(default="default", min_length=1, max_length=55)
+    feature_name: str = Field(default="misc", min_length=1, max_length=55)
     tests_required: bool = Field(default=True)
     priority: int = Field(default=0, ge=0, le=10)
     status: TaskStatus = Field(default=TaskStatus.PENDING)
@@ -105,12 +105,12 @@ class AddTaskRequest(BaseModel):
     description: str = Field(
         ..., min_length=1, description="Description of what the task involves"
     )
-    details: Optional[str] = Field(
+    specification: Optional[str] = Field(
         default=None,
-        description="Optional field for more detailed implementation details of the task",
+        description="Optional field for detailed task specification",
     )
     feature_name: str = Field(
-        default="default",
+        default="misc",
         min_length=1,
         max_length=55,
         description="Feature this task belongs to",
@@ -152,7 +152,7 @@ class UpdateTaskRequest(BaseModel):
     description: Optional[str] = Field(
         None, min_length=1, description="New description"
     )
-    details: Optional[str] = Field(None, description="New details")
+    specification: Optional[str] = Field(None, description="New specification")
     status: Optional[str] = Field(None, description="New status")
     priority: Optional[int] = Field(None, ge=0, le=10, description="New priority")
     tests_required: Optional[bool] = Field(
@@ -267,7 +267,7 @@ class TaskResponse(BaseModel):
 
     name: str = Field(..., description="Task name")
     description: str = Field(..., description="Task description")
-    details: Optional[str] = Field(None, description="Task details")
+    specification: Optional[str] = Field(None, description="Task specification")
     feature_name: str = Field(..., description="Feature this task belongs to")
     tests_required: bool = Field(..., description="Whether tests are required")
     priority: int = Field(..., ge=0, le=10, description="Task priority")

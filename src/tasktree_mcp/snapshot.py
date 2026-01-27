@@ -152,7 +152,7 @@ def _fetch_features(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT name, description, enabled, created_at, updated_at
+        SELECT name, description, specification, created_at, updated_at
         FROM features
         ORDER BY name ASC
         """
@@ -165,7 +165,7 @@ def _fetch_features(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                 "record_type": "feature",
                 "name": row["name"],
                 "description": row["description"],
-                "enabled": bool(row["enabled"]),
+                "specification": row["specification"],
                 "created_at": row["created_at"],
                 "updated_at": row["updated_at"],
             }
@@ -178,19 +178,20 @@ def _fetch_tasks(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
     cursor.execute(
         """
         SELECT
-            name,
-            description,
-            details,
-            feature_name,
-            tests_required,
-            priority,
-            status,
-            created_at,
-            updated_at,
-            started_at,
-            completed_at
-        FROM tasks
-        ORDER BY name ASC
+            t.name,
+            t.description,
+            t.specification,
+            f.name AS feature_name,
+            t.tests_required,
+            t.priority,
+            t.status,
+            t.created_at,
+            t.updated_at,
+            t.started_at,
+            t.completed_at
+        FROM tasks t
+        LEFT JOIN features f ON t.feature_id = f.id
+        ORDER BY t.name ASC
         """
     )
     rows = cursor.fetchall()
@@ -201,7 +202,7 @@ def _fetch_tasks(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                 "record_type": "task",
                 "name": row["name"],
                 "description": row["description"],
-                "details": row["details"],
+                "specification": row["specification"],
                 "feature_name": row["feature_name"],
                 "tests_required": bool(row["tests_required"]),
                 "priority": row["priority"],
@@ -219,9 +220,11 @@ def _fetch_dependencies(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT task_name, depends_on_task_name
-        FROM dependencies
-        ORDER BY task_name ASC, depends_on_task_name ASC
+        SELECT t.name AS task_name, d.name AS depends_on_task_name
+        FROM dependencies dep
+        JOIN tasks t ON dep.task_id = t.id
+        JOIN tasks d ON dep.depends_on_task_id = d.id
+        ORDER BY t.name ASC, d.name ASC
         """
     )
     rows = cursor.fetchall()
@@ -311,7 +314,7 @@ def _validate_meta(meta_record: Dict[str, Any]) -> None:
 def _validate_feature(record: Dict[str, Any], line_number: int) -> None:
     _require_str_field(record, "name", line_number)
     _require_nullable_str_field(record, "description", line_number)
-    _require_bool_field(record, "enabled", line_number)
+    _require_nullable_str_field(record, "specification", line_number)
     _require_str_field(record, "created_at", line_number)
     _require_nullable_str_field(record, "updated_at", line_number)
 
@@ -319,7 +322,7 @@ def _validate_feature(record: Dict[str, Any], line_number: int) -> None:
 def _validate_task(record: Dict[str, Any], line_number: int) -> None:
     _require_str_field(record, "name", line_number)
     _require_str_field(record, "description", line_number)
-    _require_nullable_str_field(record, "details", line_number)
+    _require_nullable_str_field(record, "specification", line_number)
     _require_str_field(record, "feature_name", line_number)
     if "tests_required" in record:
         _require_bool_field(record, "tests_required", line_number)
@@ -395,14 +398,14 @@ def _insert_features(
             (
                 record["name"],
                 record.get("description"),
-                bool(record.get("enabled")),
+                record.get("specification"),
                 record["created_at"],
                 updated_at,
             )
         )
     conn.executemany(
         """
-        INSERT INTO features (name, description, enabled, created_at, updated_at)
+        INSERT INTO features (name, description, specification, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?)
         """,
         rows,
@@ -419,8 +422,7 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
             (
                 record["name"],
                 record["description"],
-                record.get("details"),
-                record["feature_name"],
+                record.get("specification"),
                 int(bool(tests_required)),
                 record["priority"],
                 record["status"],
@@ -428,15 +430,16 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
                 record["updated_at"],
                 record.get("started_at"),
                 record.get("completed_at"),
+                record["feature_name"],
             )
         )
     conn.executemany(
         """
         INSERT INTO tasks (
+            feature_id,
             name,
             description,
-            details,
-            feature_name,
+            specification,
             tests_required,
             priority,
             status,
@@ -445,7 +448,20 @@ def _insert_tasks(conn: sqlite3.Connection, tasks: Sequence[Dict[str, Any]]) -> 
             started_at,
             completed_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        SELECT
+            f.id,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?
+        FROM features f
+        WHERE f.name = ?
         """,
         rows,
     )
@@ -461,8 +477,10 @@ def _insert_dependencies(
         rows.append((record["task_name"], record["depends_on_task_name"]))
     conn.executemany(
         """
-        INSERT INTO dependencies (task_name, depends_on_task_name)
-        VALUES (?, ?)
+        INSERT INTO dependencies (task_id, depends_on_task_id)
+        SELECT t.id, d.id
+        FROM tasks t, tasks d
+        WHERE t.name = ? AND d.name = ?
         """,
         rows,
     )

@@ -145,16 +145,16 @@ class TestTaskRepositoryTypedReturns:
         result = TaskRepository.add_task(
             name="full-task",
             description="Full description",
-            details="Implementation details",
+            specification="Implementation details",
             priority=7,
             status="pending",
-            feature_name="default",
+            feature_name="misc",
         )
 
         assert isinstance(result, TaskResponse)
         assert hasattr(result, "name")
         assert hasattr(result, "description")
-        assert hasattr(result, "details")
+        assert hasattr(result, "specification")
         assert hasattr(result, "priority")
         assert hasattr(result, "status")
         assert hasattr(result, "feature_name")

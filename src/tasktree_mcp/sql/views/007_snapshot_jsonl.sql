@@ -30,10 +30,9 @@ SELECT
   '' AS sort_secondary,
   json_object(
     'record_type', 'feature',
-    'id', f.id,
     'name', f.name,
     'description', f.description,
-    'enabled', json(CASE WHEN f.enabled THEN 'true' ELSE 'false' END),
+    'specification', f.specification,
     'created_at', f.created_at,
     'updated_at', f.updated_at
   ) AS json_line
@@ -47,11 +46,10 @@ SELECT
   '' AS sort_secondary,
   json_object(
     'record_type', 'task',
-    'id', t.id,
     'name', t.name,
     'description', t.description,
-    'details', t.details,
-    'feature_name', t.feature_name,
+    'specification', t.specification,
+    'feature_name', f.name,
     'tests_required', json(CASE WHEN t.tests_required THEN 'true' ELSE 'false' END),
     'priority', t.priority,
     'status', t.status,
@@ -61,6 +59,7 @@ SELECT
     'completed_at', t.completed_at
   ) AS json_line
 FROM tasks t
+LEFT JOIN features f ON t.feature_id = f.id
 
 UNION ALL
 
@@ -70,7 +69,9 @@ SELECT
   d.depends_on_task_id AS sort_secondary,
   json_object(
     'record_type', 'dependency',
-    'task_id', d.task_id,
-    'depends_on_task_id', d.depends_on_task_id
+    'task_name', t.name,
+    'depends_on_task_name', dep.name
   ) AS json_line
-FROM dependencies d;
+FROM dependencies d
+JOIN tasks t ON d.task_id = t.id
+JOIN tasks dep ON d.depends_on_task_id = dep.id;

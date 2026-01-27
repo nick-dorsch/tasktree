@@ -68,23 +68,27 @@ class TaskRepository:
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
-            query = "SELECT * FROM tasks"
+            query = (
+                "SELECT t.*, f.name AS feature_name "
+                "FROM tasks t "
+                "LEFT JOIN features f ON t.feature_id = f.id"
+            )
             params = []
 
             if status or priority_min is not None or feature_name:
                 conditions = []
                 if status:
-                    conditions.append("status = ?")
+                    conditions.append("t.status = ?")
                     params.append(status)
                 if priority_min is not None:
-                    conditions.append("priority >= ?")
+                    conditions.append("t.priority >= ?")
                     params.append(priority_min)
                 if feature_name:
-                    conditions.append("feature_name = ?")
+                    conditions.append("f.name = ?")
                     params.append(feature_name)
                 query += " WHERE " + " AND ".join(conditions)
 
-            query += " ORDER BY priority DESC, created_at ASC"
+            query += " ORDER BY t.priority DESC, t.created_at ASC"
 
             cursor.execute(query, params)
             rows = cursor.fetchall()
@@ -113,7 +117,17 @@ class TaskRepository:
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM tasks WHERE name = ?", (name,))
+            cursor.execute(
+                """
+                SELECT t.*, f.name AS feature_name
+                FROM tasks t
+                LEFT JOIN features f ON t.feature_id = f.id
+                WHERE t.name = ?
+                ORDER BY t.created_at ASC
+                LIMIT 1
+                """,
+                (name,),
+            )
             row = cursor.fetchone()
             return (
                 TaskResponse.from_dict({key: row[key] for key in row.keys()})
@@ -127,8 +141,8 @@ class TaskRepository:
         description: str,
         priority: int = 0,
         status: str = "pending",
-        details: Optional[str] = None,
-        feature_name: str = "default",
+        specification: Optional[str] = None,
+        feature_name: str = "misc",
         tests_required: bool = True,
     ) -> TaskResponse:
         """
@@ -139,7 +153,7 @@ class TaskRepository:
             description: Task description
             priority: Priority level (0-10)
             status: Initial status
-            details: Optional detailed description
+            specification: Optional detailed specification
             feature_name: Feature this task belongs to
             tests_required: Whether tests are required for this task
 
@@ -153,32 +167,56 @@ class TaskRepository:
             cursor = conn.cursor()
 
             try:
+                task_specification = (
+                    specification if specification is not None else description
+                )
                 cursor.execute(
                     """
                     INSERT INTO tasks (
+                        feature_id,
                         name,
                         description,
-                        details,
-                        feature_name,
+                        specification,
                         tests_required,
                         priority,
                         status
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    SELECT
+                        f.id,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?,
+                        ?
+                    FROM features f
+                    WHERE f.name = ?
                     """,
                     (
                         name,
                         description,
-                        details,
-                        feature_name,
+                        task_specification,
                         int(tests_required),
                         priority,
                         status,
+                        feature_name,
                     ),
                 )
+                if cursor.rowcount == 0:
+                    raise ValueError(f"Feature '{feature_name}' does not exist")
                 conn.commit()
 
-                cursor.execute("SELECT * FROM tasks WHERE name = ?", (name,))
+                cursor.execute(
+                    """
+                    SELECT t.*, f.name AS feature_name
+                    FROM tasks t
+                    JOIN features f ON t.feature_id = f.id
+                    WHERE t.name = ? AND f.name = ?
+                    ORDER BY t.created_at DESC
+                    LIMIT 1
+                    """,
+                    (name, feature_name),
+                )
                 row = cursor.fetchone()
                 if row:
                     return TaskResponse.from_dict({key: row[key] for key in row.keys()})
@@ -186,8 +224,6 @@ class TaskRepository:
                 raise RuntimeError("Failed to retrieve newly created task")
 
             except sqlite3.IntegrityError as e:
-                if "FOREIGN KEY" in str(e):
-                    raise ValueError(f"Feature '{feature_name}' does not exist") from e
                 raise ValueError(f"Task with name '{name}' already exists") from e
 
     @staticmethod
@@ -196,7 +232,7 @@ class TaskRepository:
         description: Optional[str] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
-        details: Optional[str] = None,
+        specification: Optional[str] = None,
         tests_required: Optional[bool] = None,
     ) -> Optional[TaskResponse]:
         """Update an existing task."""
@@ -222,9 +258,9 @@ class TaskRepository:
             if priority is not None:
                 updates.append("priority = ?")
                 params.append(priority)
-            if details is not None:
-                updates.append("details = ?")
-                params.append(details)
+            if specification is not None:
+                updates.append("specification = ?")
+                params.append(specification)
             if tests_required is not None:
                 updates.append("tests_required = ?")
                 params.append(int(tests_required))
@@ -256,11 +292,18 @@ class TaskRepository:
 
             # First delete all dependencies associated with this task
             # This includes both:
-            # - Dependencies where this task depends on others (task_name = name)
-            # - Dependencies where other tasks depend on this task (depends_on_task_name = name)
+            # - Dependencies where this task depends on others (task_id = target id)
+            # - Dependencies where other tasks depend on this task (depends_on_task_id = target id)
             cursor.execute(
-                "DELETE FROM dependencies WHERE task_name = ? OR depends_on_task_name = ?",
-                (name, name),
+                """
+                WITH target AS (
+                    SELECT id FROM tasks WHERE name = ?
+                )
+                DELETE FROM dependencies
+                WHERE task_id IN (SELECT id FROM target)
+                   OR depends_on_task_id IN (SELECT id FROM target)
+                """,
+                (name,),
             )
 
             # Then delete the task itself
@@ -350,19 +393,23 @@ class DependencyRepository:
             if task_name:
                 cursor.execute(
                     """
-                    SELECT task_name, depends_on_task_name
-                    FROM dependencies
-                    WHERE task_name = ? OR depends_on_task_name = ?
-                    ORDER BY task_name, depends_on_task_name
+                    SELECT t.name AS task_name, d.name AS depends_on_task_name
+                    FROM dependencies dep
+                    JOIN tasks t ON dep.task_id = t.id
+                    JOIN tasks d ON dep.depends_on_task_id = d.id
+                    WHERE t.name = ? OR d.name = ?
+                    ORDER BY t.name, d.name
                     """,
                     (task_name, task_name),
                 )
             else:
                 cursor.execute(
                     """
-                    SELECT task_name, depends_on_task_name
-                    FROM dependencies
-                    ORDER BY task_name, depends_on_task_name
+                    SELECT t.name AS task_name, d.name AS depends_on_task_name
+                    FROM dependencies dep
+                    JOIN tasks t ON dep.task_id = t.id
+                    JOIN tasks d ON dep.depends_on_task_id = d.id
+                    ORDER BY t.name, d.name
                     """
                 )
 
@@ -380,16 +427,20 @@ class DependencyRepository:
 
             try:
                 cursor.execute(
-                    "SELECT name FROM tasks WHERE name IN (?, ?)",
+                    """
+                    WITH task AS (
+                        SELECT id FROM tasks WHERE name = ? LIMIT 1
+                    ),
+                    depends_on AS (
+                        SELECT id FROM tasks WHERE name = ? LIMIT 1
+                    )
+                    INSERT INTO dependencies (task_id, depends_on_task_id)
+                    SELECT task.id, depends_on.id FROM task, depends_on
+                    """,
                     (task_name, depends_on_task_name),
                 )
-                if len(cursor.fetchall()) != 2:
+                if cursor.rowcount == 0:
                     raise ValueError("Both tasks must exist to create a dependency")
-
-                cursor.execute(
-                    "INSERT INTO dependencies (task_name, depends_on_task_name) VALUES (?, ?)",
-                    (task_name, depends_on_task_name),
-                )
                 conn.commit()
 
                 return DependencyResponse(
@@ -408,7 +459,11 @@ class DependencyRepository:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "DELETE FROM dependencies WHERE task_name = ? AND depends_on_task_name = ?",
+                """
+                DELETE FROM dependencies
+                WHERE task_id = (SELECT id FROM tasks WHERE name = ? LIMIT 1)
+                  AND depends_on_task_id = (SELECT id FROM tasks WHERE name = ? LIMIT 1)
+                """,
                 (task_name, depends_on_task_name),
             )
             deleted = cursor.rowcount > 0

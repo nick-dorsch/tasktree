@@ -2,8 +2,9 @@
 DROP VIEW IF EXISTS v_available_tasks;
 
 CREATE VIEW v_available_tasks AS
-SELECT t.*
+SELECT t.*, f.name AS feature_name
 FROM tasks t
+LEFT JOIN features f ON t.feature_id = f.id
 WHERE t.status = 'pending'  -- Only tasks that are pending
   AND NOT EXISTS (
     -- Check for any uncompleted dependencies

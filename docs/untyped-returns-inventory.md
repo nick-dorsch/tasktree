@@ -129,7 +129,7 @@ This document tracks all MCP tools and repository methods that return `Dict[str,
 #### 1. `list_tasks` (Line 31-61)
 - **Return Type:** `List[Dict[str, Any]]`
 - **Data Source:** `SELECT * FROM tasks` with optional filters
-- **Fields Returned:** name, description, details, feature_name, priority, status, created_at, updated_at, started_at, completed_at
+- **Fields Returned:** name, description, specification, feature_name, priority, status, created_at, updated_at, started_at, completed_at
 - **Called By:** `tools.list_tasks()`
 - **Tests:** Same as MCP tool `list_tasks`
 

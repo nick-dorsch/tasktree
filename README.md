@@ -43,8 +43,8 @@ task mcp
 Task management:
 - `list_tasks(status=None, priority_min=None, feature_name=None)`
 - `get_task(name)`
-- `add_task(name, description, priority=0, status="pending", dependencies=None, details=None, feature_name="default", tests_required=True)`
-- `update_task(name, description=None, status=None, priority=None, details=None, tests_required=None)`
+- `add_task(name, description, priority=0, status="pending", dependencies=None, specification=None, feature_name="misc", tests_required=True)`
+- `update_task(name, description=None, status=None, priority=None, specification=None, tests_required=None)`
 - `delete_task(name)`
 - `start_task(name)`
 - `complete_task(name)`

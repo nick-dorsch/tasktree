@@ -17,13 +17,16 @@ def test_db_has_tasks_table(test_db_connection: sqlite3.Connection):
     columns = {row["name"] for row in cursor.fetchall()}
 
     expected_columns = {
+        "id",
+        "feature_id",
         "name",
         "description",
-        "details",
+        "specification",
         "tests_required",
         "priority",
         "status",
         "created_at",
+        "updated_at",
         "started_at",
         "completed_at",
     }

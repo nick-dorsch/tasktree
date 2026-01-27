@@ -16,21 +16,27 @@ def test_inline_migration_adds_tests_required_column(tmp_path: Path, monkeypatch
         conn.executescript(
             """
             CREATE TABLE IF NOT EXISTS features (
-              name VARCHAR(55) PRIMARY KEY,
-              description TEXT,
-              enabled BOOLEAN DEFAULT TRUE,
+              id CHAR(32) PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+              name VARCHAR(55) NOT NULL UNIQUE,
+              description TEXT NOT NULL,
+              specification TEXT NOT NULL,
               created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            INSERT OR IGNORE INTO features (name, description, enabled) VALUES
-            ('default', 'Default feature set for basic task management', TRUE);
+            INSERT OR IGNORE INTO features (name, description, specification) VALUES
+            (
+              'misc',
+              'Default feature for uncategorized tasks',
+              'Use this feature in cases where a task is minimal and does not require a feature, such as minor hotfixes, tweaks etc.'
+            );
 
             CREATE TABLE IF NOT EXISTS tasks (
-              name VARCHAR(55) PRIMARY KEY,
+              id CHAR(32) PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+              feature_id CHAR(32) REFERENCES features(id),
+              name VARCHAR(55) NOT NULL,
               description TEXT NOT NULL,
-              details TEXT,
-              feature_name VARCHAR(55) NOT NULL DEFAULT 'default',
+              specification TEXT NOT NULL,
               priority INTEGER DEFAULT 0 CHECK(priority >= 0 AND priority <= 10),
               status TEXT DEFAULT 'pending' CHECK(
                 status IN (
@@ -44,14 +50,25 @@ def test_inline_migration_adds_tests_required_column(tmp_path: Path, monkeypatch
               updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
               started_at TIMESTAMP,
               completed_at TIMESTAMP,
-              FOREIGN KEY (feature_name) REFERENCES features(name)
+              UNIQUE(name, feature_id)
             );
             """
         )
         conn.execute(
-            "INSERT INTO tasks (name, description, feature_name, priority, status) "
-            "VALUES (?, ?, ?, ?, ?)",
-            ("legacy-task", "Legacy task", "default", 0, "pending"),
+            """
+            INSERT INTO tasks (feature_id, name, description, specification, priority, status)
+            SELECT id, ?, ?, ?, ?, ?
+            FROM features
+            WHERE name = ?
+            """,
+            (
+                "legacy-task",
+                "Legacy task",
+                "Legacy task",
+                0,
+                "pending",
+                "misc",
+            ),
         )
         conn.commit()
     finally:

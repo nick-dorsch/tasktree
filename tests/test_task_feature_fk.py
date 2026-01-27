@@ -24,24 +24,24 @@ def mock_db_path(test_db: Path, monkeypatch):
 
 
 def test_add_task_default_feature(mock_db_path):
-    """Test that tasks get 'default' feature_name by default."""
+    """Test that tasks get 'misc' feature_name by default."""
     task = TaskRepository.add_task(
         name="test-task",
         description="A test task",
     )
 
-    assert task.feature_name == "default"
+    assert task.feature_name == "misc"
 
 
-def test_add_task_explicit_default_feature(mock_db_path):
-    """Test explicitly setting feature_name to 'default'."""
+def test_add_task_explicit_misc_feature(mock_db_path):
+    """Test explicitly setting feature_name to 'misc'."""
     task = TaskRepository.add_task(
         name="test-task",
         description="A test task",
-        feature_name="default",
+        feature_name="misc",
     )
 
-    assert task.feature_name == "default"
+    assert task.feature_name == "misc"
 
 
 def test_add_task_nonexistent_feature(mock_db_path):
@@ -64,7 +64,7 @@ def test_list_tasks_includes_feature_name(mock_db_path):
     tasks = TaskRepository.list_tasks()
     assert len(tasks) == 1
     assert hasattr(tasks[0], "feature_name")
-    assert tasks[0].feature_name == "default"
+    assert tasks[0].feature_name == "misc"
 
 
 def test_get_task_includes_feature_name(mock_db_path):
@@ -77,7 +77,7 @@ def test_get_task_includes_feature_name(mock_db_path):
     task = TaskRepository.get_task("test-task")
     assert task is not None
     assert hasattr(task, "feature_name")
-    assert task.feature_name == "default"
+    assert task.feature_name == "misc"
 
 
 def test_add_task_with_all_parameters_including_feature(mock_db_path):
@@ -87,13 +87,13 @@ def test_add_task_with_all_parameters_including_feature(mock_db_path):
         description="A task with all parameters",
         priority=8,
         status="in_progress",
-        details="Detailed implementation notes",
-        feature_name="default",
+        specification="Detailed implementation notes",
+        feature_name="misc",
     )
 
     assert task.name == "full-task"
     assert task.description == "A task with all parameters"
     assert task.priority == 8
     assert task.status == "in_progress"
-    assert task.details == "Detailed implementation notes"
-    assert task.feature_name == "default"
+    assert task.specification == "Detailed implementation notes"
+    assert task.feature_name == "misc"

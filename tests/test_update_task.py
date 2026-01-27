@@ -1,5 +1,5 @@
 """
-Tests for the update_task tool including partial updates, details field updates, and validation.
+Tests for the update_task tool including partial updates, specification field updates, and validation.
 """
 
 from pathlib import Path
@@ -78,24 +78,24 @@ def test_update_task_status_only(test_db: Path, monkeypatch):
     assert updated.started_at is not None  # Trigger should set this
 
 
-def test_update_task_details_only(test_db: Path, monkeypatch):
-    """Test updating only the details field."""
+def test_update_task_specification_only(test_db: Path, monkeypatch):
+    """Test updating only the specification field."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
-    # Create a task without details
+    # Create a task without specification
     TaskRepository.add_task(
         name="details-task",
         description="Test task",
     )
 
-    # Update only details
+    # Update only specification
     updated = TaskRepository.update_task(
         name="details-task",
-        details="New implementation details",
+        specification="New implementation details",
     )
 
     assert updated is not None
-    assert updated.details == "New implementation details"
+    assert updated.specification == "New implementation details"
     assert updated.description == "Test task"  # Unchanged
 
 
@@ -109,7 +109,7 @@ def test_update_task_multiple_fields(test_db: Path, monkeypatch):
         description="Original",
         priority=1,
         status="pending",
-        details="Old details",
+        specification="Old details",
     )
 
     # Update multiple fields
@@ -118,77 +118,79 @@ def test_update_task_multiple_fields(test_db: Path, monkeypatch):
         description="New description",
         priority=9,
         status="in_progress",
-        details="New details",
+        specification="New details",
     )
 
     assert updated is not None
     assert updated.description == "New description"
     assert updated.priority == 9
     assert updated.status == "in_progress"
-    assert updated.details == "New details"
+    assert updated.specification == "New details"
     assert updated.started_at is not None
 
 
-def test_update_task_add_details_to_task_without_details(test_db: Path, monkeypatch):
-    """Test adding details to a task that didn't have any."""
+def test_update_task_add_specification_to_task_without_specification(
+    test_db: Path, monkeypatch
+):
+    """Test adding specification to a task that didn't have any."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
-    # Create task without details
+    # Create task without specification
     TaskRepository.add_task(
         name="add-details",
         description="Task without details",
     )
 
-    # Add details
+    # Add specification
     updated = TaskRepository.update_task(
         name="add-details",
-        details="Newly added details",
+        specification="Newly added details",
     )
 
     assert updated is not None
-    assert updated.details == "Newly added details"
+    assert updated.specification == "Newly added details"
 
 
-def test_update_task_modify_existing_details(test_db: Path, monkeypatch):
-    """Test modifying existing details."""
+def test_update_task_modify_existing_specification(test_db: Path, monkeypatch):
+    """Test modifying existing specification."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
-    # Create task with details
+    # Create task with specification
     TaskRepository.add_task(
         name="modify-details",
         description="Task with details",
-        details="Original details",
+        specification="Original details",
     )
 
-    # Modify details
+    # Modify specification
     updated = TaskRepository.update_task(
         name="modify-details",
-        details="Modified details",
+        specification="Modified details",
     )
 
     assert updated is not None
-    assert updated.details == "Modified details"
+    assert updated.specification == "Modified details"
 
 
-def test_update_task_clear_details(test_db: Path, monkeypatch):
-    """Test clearing details by setting to empty string."""
+def test_update_task_clear_specification(test_db: Path, monkeypatch):
+    """Test clearing specification by setting to empty string."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
-    # Create task with details
+    # Create task with specification
     TaskRepository.add_task(
         name="clear-details",
         description="Task with details",
-        details="Some details to clear",
+        specification="Some details to clear",
     )
 
-    # Clear details
+    # Clear specification
     updated = TaskRepository.update_task(
         name="clear-details",
-        details="",
+        specification="",
     )
 
     assert updated is not None
-    assert updated.details == ""
+    assert updated.specification == ""
 
 
 def test_update_task_nonexistent_task(test_db: Path, monkeypatch):
@@ -254,7 +256,7 @@ def test_update_task_preserves_unspecified_fields(test_db: Path, monkeypatch):
         description="Original description",
         priority=7,
         status="pending",
-        details="Original details",
+        specification="Original details",
     )
 
     # Update only priority
@@ -267,7 +269,7 @@ def test_update_task_preserves_unspecified_fields(test_db: Path, monkeypatch):
     assert updated.priority == 9  # Changed
     assert updated.description == "Original description"  # Preserved
     assert updated.status == "pending"  # Preserved
-    assert updated.details == "Original details"  # Preserved
+    assert updated.specification == "Original details"  # Preserved
 
 
 def test_update_task_status_from_pending_to_completed(test_db: Path, monkeypatch):
@@ -309,6 +311,7 @@ def test_update_task_priority_bounds(test_db: Path, monkeypatch):
         name="priority-bounds",
         priority=0,
     )
+    assert updated_min is not None
     assert updated_min.priority == 0
 
     # Update to maximum
@@ -316,11 +319,12 @@ def test_update_task_priority_bounds(test_db: Path, monkeypatch):
         name="priority-bounds",
         priority=10,
     )
+    assert updated_max is not None
     assert updated_max.priority == 10
 
 
-def test_update_task_with_long_details(test_db: Path, monkeypatch):
-    """Test updating with very long details."""
+def test_update_task_with_long_specification(test_db: Path, monkeypatch):
+    """Test updating with very long specification."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
     # Create task
@@ -329,20 +333,21 @@ def test_update_task_with_long_details(test_db: Path, monkeypatch):
         description="Task for long details",
     )
 
-    # Update with long details
-    long_details = "A" * 5000
+    # Update with long specification
+    long_specification = "A" * 5000
     updated = TaskRepository.update_task(
         name="long-details",
-        details=long_details,
+        specification=long_specification,
     )
 
     assert updated is not None
-    assert updated.details == long_details
-    assert len(updated.details) == 5000
+    assert updated.specification == long_specification
+    assert updated.specification is not None
+    assert len(updated.specification) == 5000
 
 
-def test_update_task_with_unicode_details(test_db: Path, monkeypatch):
-    """Test updating with unicode characters in details."""
+def test_update_task_with_unicode_specification(test_db: Path, monkeypatch):
+    """Test updating with unicode characters in specification."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
     # Create task
@@ -351,16 +356,17 @@ def test_update_task_with_unicode_details(test_db: Path, monkeypatch):
         description="Task for unicode",
     )
 
-    # Update with unicode details
+    # Update with unicode specification
     updated = TaskRepository.update_task(
         name="unicode-details",
-        details="Unicode: 你好 🚀 café ✨",
+        specification="Unicode: 你好 🚀 café ✨",
     )
 
     assert updated is not None
-    assert "你好" in updated.details
-    assert "🚀" in updated.details
-    assert "✨" in updated.details
+    assert updated.specification is not None
+    assert "你好" in updated.specification
+    assert "🚀" in updated.specification
+    assert "✨" in updated.specification
 
 
 def test_update_task_status_preserves_timestamps(test_db: Path, monkeypatch):
@@ -377,11 +383,13 @@ def test_update_task_status_preserves_timestamps(test_db: Path, monkeypatch):
     # Start task
     TaskRepository.update_task(name="timestamp-preserve", status="in_progress")
     started = TaskRepository.get_task("timestamp-preserve")
+    assert started is not None
     started_at_original = started.started_at
 
     # Complete task
     TaskRepository.update_task(name="timestamp-preserve", status="completed")
     completed = TaskRepository.get_task("timestamp-preserve")
+    assert completed is not None
 
     # started_at should be preserved
     assert completed.started_at == started_at_original
@@ -423,6 +431,7 @@ def test_update_task_multiple_consecutive_updates(test_db: Path, monkeypatch):
         name="consecutive-updates",
         priority=5,
     )
+    assert updated1 is not None
     assert updated1.priority == 5
 
     # Second update
@@ -430,14 +439,16 @@ def test_update_task_multiple_consecutive_updates(test_db: Path, monkeypatch):
         name="consecutive-updates",
         description="Updated description",
     )
+    assert updated2 is not None
     assert updated2.description == "Updated description"
     assert updated2.priority == 5  # Should be preserved
 
     # Third update
     updated3 = TaskRepository.update_task(
         name="consecutive-updates",
-        details="Added details",
+        specification="Added details",
     )
-    assert updated3.details == "Added details"
+    assert updated3 is not None
+    assert updated3.specification == "Added details"
     assert updated3.description == "Updated description"  # Should be preserved
     assert updated3.priority == 5  # Should be preserved

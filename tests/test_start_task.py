@@ -77,7 +77,7 @@ def test_start_task_whitespace_name(test_db: Path, monkeypatch):
 
 
 def test_start_task_preserves_other_fields(test_db: Path, monkeypatch):
-    """Test that starting a task preserves description, priority, and details."""
+    """Test that starting a task preserves description, priority, and specification."""
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
     # Create a task with specific fields
@@ -85,7 +85,7 @@ def test_start_task_preserves_other_fields(test_db: Path, monkeypatch):
         name="preserve-test",
         description="Original description",
         priority=8,
-        details="Important details",
+        specification="Important details",
     )
 
     # Start the task
@@ -97,7 +97,7 @@ def test_start_task_preserves_other_fields(test_db: Path, monkeypatch):
     assert started_task is not None
     assert started_task.description == original_task.description
     assert started_task.priority == original_task.priority
-    assert started_task.details == original_task.details
+    assert started_task.specification == original_task.specification
     assert started_task.status == "in_progress"
 
 

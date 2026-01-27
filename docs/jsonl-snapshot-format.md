@@ -43,7 +43,7 @@ Required fields:
 - `record_type`: "task"
 - `name`: string
 - `description`: string
-- `details`: string or null
+- `specification`: string or null
 - `feature_name`: string or null
 - `tests_required`: boolean
 - `priority`: integer

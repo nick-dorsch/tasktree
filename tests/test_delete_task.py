@@ -403,13 +403,13 @@ def test_delete_task_special_characters(mock_db_path):
         assert TaskRepository.get_task(name) is None
 
 
-def test_delete_task_with_details_field(mock_db_path):
-    """Test deleting a task that has details field populated."""
-    # Create a task with details
+def test_delete_task_with_specification_field(mock_db_path):
+    """Test deleting a task that has specification field populated."""
+    # Create a task with specification
     TaskRepository.add_task(
         "task-with-details",
         "A task",
-        details="These are detailed implementation notes",
+        specification="These are detailed implementation notes",
     )
 
     # Delete it

@@ -71,7 +71,7 @@ def test_get_task_with_all_fields(mock_db_path):
         description="Complete description",
         priority=8,
         status="in_progress",
-        details="Detailed implementation notes",
+        specification="Detailed implementation notes",
     )
 
     # Get the task
@@ -83,7 +83,7 @@ def test_get_task_with_all_fields(mock_db_path):
     assert task.description == "Complete description"
     assert task.priority == 8
     assert task.status == "in_progress"
-    assert task.details == "Detailed implementation notes"
+    assert task.specification == "Detailed implementation notes"
     assert hasattr(task, "created_at")
     assert hasattr(task, "started_at")
     assert hasattr(task, "completed_at")
@@ -106,7 +106,7 @@ def test_get_task_with_minimal_fields(mock_db_path):
     assert task.description == "Minimal description"
     assert task.priority == 0
     assert task.status == "pending"
-    assert task.details is None
+    assert task.specification == "Minimal description"
 
 
 def test_get_task_immediately_after_creation(mock_db_path):

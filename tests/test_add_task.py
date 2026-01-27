@@ -1,5 +1,5 @@
 """
-Tests for the add_task tool including validation, duplicate names, details field, and dependencies.
+Tests for the add_task tool including validation, duplicate names, specification field, and dependencies.
 """
 
 from pathlib import Path
@@ -32,9 +32,9 @@ def test_add_task_basic(mock_db_path):
 
     assert task.name == "basic-task"
     assert task.description == "A basic test task"
+    assert task.specification == "A basic test task"
     assert task.priority == 0
     assert task.status == "pending"
-    assert task.details is None
     assert task.tests_required is True
     assert task.created_at is not None
 
@@ -46,7 +46,7 @@ def test_add_task_with_all_parameters(mock_db_path):
         description="A task with all parameters",
         priority=8,
         status="in_progress",
-        details="Detailed implementation notes",
+        specification="Detailed implementation notes",
         tests_required=False,
     )
 
@@ -54,7 +54,7 @@ def test_add_task_with_all_parameters(mock_db_path):
     assert task.description == "A task with all parameters"
     assert task.priority == 8
     assert task.status == "in_progress"
-    assert task.details == "Detailed implementation notes"
+    assert task.specification == "Detailed implementation notes"
     assert task.tests_required is False
 
 
@@ -101,26 +101,26 @@ def test_add_task_with_different_statuses(mock_db_path):
         assert task.status == status
 
 
-def test_add_task_with_details(mock_db_path):
-    """Test adding a task with details field."""
+def test_add_task_with_specification(mock_db_path):
+    """Test adding a task with specification field."""
     task = TaskRepository.add_task(
         name="task-with-details",
         description="A task",
-        details="These are implementation details",
+        specification="These are implementation details",
     )
 
-    assert task.details == "These are implementation details"
+    assert task.specification == "These are implementation details"
 
 
-def test_add_task_with_empty_details(mock_db_path):
-    """Test adding a task with empty string details."""
+def test_add_task_with_empty_specification(mock_db_path):
+    """Test adding a task with empty string specification."""
     task = TaskRepository.add_task(
         name="task-empty-details",
         description="A task",
-        details="",
+        specification="",
     )
 
-    assert task.details == ""
+    assert task.specification == ""
 
 
 def test_add_task_duplicate_name(mock_db_path):
@@ -204,13 +204,13 @@ def test_add_task_unicode_characters(mock_db_path):
     task = TaskRepository.add_task(
         name="unicode-task",
         description="Task with unicode: 你好 🎉 café",
-        details="Details with emoji: ✨🚀",
+        specification="Details with emoji: ✨🚀",
     )
 
     assert "你好" in task.description
     assert "🎉" in task.description
-    assert task.details is not None
-    assert "✨" in task.details
+    assert task.specification is not None
+    assert "✨" in task.specification
 
 
 def test_add_task_with_dependencies_via_tools_wrapper(mock_db_path):

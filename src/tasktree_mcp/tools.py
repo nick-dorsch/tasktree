@@ -90,8 +90,8 @@ def register_task_tools(mcp: FastMCP) -> None:
         priority: int = 0,
         status: str = "pending",
         dependencies: Optional[List[str]] = None,
-        details: Optional[str] = None,
-        feature_name: str = "default",
+        specification: Optional[str] = None,
+        feature_name: str = "misc",
         tests_required: bool = True,
     ) -> TaskResponse:
         """
@@ -106,8 +106,8 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority: Priority level (0-10, higher is more important)
             status: Initial status ('pending', 'in_progress', 'completed')
             dependencies: List of task names this task depends on (optional)
-            details: Explanation of implementation details of the task, including code
-            feature_name: Feature this task belongs to (defaults to 'default')
+            specification: Detailed task specification, including implementation notes
+            feature_name: Feature this task belongs to (defaults to 'misc')
             tests_required: Whether tests are required for this task
 
         Returns:
@@ -119,7 +119,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             priority=priority,
             status=status,
             dependencies=dependencies,
-            details=details,
+            specification=specification,
             feature_name=feature_name,
             tests_required=tests_required,
         )
@@ -138,7 +138,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=request.description,
             priority=request.priority,
             status=task_status,
-            details=request.details,
+            specification=request.specification,
             feature_name=request.feature_name,
             tests_required=request.tests_required,
         )
@@ -149,7 +149,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=task.description,
             priority=task.priority,
             status=task.status.value,
-            details=task.details,
+            specification=task.specification,
             feature_name=task.feature_name,
             tests_required=task.tests_required,
         )
@@ -170,7 +170,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         description: Optional[str] = None,
         status: Optional[str] = None,
         priority: Optional[int] = None,
-        details: Optional[str] = None,
+        specification: Optional[str] = None,
         tests_required: Optional[bool] = None,
     ) -> Optional[TaskResponse]:
         """
@@ -181,7 +181,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description: New description (optional)
             status: New status (optional)
             priority: New priority (optional)
-            details: New details (optional)
+            specification: New specification (optional)
             tests_required: Whether tests are required for this task (optional)
 
         Returns:
@@ -192,7 +192,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=description,
             status=status,
             priority=priority,
-            details=details,
+            specification=specification,
             tests_required=tests_required,
         )
         validate_task_name(request.name)
@@ -205,7 +205,7 @@ def register_task_tools(mcp: FastMCP) -> None:
             description=request.description,
             status=request.status,
             priority=request.priority,
-            details=request.details,
+            specification=request.specification,
             tests_required=request.tests_required,
         )
 

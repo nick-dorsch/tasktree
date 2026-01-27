@@ -260,7 +260,7 @@ def test_list_tasks_all_fields_present(mock_db_path):
         description="Full description",
         priority=7,
         status="in_progress",
-        details="Implementation details",
+        specification="Implementation details",
     )
 
     tasks = TaskRepository.list_tasks()
@@ -271,7 +271,7 @@ def test_list_tasks_all_fields_present(mock_db_path):
     # Verify all expected fields are present (using hasattr for Pydantic models)
     assert hasattr(task, "name")
     assert hasattr(task, "description")
-    assert hasattr(task, "details")
+    assert hasattr(task, "specification")
     assert hasattr(task, "priority")
     assert hasattr(task, "status")
     assert hasattr(task, "created_at")
@@ -281,7 +281,7 @@ def test_list_tasks_all_fields_present(mock_db_path):
     # Verify field values
     assert task.name == "full-task"
     assert task.description == "Full description"
-    assert task.details == "Implementation details"
+    assert task.specification == "Implementation details"
     assert task.priority == 7
     assert task.status == "in_progress"
 
@@ -351,16 +351,22 @@ def test_list_tasks_filter_by_feature_name(mock_db_path):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-a", "Feature A"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-a", "Feature A", "Feature A specification"),
         )
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-b", "Feature B"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-b", "Feature B", "Feature B specification"),
         )
         conn.commit()
 
-    TaskRepository.add_task("task-1", "Task 1", feature_name="default", priority=5)
+    TaskRepository.add_task("task-1", "Task 1", feature_name="misc", priority=5)
     TaskRepository.add_task("task-2", "Task 2", feature_name="feature-a", priority=8)
     TaskRepository.add_task("task-3", "Task 3", feature_name="feature-b", priority=3)
     TaskRepository.add_task("task-4", "Task 4", feature_name="feature-a", priority=6)
@@ -380,12 +386,15 @@ def test_list_tasks_filter_by_feature_name_no_matches(mock_db_path):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-a", "Feature A"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-a", "Feature A", "Feature A specification"),
         )
         conn.commit()
 
-    TaskRepository.add_task("task-1", "Task 1", feature_name="default")
+    TaskRepository.add_task("task-1", "Task 1", feature_name="misc")
     TaskRepository.add_task("task-2", "Task 2", feature_name="feature-a")
 
     tasks = TaskRepository.list_tasks(feature_name="nonexistent")
@@ -402,12 +411,18 @@ def test_list_tasks_filter_by_feature_and_status(mock_db_path):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-a", "Feature A"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-a", "Feature A", "Feature A specification"),
         )
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-b", "Feature B"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-b", "Feature B", "Feature B specification"),
         )
         conn.commit()
 
@@ -440,12 +455,18 @@ def test_list_tasks_filter_by_feature_priority_and_status(mock_db_path):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-a", "Feature A"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-a", "Feature A", "Feature A specification"),
         )
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-b", "Feature B"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-b", "Feature B", "Feature B specification"),
         )
         conn.commit()
 
@@ -481,17 +502,20 @@ def test_list_tasks_filter_by_default_feature(mock_db_path):
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT OR IGNORE INTO features (name, description) VALUES (?, ?)",
-            ("feature-a", "Feature A"),
+            """
+            INSERT OR IGNORE INTO features (name, description, specification)
+            VALUES (?, ?, ?)
+            """,
+            ("feature-a", "Feature A", "Feature A specification"),
         )
         conn.commit()
 
-    TaskRepository.add_task("task-1", "Task 1")  # Defaults to 'default' feature
+    TaskRepository.add_task("task-1", "Task 1")  # Defaults to 'misc' feature
     TaskRepository.add_task("task-2", "Task 2", feature_name="feature-a")
-    TaskRepository.add_task("task-3", "Task 3")  # Defaults to 'default' feature
+    TaskRepository.add_task("task-3", "Task 3")  # Defaults to 'misc' feature
 
-    tasks = TaskRepository.list_tasks(feature_name="default")
+    tasks = TaskRepository.list_tasks(feature_name="misc")
 
     assert len(tasks) == 2
-    assert all(task.feature_name == "default" for task in tasks)
+    assert all(task.feature_name == "misc" for task in tasks)
     assert {task.name for task in tasks} == {"task-1", "task-3"}

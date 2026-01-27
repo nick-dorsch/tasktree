@@ -195,36 +195,40 @@ def test_import_snapshot_overwrite_restores_data(test_db: Path, tmp_path: Path) 
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT name, description, enabled, created_at, updated_at FROM features"
+            """
+            SELECT name, description, specification, created_at, updated_at
+            FROM features
+            """
         )
         for row in cursor.fetchall():
             record = feature_records[row["name"]]
             assert row["description"] == record["description"]
-            assert bool(row["enabled"]) == bool(record["enabled"])
+            assert row["specification"] == record["specification"]
             assert row["created_at"] == record["created_at"]
             assert row["updated_at"] == record["updated_at"]
 
         cursor.execute(
             """
             SELECT
-                name,
-                description,
-                details,
-                feature_name,
-                tests_required,
-                priority,
-                status,
-                created_at,
-                updated_at,
-                started_at,
-                completed_at
-            FROM tasks
+                t.name,
+                t.description,
+                t.specification,
+                f.name AS feature_name,
+                t.tests_required,
+                t.priority,
+                t.status,
+                t.created_at,
+                t.updated_at,
+                t.started_at,
+                t.completed_at
+            FROM tasks t
+            LEFT JOIN features f ON t.feature_id = f.id
             """
         )
         for row in cursor.fetchall():
             record = task_records[row["name"]]
             assert row["description"] == record["description"]
-            assert row["details"] == record["details"]
+            assert row["specification"] == record["specification"]
             assert row["feature_name"] == record["feature_name"]
             assert bool(row["tests_required"]) == bool(
                 record.get("tests_required", True)
