@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 TaskTree MCP Server
 A Model Context Protocol server that provides tools for querying and managing tasks

@@ -25,7 +25,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for the graph API."""
 
     db_path: Path
-    assets_dir: Path = (Path(__file__).parent / "graph_assets").resolve()
+    assets_dir: Path = (Path(__file__).parent / "assets" / "graph_assets").resolve()
 
     mime_types = {
         ".css": "text/css; charset=utf-8",
