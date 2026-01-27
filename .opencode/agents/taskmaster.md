@@ -1,7 +1,7 @@
 ---
 description: Adds features and tasks to TaskTree using the TaskTree MCP server
 mode: primary
-model: google/gemini-3-pro-preview
+model: opencode/gemini-3-flash
 color: "#76db7d"
 temperature: 0.1
 tools:

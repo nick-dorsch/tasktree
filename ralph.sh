@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Model to use for opencode runs
-MODEL="opencode/glm-4.7"
+MODEL="opencode/gemini-3-flash"
 
 # Run agent in a loop with stop condition
 if [ -f "PROMPT.md" ]; then

@@ -1,7 +1,7 @@
 -- Dependencies are edges in the graph between tasks and other tasks they depend on
 CREATE TABLE IF NOT EXISTS dependencies (
-  task_id TEXT NOT NULL REFERENCES tasks(id),
-  depends_on_task_id TEXT NOT NULL REFERENCES tasks(id),
+  task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  depends_on_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
   PRIMARY KEY (task_id, depends_on_task_id),
   CHECK (task_id != depends_on_task_id) -- Prevent self-dependencies
 );
