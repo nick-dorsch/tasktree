@@ -12,6 +12,7 @@ from ..core.models import (
     AddFeatureRequest,
     AddTaskRequest,
     CompleteTaskRequest,
+    DeleteFeatureRequest,
     DeleteTaskRequest,
     Dependency,
     DependencyResponse,
@@ -407,6 +408,21 @@ def register_feature_tools(mcp: FastMCP) -> None:
             List of FeatureResponse models with feature data
         """
         return FeatureRepository.list_features()
+
+    @mcp.tool()
+    def delete_feature(name: str) -> bool:
+        """
+        Delete a feature from the database.
+
+        Args:
+            name: Name of the feature to delete
+
+        Returns:
+            True if feature was deleted, False if not found
+        """
+        request = DeleteFeatureRequest(name=name)
+        validate_feature_name(request.name)
+        return FeatureRepository.delete_feature(request.name)
 
 
 def register_all_tools(mcp: FastMCP) -> None:
