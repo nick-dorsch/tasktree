@@ -1,9 +1,9 @@
 -- Dependencies are edges in the graph between tasks and other tasks they depend on
 CREATE TABLE IF NOT EXISTS dependencies (
-  task_name TEXT NOT NULL REFERENCES tasks(name),
-  depends_on_task_name TEXT NOT NULL REFERENCES tasks(name),
-  PRIMARY KEY (task_name, depends_on_task_name),
-  CHECK (task_name != depends_on_task_name) -- Prevent self-dependencies
+  task_id TEXT NOT NULL REFERENCES tasks(id),
+  depends_on_task_id TEXT NOT NULL REFERENCES tasks(id),
+  PRIMARY KEY (task_id, depends_on_task_id),
+  CHECK (task_id != depends_on_task_id) -- Prevent self-dependencies
 );
 
 -- Trigger to prevent circular dependencies
@@ -16,19 +16,19 @@ BEGIN
     WHEN EXISTS (
       WITH RECURSIVE dependency_chain AS (
         -- Start with the task we're trying to depend on
-        SELECT depends_on_task_name as task_name, 1 as depth
+        SELECT depends_on_task_id AS task_id, 1 AS depth
         FROM dependencies
-        WHERE task_name = NEW.depends_on_task_name
+        WHERE task_id = NEW.depends_on_task_id
         
         UNION ALL
         
         -- Recursively follow all dependencies
-        SELECT d.depends_on_task_name, dc.depth + 1
-        FROM dependencies d
-        JOIN dependency_chain dc ON d.task_name = dc.task_name
-        WHERE dc.depth < 10 -- Prevent infinite recursion
+        SELECT d.depends_on_task_id, dc.depth + 1
+        FROM dependencies AS d
+        JOIN dependency_chain AS dc ON d.task_id = dc.task_id
+        WHERE dc.depth < 500 -- Prevent infinite recursion
       )
-      SELECT 1 FROM dependency_chain WHERE task_name = NEW.task_name
+      SELECT 1 FROM dependency_chain WHERE task_id = NEW.task_id
     ) THEN
       RAISE(ABORT, 'Circular dependencies are not allowed!')
     END;

@@ -1,12 +1,14 @@
 -- Each task is a node in the dependency graph
 CREATE TABLE IF NOT EXISTS tasks (
-  name VARCHAR(55) PRIMARY KEY,
+  id CHAR(32) PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  feature_id CHAR(32) REFERENCES features(id),
+
+  name VARCHAR(55) NOT NULL,
   description TEXT NOT NULL,
-  details TEXT,
-  feature_name VARCHAR(55) NOT NULL DEFAULT 'default',
-  tests_required INTEGER NOT NULL DEFAULT 1 CHECK (tests_required IN (0, 1)),
+  specification TEXT NOT NULL,
 
   priority INTEGER DEFAULT 0 CHECK(priority >= 0 AND priority <= 10),
+  tests_required INTEGER NOT NULL DEFAULT 1 CHECK (tests_required IN (0, 1)),
   status TEXT DEFAULT 'pending' CHECK(
     status IN (
       'pending',
@@ -21,7 +23,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   started_at TIMESTAMP,
   completed_at TIMESTAMP,
 
-  FOREIGN KEY (feature_name) REFERENCES features(name)
+  UNIQUE(name, feature_id)
 );
 
 -- Triggers to automatically set timestamps based on status changes
