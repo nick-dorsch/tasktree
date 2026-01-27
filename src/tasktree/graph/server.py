@@ -14,6 +14,7 @@ Default:
 """
 
 import argparse
+import hashlib
 import json
 import sqlite3
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -39,6 +40,24 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         ".svg": "image/svg+xml",
         ".txt": "text/plain; charset=utf-8",
     }
+
+    FEATURE_COLORS = [
+        "#FF6B6B",  # Coral Red
+        "#4ECDC4",  # Turquoise
+        "#45B7D1",  # Sky Blue
+        "#96CEB4",  # Sage Green
+        "#FECA57",  # Golden Yellow
+        "#B983FF",  # Lavender
+        "#FD79A8",  # Pink
+        "#A29BFE",  # Periwinkle
+        "#6C5CE7",  # Purple
+        "#00B894",  # Emerald
+    ]
+
+    def _get_feature_color(self, feature_name: str) -> str:
+        """Get a consistent color for a feature name."""
+        hash_val = int(hashlib.md5(feature_name.encode()).hexdigest(), 16)
+        return self.FEATURE_COLORS[hash_val % len(self.FEATURE_COLORS)]
 
     def do_GET(self) -> None:
         """Handle GET requests."""
@@ -203,9 +222,10 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 </div>"""
 
             feature_info_detail = feature_info[feature_name]
+            feature_color = self._get_feature_color(feature_name)
             task_items_html += f"""
             <div class="feature-group" data-feature="{feature_name}">
-                <div class="feature-header" onclick="toggleFeatureTasks(this)">
+                <div class="feature-header" onclick="toggleFeatureTasks(this)" style="border-left: 4px solid {feature_color}; background-color: {feature_color}1A;">
                     <div class="feature-main-info">
                         <span class="feature-chevron">▶</span>
                         <span class="feature-name" title="{feature_name}">{feature_name}</span>
@@ -337,6 +357,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                         "specification": row[7],
                         "tests_required": bool(row[8]),
                         "feature_name": row[9],
+                        "feature_color": self._get_feature_color(row[9]),
                         "feature_description": row[10],
                         "feature_created_at": row[11],
                         "updated_at": row[12],

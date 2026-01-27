@@ -434,6 +434,7 @@ function updateTaskList(tasks) {
         const isExpanded = expandedFeatures.has(featureName);
         const featureDisplay = isExpanded ? 'block' : 'none';
         const featureClass = isExpanded ? 'expanded' : '';
+        const featureColor = featureTasks.length > 0 && featureTasks[0].feature_color ? featureTasks[0].feature_color : '#ccc';
 
         let featureTasksHtml = '';
 
@@ -480,10 +481,12 @@ function updateTaskList(tasks) {
         });
 
         taskItemsHtml += '<div class="feature-group" data-feature="' + featureName + '">' +
-            '<div class="feature-header ' + featureClass + '" onclick="toggleFeatureTasks(this)">' +
+            '<div class="feature-header ' + featureClass + '" onclick="toggleFeatureTasks(this)" style="border-left: 4px solid ' + featureColor + '; background-color: ' + featureColor + '1A;">' +
+            '<div class="feature-main-info">' +
             '<span class="feature-chevron">▶</span>' +
             '<span class="feature-name" title="' + featureName + '">' + featureName + '</span>' +
             '<span class="feature-count">' + featureTasks.length + '</span>' +
+            '</div>' +
             '</div>' +
             '<div class="feature-tasks" style="display: ' + featureDisplay + ';">' +
             featureTasksHtml +
