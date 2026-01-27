@@ -1614,7 +1614,6 @@ source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
     { name = "pydantic" },
-    { name = "ruff" },
     { name = "typer" },
 ]
 
@@ -1622,13 +1621,13 @@ dependencies = [
 dev = [
     { name = "pytest" },
     { name = "pyyaml" },
+    { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=2.14.4" },
     { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "ruff", specifier = ">=0.14.14" },
     { name = "typer", specifier = ">=0.21.1" },
 ]
 
@@ -1636,6 +1635,7 @@ requires-dist = [
 dev = [
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "ruff", specifier = ">=0.14.14" },
 ]
 
 [[package]]

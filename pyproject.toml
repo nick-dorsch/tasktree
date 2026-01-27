@@ -11,7 +11,6 @@ requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=2.14.4",
     "pydantic>=2.0.0",
-    "ruff>=0.14.14",
     "typer>=0.21.1",
 ]
 
@@ -22,6 +21,7 @@ tasktree = "tasktree.cli.main:cli"
 dev = [
     "pytest>=8.0.0",
     "pyyaml>=6.0.3",
+    "ruff>=0.14.14",
 ]
 
 [tool.hatch.build]
