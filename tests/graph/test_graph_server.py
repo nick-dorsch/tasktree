@@ -1078,6 +1078,7 @@ def test_api_tasks_endpoint_with_tasks(mock_db_path, server_thread):
         assert "completed_at" in task
         assert "specification" in task
         assert "feature_name" in task
+        assert "feature_created_at" in task
         assert "tests_required" in task
         assert "updated_at" in task
     finally:

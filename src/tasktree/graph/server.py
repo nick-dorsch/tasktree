@@ -92,7 +92,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 t.started_at,
                 t.completed_at,
                 t.specification,
-                f.name AS feature_name
+                f.name AS feature_name,
+                f.created_at AS feature_created_at
             FROM tasks t
             JOIN features f ON t.feature_id = f.id
             ORDER BY CASE t.status
@@ -106,12 +107,19 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         """)
         tasks = cursor.fetchall()
 
+        # Get feature created_at info for sorting
+        cursor.execute("""
+            SELECT name, created_at FROM features ORDER BY created_at DESC
+        """)
+        features_by_created = cursor.fetchall()
+        feature_order = {name: idx for idx, (name, _) in enumerate(features_by_created)}
+
         conn.close()
 
         # Build task list HTML grouped by feature
         tasks_by_feature: dict[str, list[tuple]] = {}
         for task in tasks:
-            feature_name = task[-1]
+            feature_name = task[-2]  # feature_name is now second to last
             tasks_by_feature.setdefault(feature_name, []).append(task)
 
         task_items_html = ""
@@ -122,7 +130,9 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             "blocked": "#F44336",
         }
 
-        for feature_name in sorted(tasks_by_feature.keys()):
+        for feature_name in sorted(
+            tasks_by_feature.keys(), key=lambda x: feature_order.get(x, 999)
+        ):
             feature_tasks_html = ""
             for task in tasks_by_feature[feature_name]:
                 (
@@ -135,6 +145,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     completed_at,
                     specification,
                     _feature_name,
+                    _feature_created_at,
                 ) = task
 
                 status_color = status_colors.get(status, "#999")
@@ -275,6 +286,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     t.specification,
                     t.tests_required,
                     f.name AS feature_name,
+                    f.created_at AS feature_created_at,
                     t.updated_at
                 FROM tasks t
                 JOIN features f ON t.feature_id = f.id
@@ -303,7 +315,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                         "specification": row[7],
                         "tests_required": bool(row[8]),
                         "feature_name": row[9],
-                        "updated_at": row[10],
+                        "feature_created_at": row[10],
+                        "updated_at": row[11],
                     }
                 )
 
