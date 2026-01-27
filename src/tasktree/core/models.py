@@ -406,6 +406,13 @@ class FeatureResponse(BaseModel):
         return cls(**data)
 
 
+class TaskStartResponse(BaseModel):
+    """Response model for starting a task with feature context."""
+
+    task: TaskResponse = Field(..., description="Started task")
+    feature: FeatureResponse = Field(..., description="Feature for the task")
+
+
 class FeatureListResponse(BaseModel):
     """Response model for list of features."""
 

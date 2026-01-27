@@ -23,6 +23,7 @@ from ..core.models import (
     RemoveDependencyRequest,
     Task,
     TaskResponse,
+    TaskStartResponse,
     TaskStatus,
     UpdateTaskRequest,
 )
@@ -30,8 +31,8 @@ from ..core.validators import (
     validate_description,
     validate_feature_name,
     validate_priority,
-    validate_status,
     validate_specification,
+    validate_status,
     validate_task_name,
 )
 
@@ -225,7 +226,7 @@ def register_task_tools(mcp: FastMCP) -> None:
         return TaskRepository.delete_task(request.name)
 
     @mcp.tool()
-    def start_task(name: str) -> Optional[TaskResponse]:
+    def start_task(name: str) -> Optional[TaskStartResponse]:
         """
         Start a task by setting its status to 'in_progress'.
 
@@ -233,10 +234,16 @@ def register_task_tools(mcp: FastMCP) -> None:
             name: Name of the task to start
 
         Returns:
-            TaskResponse model with updated task data if found, None otherwise
+            TaskStartResponse model with task and feature data if found, None otherwise
         """
         validate_task_name(name)
-        return TaskRepository.update_task(name=name, status="in_progress")
+        task = TaskRepository.update_task(name=name, status="in_progress")
+        if task is None:
+            return None
+        feature = FeatureRepository.get_feature(task.feature_name)
+        if feature is None:
+            raise ValueError(f"Feature '{task.feature_name}' does not exist")
+        return TaskStartResponse(task=task, feature=feature)
 
     @mcp.tool()
     def complete_task(name: str) -> Optional[TaskResponse]:

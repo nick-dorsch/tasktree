@@ -371,6 +371,30 @@ class FeatureRepository:
                 for row in rows
             ]
 
+    @staticmethod
+    def get_feature(name: str) -> Optional[FeatureResponse]:
+        """
+        Get a specific feature by name.
+
+        Args:
+            name: Feature name to retrieve
+
+        Returns:
+            FeatureResponse model if found, None otherwise
+        """
+        if not name or not name.strip():
+            raise ValueError("Feature name cannot be empty")
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM features WHERE name = ?", (name,))
+            row = cursor.fetchone()
+            return (
+                FeatureResponse.from_dict({key: row[key] for key in row.keys()})
+                if row
+                else None
+            )
+
 
 class DependencyRepository:
     """Repository class for dependency operations."""
