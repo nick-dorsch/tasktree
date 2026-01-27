@@ -73,6 +73,9 @@ Snapshot location resolution:
 
 ## Snapshot Workflow
 
+TaskTree automatically exports a JSONL snapshot to the snapshot path after every
+write operation. You can also manually trigger export/import:
+
 ```bash
 task snapshot-export
 task snapshot-import

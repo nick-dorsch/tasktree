@@ -47,8 +47,11 @@ uv run python src/tasktree/server.py --test
 
 ## Snapshot Workflow
 
-TaskTree keeps the SQLite database (`.tasktree/tasktree.db`) out of git. Use JSONL
-snapshots for collaboration and rehydrating local state.
+TaskTree keeps the SQLite database (`.tasktree/tasktree.db`) out of git. It
+automatically exports a JSONL snapshot after every write operation for easy
+collaboration and state rehydration.
+
+You can also manually trigger:
 
 ```bash
 task snapshot-export

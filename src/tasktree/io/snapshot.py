@@ -16,19 +16,15 @@ RECORD_ORDER: Tuple[str, ...] = ("meta", "feature", "task", "dependency")
 def export_snapshot(db_path: Path, snapshot_path: Path) -> None:
     """
     Export the TaskTree database to a deterministic JSONL snapshot.
-
-    Args:
-        db_path: Path to the SQLite database
-        snapshot_path: Path to write the JSONL snapshot
-
-    Raises:
-        FileNotFoundError: If the database does not exist
-        sqlite3.Error: If database access fails
     """
+    with open("/tmp/tasktree_export_debug.log", "a") as f:
+        f.write(f"export_snapshot called with {db_path} and {snapshot_path}\n")
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
 
     snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+    if not snapshot_path.exists():
+        snapshot_path.touch()
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row

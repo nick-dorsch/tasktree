@@ -14,8 +14,6 @@ from .paths import get_db_path, get_snapshot_path
 from .validators import validate_specification
 
 DB_PATH = get_db_path()
-AUTO_EXPORT_ENV_VAR = "TASKTREE_AUTO_EXPORT_SNAPSHOT"
-_TRUTHY_VALUES = {"1", "true", "yes", "on"}
 logger = logging.getLogger(__name__)
 
 
@@ -52,12 +50,8 @@ def _ensure_tests_required_column(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def _auto_export_snapshot_if_enabled() -> None:
-    """Export the JSONL snapshot if auto-export is enabled."""
-    flag = os.getenv(AUTO_EXPORT_ENV_VAR, "").strip().lower()
-    if flag not in _TRUTHY_VALUES:
-        return
-
+def _trigger_snapshot_export() -> None:
+    """Export the JSONL snapshot."""
     try:
         export_snapshot(DB_PATH, get_snapshot_path())
     except Exception as exc:
@@ -224,7 +218,7 @@ class TaskRepository:
                     raise ValueError(f"Feature '{feature_name}' does not exist")
                 conn.commit()
 
-                _auto_export_snapshot_if_enabled()
+                _trigger_snapshot_export()
 
                 cursor.execute(
                     """
@@ -294,7 +288,7 @@ class TaskRepository:
             cursor.execute(query, params)
             conn.commit()
 
-            _auto_export_snapshot_if_enabled()
+            _trigger_snapshot_export()
 
             return TaskRepository.get_task(name)
 
@@ -333,7 +327,7 @@ class TaskRepository:
             deleted = cursor.rowcount > 0
 
             conn.commit()
-            _auto_export_snapshot_if_enabled()
+            _trigger_snapshot_export()
             return deleted
 
     @staticmethod
@@ -368,7 +362,7 @@ class FeatureRepository:
                 )
                 conn.commit()
 
-                _auto_export_snapshot_if_enabled()
+                _trigger_snapshot_export()
 
                 cursor.execute("SELECT * FROM features WHERE name = ?", (name,))
                 row = cursor.fetchone()
@@ -442,7 +436,7 @@ class FeatureRepository:
             cursor.execute("DELETE FROM features WHERE name = ?", (name,))
             deleted = cursor.rowcount > 0
             conn.commit()
-            _auto_export_snapshot_if_enabled()
+            _trigger_snapshot_export()
             return deleted
 
 
@@ -513,7 +507,7 @@ class DependencyRepository:
                 )
                 conn.commit()
 
-                _auto_export_snapshot_if_enabled()
+                _trigger_snapshot_export()
 
                 return DependencyResponse(
                     task_name=task_name,
@@ -540,7 +534,7 @@ class DependencyRepository:
             )
             deleted = cursor.rowcount > 0
             conn.commit()
-            _auto_export_snapshot_if_enabled()
+            _trigger_snapshot_export()
             return deleted
 
     @staticmethod

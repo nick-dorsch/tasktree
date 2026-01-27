@@ -51,7 +51,6 @@ def snapshot_env(test_db: Path, tmp_path: Path, monkeypatch) -> Path:
 
     snapshot_path = tmp_path / "snapshot.jsonl"
     monkeypatch.setattr(db_module, "DB_PATH", test_db)
-    monkeypatch.setenv("TASKTREE_AUTO_EXPORT_SNAPSHOT", "true")
     monkeypatch.setenv("TASKTREE_SNAPSHOT_PATH", str(snapshot_path))
     return snapshot_path
 
