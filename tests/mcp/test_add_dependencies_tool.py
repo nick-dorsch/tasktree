@@ -60,9 +60,9 @@ def test_add_dependencies_tool_creates_multiple(mock_db_path):
     """Test that add_dependencies creates multiple dependencies."""
     tools = get_dependency_tools()
 
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     result = tools["add_dependencies"]("task-c", ["task-a", "task-b"])
 
@@ -77,8 +77,8 @@ def test_add_dependencies_tool_reports_failures(mock_db_path):
     """Test that add_dependencies reports failures but still inserts successes."""
     tools = get_dependency_tools()
 
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     with pytest.raises(ValueError, match="missing-task"):
         tools["add_dependencies"]("task-b", ["task-a", "missing-task"])

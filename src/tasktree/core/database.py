@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from .models import DependencyResponse, FeatureResponse, TaskResponse
 from .paths import get_db_path
+from .validators import validate_specification
 
 DB_PATH = get_db_path()
 
@@ -139,9 +140,9 @@ class TaskRepository:
     def add_task(
         name: str,
         description: str,
+        specification: str,
         priority: int = 0,
         status: str = "pending",
-        specification: Optional[str] = None,
         feature_name: str = "misc",
         tests_required: bool = True,
     ) -> TaskResponse:
@@ -151,9 +152,9 @@ class TaskRepository:
         Args:
             name: Unique task name
             description: Task description
+            specification: Detailed task specification
             priority: Priority level (0-10)
             status: Initial status
-            specification: Optional detailed specification
             feature_name: Feature this task belongs to
             tests_required: Whether tests are required for this task
 
@@ -163,13 +164,12 @@ class TaskRepository:
         Raises:
             ValueError: If task name already exists or feature doesn't exist
         """
+        validate_specification(specification)
+
         with get_db_connection() as conn:
             cursor = conn.cursor()
 
             try:
-                task_specification = (
-                    specification if specification is not None else description
-                )
                 cursor.execute(
                     """
                     INSERT INTO tasks (
@@ -195,7 +195,7 @@ class TaskRepository:
                     (
                         name,
                         description,
-                        task_specification,
+                        specification,
                         int(tests_required),
                         priority,
                         status,

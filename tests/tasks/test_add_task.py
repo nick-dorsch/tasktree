@@ -28,11 +28,12 @@ def test_add_task_basic(mock_db_path):
     task = TaskRepository.add_task(
         name="basic-task",
         description="A basic test task",
+        specification="Basic specification",
     )
 
     assert task.name == "basic-task"
     assert task.description == "A basic test task"
-    assert task.specification == "A basic test task"
+    assert task.specification == "Basic specification"
     assert task.priority == 0
     assert task.status == "pending"
     assert task.tests_required is True
@@ -63,6 +64,7 @@ def test_add_task_with_tests_required_flag(mock_db_path):
     task = TaskRepository.add_task(
         name="no-tests-task",
         description="A task without tests",
+        specification="Spec without tests",
         tests_required=False,
     )
 
@@ -75,6 +77,7 @@ def test_add_task_with_priority_bounds(mock_db_path):
     task_min = TaskRepository.add_task(
         name="min-priority",
         description="Task with minimum priority",
+        specification="Min priority spec",
         priority=0,
     )
     assert task_min.priority == 0
@@ -83,6 +86,7 @@ def test_add_task_with_priority_bounds(mock_db_path):
     task_max = TaskRepository.add_task(
         name="max-priority",
         description="Task with maximum priority",
+        specification="Max priority spec",
         priority=10,
     )
     assert task_max.priority == 10
@@ -96,6 +100,7 @@ def test_add_task_with_different_statuses(mock_db_path):
         task = TaskRepository.add_task(
             name=f"task-{status}",
             description=f"Task with {status} status",
+            specification=f"Spec for {status}",
             status=status,
         )
         assert task.status == status
@@ -113,14 +118,22 @@ def test_add_task_with_specification(mock_db_path):
 
 
 def test_add_task_with_empty_specification(mock_db_path):
-    """Test adding a task with empty string specification."""
-    task = TaskRepository.add_task(
-        name="task-empty-details",
-        description="A task",
-        specification="",
-    )
+    """Test adding a task with empty string specification raises ValidationError."""
+    with pytest.raises(Exception):  # Catching pydantic ValidationError or ValueError
+        TaskRepository.add_task(
+            name="task-empty-details",
+            description="A task",
+            specification="",
+        )
 
-    assert task.specification == ""
+
+def test_add_task_missing_specification(mock_db_path):
+    """Test adding a task without specification raises TypeError."""
+    with pytest.raises(TypeError):
+        TaskRepository.add_task(
+            name="task-missing-spec",
+            description="A task",
+        )
 
 
 def test_add_task_duplicate_name(mock_db_path):
@@ -129,6 +142,7 @@ def test_add_task_duplicate_name(mock_db_path):
     TaskRepository.add_task(
         name="duplicate-task",
         description="First task",
+        specification="First spec",
     )
 
     # Try to add second task with same name
@@ -136,6 +150,7 @@ def test_add_task_duplicate_name(mock_db_path):
         TaskRepository.add_task(
             name="duplicate-task",
             description="Second task",
+            specification="Second spec",
         )
 
 
@@ -145,6 +160,7 @@ def test_add_task_creates_timestamps(mock_db_path):
     task_pending = TaskRepository.add_task(
         name="pending-task",
         description="A pending task",
+        specification="Pending spec",
         status="pending",
     )
     assert task_pending.created_at is not None
@@ -155,6 +171,7 @@ def test_add_task_creates_timestamps(mock_db_path):
     task_in_progress = TaskRepository.add_task(
         name="in-progress-task",
         description="An in-progress task",
+        specification="In progress spec",
         status="in_progress",
     )
     assert task_in_progress.created_at is not None
@@ -165,6 +182,7 @@ def test_add_task_creates_timestamps(mock_db_path):
     task_completed = TaskRepository.add_task(
         name="completed-task",
         description="A completed task",
+        specification="Completed spec",
         status="completed",
     )
     assert task_completed.created_at is not None
@@ -183,6 +201,7 @@ def test_add_task_special_characters_in_name(mock_db_path):
         task = TaskRepository.add_task(
             name=name,
             description=f"Task with name: {name}",
+            specification=f"Spec for {name}",
         )
         assert task.name == name
 
@@ -194,6 +213,7 @@ def test_add_task_long_description(mock_db_path):
     task = TaskRepository.add_task(
         name="long-desc-task",
         description=long_desc,
+        specification="Long desc spec",
     )
 
     assert task.description == long_desc
@@ -216,13 +236,14 @@ def test_add_task_unicode_characters(mock_db_path):
 def test_add_task_with_dependencies_via_tools_wrapper(mock_db_path):
     """Test adding a task with dependencies using the tools wrapper pattern."""
     # First create the dependency tasks
-    TaskRepository.add_task("dependency-1", "First dependency")
-    TaskRepository.add_task("dependency-2", "Second dependency")
+    TaskRepository.add_task("dependency-1", "First dependency", "Spec 1")
+    TaskRepository.add_task("dependency-2", "Second dependency", "Spec 2")
 
     # Create a task that depends on them
     task = TaskRepository.add_task(
         name="dependent-task",
         description="A task with dependencies",
+        specification="Dependent spec",
     )
 
     # Add dependencies separately (simulating tool behavior)
@@ -240,7 +261,7 @@ def test_add_task_with_dependencies_via_tools_wrapper(mock_db_path):
 def test_add_task_nonexistent_dependency_validation(mock_db_path):
     """Test that adding dependencies to non-existent tasks is handled."""
     # Create a task
-    TaskRepository.add_task("task-a", "Task A")
+    TaskRepository.add_task("task-a", "Task A", "Spec A")
 
     # Try to add dependency on non-existent task - this should raise an error
     # Note: This tests the validation that should happen at the tools layer
@@ -256,6 +277,7 @@ def test_add_task_multiple_tasks(mock_db_path):
         task = TaskRepository.add_task(
             name=name,
             description=f"Description for {name}",
+            specification=f"Spec for {name}",
             priority=len(task_names) - int(name.split("-")[1]),
         )
         assert task.name == name

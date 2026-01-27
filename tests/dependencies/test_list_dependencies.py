@@ -32,8 +32,8 @@ def test_list_dependencies_empty_database(mock_db_path):
 def test_list_dependencies_no_dependencies(mock_db_path):
     """Test listing dependencies when tasks exist but no dependencies."""
     # Create tasks without dependencies
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     deps = DependencyRepository.list_dependencies()
     assert deps == []
@@ -42,8 +42,8 @@ def test_list_dependencies_no_dependencies(mock_db_path):
 def test_list_dependencies_all_basic(mock_db_path):
     """Test listing all dependencies with a basic setup."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     # Add dependency: task-b depends on task-a
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -59,9 +59,9 @@ def test_list_dependencies_all_basic(mock_db_path):
 def test_list_dependencies_all_multiple(mock_db_path):
     """Test listing all dependencies with multiple dependencies."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # Add dependencies
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -84,10 +84,10 @@ def test_list_dependencies_all_multiple(mock_db_path):
 def test_list_dependencies_all_ordering(mock_db_path):
     """Test that listing all dependencies returns them in correct order."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     # Add dependencies in non-alphabetical order
     DependencyRepository.add_dependency("task-d", "task-c")
@@ -111,9 +111,9 @@ def test_list_dependencies_all_ordering(mock_db_path):
 def test_list_dependencies_filtered_task_as_dependent(mock_db_path):
     """Test listing dependencies filtered by a task that depends on others."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # Add dependencies: task-c depends on both task-a and task-b
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -130,9 +130,9 @@ def test_list_dependencies_filtered_task_as_dependent(mock_db_path):
 def test_list_dependencies_filtered_task_as_dependency(mock_db_path):
     """Test listing dependencies filtered by a task that others depend on."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # Add dependencies: both task-b and task-c depend on task-a
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -149,9 +149,9 @@ def test_list_dependencies_filtered_task_as_dependency(mock_db_path):
 def test_list_dependencies_filtered_task_both_roles(mock_db_path):
     """Test listing dependencies for a task that is both dependent and dependency."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # Create chain: C depends on B, B depends on A
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -174,8 +174,8 @@ def test_list_dependencies_filtered_task_both_roles(mock_db_path):
 def test_list_dependencies_filtered_nonexistent_task(mock_db_path):
     """Test listing dependencies for a task that doesn't exist."""
     # Create some tasks and dependencies
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
     DependencyRepository.add_dependency("task-b", "task-a")
 
     # List dependencies for non-existent task
@@ -188,9 +188,9 @@ def test_list_dependencies_filtered_nonexistent_task(mock_db_path):
 def test_list_dependencies_filtered_task_no_dependencies(mock_db_path):
     """Test listing dependencies for a task that exists but has no dependencies."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("isolated-task", "Isolated Task")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("isolated-task", "Isolated Task", specification="Spec")
 
     # Add dependency between task-a and task-b
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -208,10 +208,10 @@ def test_list_dependencies_filtered_complex_graph(mock_db_path):
     # D depends on B and C
     # B depends on A
     # C depends on A
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     DependencyRepository.add_dependency("task-b", "task-a")
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -235,10 +235,10 @@ def test_list_dependencies_all_diamond_pattern(mock_db_path):
     # D depends on B and C
     # B depends on A
     # C depends on A
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     DependencyRepository.add_dependency("task-b", "task-a")
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -263,10 +263,10 @@ def test_list_dependencies_all_diamond_pattern(mock_db_path):
 def test_list_dependencies_filtered_ordering(mock_db_path):
     """Test that filtered dependencies are returned in correct order."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     # Create dependencies where task-c is in the middle
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -293,7 +293,7 @@ def test_list_dependencies_long_chain(mock_db_path):
     # Create a long chain: task-0 <- task-1 <- task-2 <- ... <- task-7
     chain_length = 8
     for i in range(chain_length):
-        TaskRepository.add_task(f"task-{i}", f"Task {i}")
+        TaskRepository.add_task(f"task-{i}", f"Task {i}", specification="Spec")
 
     for i in range(1, chain_length):
         DependencyRepository.add_dependency(f"task-{i}", f"task-{i - 1}")
@@ -312,13 +312,13 @@ def test_list_dependencies_multiple_independents(mock_db_path):
     """Test listing dependencies with multiple independent dependency trees."""
     # Create two independent trees
     # Tree 1: B depends on A
-    TaskRepository.add_task("tree1-a", "Tree 1 A")
-    TaskRepository.add_task("tree1-b", "Tree 1 B")
+    TaskRepository.add_task("tree1-a", "Tree 1 A", specification="Spec")
+    TaskRepository.add_task("tree1-b", "Tree 1 B", specification="Spec")
     DependencyRepository.add_dependency("tree1-b", "tree1-a")
 
     # Tree 2: D depends on C
-    TaskRepository.add_task("tree2-c", "Tree 2 C")
-    TaskRepository.add_task("tree2-d", "Tree 2 D")
+    TaskRepository.add_task("tree2-c", "Tree 2 C", specification="Spec")
+    TaskRepository.add_task("tree2-d", "Tree 2 D", specification="Spec")
     DependencyRepository.add_dependency("tree2-d", "tree2-c")
 
     # List all dependencies

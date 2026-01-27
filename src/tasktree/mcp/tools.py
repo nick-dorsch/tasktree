@@ -88,10 +88,10 @@ def register_task_tools(mcp: FastMCP) -> None:
     def add_task(
         name: str,
         description: str,
+        specification: str,
         priority: int = 0,
         status: str = "pending",
         dependencies: Optional[List[str]] = None,
-        specification: Optional[str] = None,
         feature_name: str = "misc",
         tests_required: bool = True,
     ) -> bool:
@@ -104,10 +104,10 @@ def register_task_tools(mcp: FastMCP) -> None:
         Args:
             name: Unique name for the task
             description: Description of what the task involves
+            specification: Detailed task specification, including implementation notes
             priority: Priority level (0-10, higher is more important)
             status: Initial status ('pending', 'in_progress', 'completed')
             dependencies: List of task names this task depends on (optional)
-            specification: Detailed task specification, including implementation notes
             feature_name: Feature this task belongs to (defaults to 'misc')
             tests_required: Whether tests are required for this task
 
@@ -117,14 +117,15 @@ def register_task_tools(mcp: FastMCP) -> None:
         request = AddTaskRequest(
             name=name,
             description=description,
+            specification=specification,
             priority=priority,
             status=status,
             dependencies=dependencies,
-            specification=specification,
             feature_name=feature_name,
             tests_required=tests_required,
         )
         validate_feature_name(request.feature_name)
+        validate_specification(request.specification)
 
         # Validate dependencies exist before creating task
         if request.dependencies:
@@ -137,9 +138,9 @@ def register_task_tools(mcp: FastMCP) -> None:
         task = Task(
             name=request.name,
             description=request.description,
+            specification=request.specification,
             priority=request.priority,
             status=task_status,
-            specification=request.specification,
             feature_name=request.feature_name,
             tests_required=request.tests_required,
         )
@@ -148,9 +149,9 @@ def register_task_tools(mcp: FastMCP) -> None:
         TaskRepository.add_task(
             name=task.name,
             description=task.description,
+            specification=task.specification,
             priority=task.priority,
             status=task.status.value,
-            specification=task.specification,
             feature_name=task.feature_name,
             tests_required=task.tests_required,
         )

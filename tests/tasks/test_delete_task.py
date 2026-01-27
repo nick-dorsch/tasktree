@@ -26,7 +26,7 @@ def mock_db_path(test_db: Path, monkeypatch):
 def test_delete_task_basic(mock_db_path):
     """Test deleting a task with no dependencies."""
     # Create a task
-    TaskRepository.add_task("task-to-delete", "Task to delete")
+    TaskRepository.add_task("task-to-delete", "Task to delete", specification="Spec")
 
     # Verify it exists
     task = TaskRepository.get_task("task-to-delete")
@@ -63,8 +63,8 @@ def test_delete_task_whitespace_name(mock_db_path):
 def test_delete_task_with_outgoing_dependencies(mock_db_path):
     """Test deleting a task that depends on other tasks (has outgoing dependencies)."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     # task-b depends on task-a
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -87,8 +87,8 @@ def test_delete_task_with_outgoing_dependencies(mock_db_path):
 def test_delete_task_with_incoming_dependencies(mock_db_path):
     """Test deleting a task that other tasks depend on (has incoming dependencies)."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     # task-b depends on task-a
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -111,9 +111,9 @@ def test_delete_task_with_incoming_dependencies(mock_db_path):
 def test_delete_task_with_multiple_outgoing_dependencies(mock_db_path):
     """Test deleting a task that depends on multiple other tasks."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # task-c depends on both task-a and task-b
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -142,10 +142,10 @@ def test_delete_task_with_multiple_outgoing_dependencies(mock_db_path):
 def test_delete_task_with_multiple_incoming_dependencies(mock_db_path):
     """Test deleting a task that multiple other tasks depend on."""
     # Create tasks
-    TaskRepository.add_task("base-task", "Base Task")
-    TaskRepository.add_task("dependent-1", "Dependent 1")
-    TaskRepository.add_task("dependent-2", "Dependent 2")
-    TaskRepository.add_task("dependent-3", "Dependent 3")
+    TaskRepository.add_task("base-task", "Base Task", specification="Spec")
+    TaskRepository.add_task("dependent-1", "Dependent 1", specification="Spec")
+    TaskRepository.add_task("dependent-2", "Dependent 2", specification="Spec")
+    TaskRepository.add_task("dependent-3", "Dependent 3", specification="Spec")
 
     # Multiple tasks depend on base-task
     DependencyRepository.add_dependency("dependent-1", "base-task")
@@ -176,9 +176,9 @@ def test_delete_task_with_multiple_incoming_dependencies(mock_db_path):
 def test_delete_task_in_dependency_chain(mock_db_path):
     """Test deleting a task in the middle of a dependency chain."""
     # Create a chain: task-c depends on task-b, task-b depends on task-a
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     DependencyRepository.add_dependency("task-b", "task-a")
     DependencyRepository.add_dependency("task-c", "task-b")
@@ -209,10 +209,10 @@ def test_delete_task_in_complex_graph(mock_db_path):
     # task-d depends on task-b and task-c
     # task-b depends on task-a
     # task-c depends on task-a
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     DependencyRepository.add_dependency("task-b", "task-a")
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -246,7 +246,7 @@ def test_delete_task_with_different_statuses(mock_db_path):
 
     for status in statuses:
         task_name = f"task-{status}"
-        TaskRepository.add_task(task_name, f"Task with {status} status", status=status)
+        TaskRepository.add_task(task_name, f"Task with {status} status", specification="Spec", status=status)
 
         # Delete it
         deleted = TaskRepository.delete_task(task_name)
@@ -259,8 +259,8 @@ def test_delete_task_with_different_statuses(mock_db_path):
 def test_delete_task_affects_available_tasks(mock_db_path):
     """Test that deleting a task affects the available tasks list."""
     # Create tasks with dependencies
-    TaskRepository.add_task("task-a", "Task A", status="pending")
-    TaskRepository.add_task("task-b", "Task B", status="pending")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec", status="pending")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec", status="pending")
 
     # task-b depends on task-a
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -284,7 +284,7 @@ def test_delete_multiple_tasks_in_sequence(mock_db_path):
     # Create multiple tasks
     task_names = [f"task-{i}" for i in range(5)]
     for name in task_names:
-        TaskRepository.add_task(name, f"Description for {name}")
+        TaskRepository.add_task(name, f"Description for {name}", specification="Spec")
 
     # Delete them one by one
     for name in task_names:
@@ -300,9 +300,9 @@ def test_delete_multiple_tasks_in_sequence(mock_db_path):
 def test_delete_task_and_verify_list_count(mock_db_path):
     """Test that deleting a task updates the task count correctly."""
     # Create tasks
-    TaskRepository.add_task("task-1", "Task 1")
-    TaskRepository.add_task("task-2", "Task 2")
-    TaskRepository.add_task("task-3", "Task 3")
+    TaskRepository.add_task("task-1", "Task 1", specification="Spec")
+    TaskRepository.add_task("task-2", "Task 2", specification="Spec")
+    TaskRepository.add_task("task-3", "Task 3", specification="Spec")
 
     # Verify count
     tasks = TaskRepository.list_tasks()
@@ -320,10 +320,10 @@ def test_delete_task_and_verify_list_count(mock_db_path):
 def test_delete_task_with_bidirectional_dependencies(mock_db_path):
     """Test deleting a task that has both incoming and outgoing dependencies."""
     # Create tasks: A <- B <- C, B <- D
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     # Create dependencies
     DependencyRepository.add_dependency("task-b", "task-a")  # B depends on A
@@ -354,7 +354,7 @@ def test_delete_task_with_bidirectional_dependencies(mock_db_path):
 def test_delete_task_idempotency(mock_db_path):
     """Test that deleting a task multiple times is safe."""
     # Create a task
-    TaskRepository.add_task("task-to-delete", "Task to delete")
+    TaskRepository.add_task("task-to-delete", "Task to delete", specification="Spec")
 
     # Delete it first time
     deleted = TaskRepository.delete_task("task-to-delete")
@@ -368,10 +368,10 @@ def test_delete_task_idempotency(mock_db_path):
 def test_delete_task_preserves_other_dependencies(mock_db_path):
     """Test that deleting a task doesn't affect unrelated dependencies."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     # Create dependencies
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -397,7 +397,7 @@ def test_delete_task_special_characters(mock_db_path):
     ]
 
     for name in special_names:
-        TaskRepository.add_task(name, f"Task with name: {name}")
+        TaskRepository.add_task(name, f"Task with name: {name}", specification="Spec")
         deleted = TaskRepository.delete_task(name)
         assert deleted is True
         assert TaskRepository.get_task(name) is None

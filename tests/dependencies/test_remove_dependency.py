@@ -26,8 +26,8 @@ def mock_db_path(test_db: Path, monkeypatch):
 def test_remove_dependency_basic(mock_db_path):
     """Test removing a basic dependency between two tasks."""
     # Create tasks and add dependency
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
     DependencyRepository.add_dependency("task-b", "task-a")
 
     # Verify dependency exists
@@ -48,8 +48,8 @@ def test_remove_dependency_basic(mock_db_path):
 def test_remove_dependency_nonexistent(mock_db_path):
     """Test removing a dependency that doesn't exist."""
     # Create tasks but no dependency
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     # Try to remove non-existent dependency
     result = DependencyRepository.remove_dependency("task-b", "task-a")
@@ -70,9 +70,9 @@ def test_remove_dependency_nonexistent_tasks(mock_db_path):
 def test_remove_dependency_one_of_multiple(mock_db_path):
     """Test removing one dependency when multiple exist for a task."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # task-c depends on both task-a and task-b
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -96,9 +96,9 @@ def test_remove_dependency_one_of_multiple(mock_db_path):
 def test_remove_dependency_from_chain(mock_db_path):
     """Test removing a dependency from a chain (A -> B -> C)."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
 
     # Create chain: C depends on B, B depends on A
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -122,8 +122,8 @@ def test_remove_dependency_from_chain(mock_db_path):
 def test_remove_dependency_affects_available_tasks(mock_db_path):
     """Test that removing dependencies affects which tasks are available."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A", status="pending")
-    TaskRepository.add_task("task-b", "Task B", status="pending")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec", status="pending")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec", status="pending")
 
     # Add dependency: B depends on A
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -146,8 +146,8 @@ def test_remove_dependency_affects_available_tasks(mock_db_path):
 def test_remove_dependency_wrong_direction(mock_db_path):
     """Test that removing dependency in wrong direction doesn't work."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     # Add dependency: B depends on A
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -175,10 +175,10 @@ def test_remove_dependency_diamond_pattern(mock_db_path):
     # D depends on B and C
     # B depends on A
     # C depends on A
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     DependencyRepository.add_dependency("task-b", "task-a")
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -210,10 +210,10 @@ def test_remove_dependency_diamond_pattern(mock_db_path):
 def test_remove_dependency_all_from_task(mock_db_path):
     """Test removing all dependencies from a task one by one."""
     # Create tasks
-    TaskRepository.add_task("base-task", "Base Task")
-    TaskRepository.add_task("dependent-1", "Dependent 1")
-    TaskRepository.add_task("dependent-2", "Dependent 2")
-    TaskRepository.add_task("dependent-3", "Dependent 3")
+    TaskRepository.add_task("base-task", "Base Task", specification="Spec")
+    TaskRepository.add_task("dependent-1", "Dependent 1", specification="Spec")
+    TaskRepository.add_task("dependent-2", "Dependent 2", specification="Spec")
+    TaskRepository.add_task("dependent-3", "Dependent 3", specification="Spec")
 
     # Multiple tasks depend on base-task
     DependencyRepository.add_dependency("dependent-1", "base-task")
@@ -244,8 +244,8 @@ def test_remove_dependency_all_from_task(mock_db_path):
 def test_remove_dependency_idempotent(mock_db_path):
     """Test that removing the same dependency twice is idempotent."""
     # Create tasks and add dependency
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
     DependencyRepository.add_dependency("task-b", "task-a")
 
     # Remove dependency first time
@@ -264,11 +264,11 @@ def test_remove_dependency_complex_graph(mock_db_path):
     # D depends on B and C
     # B depends on A
     # C depends on A
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
-    TaskRepository.add_task("task-e", "Task E")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
+    TaskRepository.add_task("task-e", "Task E", specification="Spec")
 
     DependencyRepository.add_dependency("task-b", "task-a")
     DependencyRepository.add_dependency("task-c", "task-a")
@@ -301,8 +301,8 @@ def test_remove_dependency_complex_graph(mock_db_path):
 def test_remove_dependency_allows_circular_after_removal(mock_db_path):
     """Test that removing a dependency allows previously blocked circular dependency."""
     # Create tasks
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
 
     # Add dependency: B depends on A
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -323,8 +323,8 @@ def test_remove_dependency_allows_circular_after_removal(mock_db_path):
 def test_remove_dependency_tasks_remain(mock_db_path):
     """Test that removing a dependency doesn't delete the tasks."""
     # Create tasks and add dependency
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
     DependencyRepository.add_dependency("task-b", "task-a")
 
     # Remove dependency
@@ -345,7 +345,7 @@ def test_remove_dependency_long_chain(mock_db_path):
     # Create a long chain of tasks
     chain_length = 8
     for i in range(chain_length):
-        TaskRepository.add_task(f"task-{i}", f"Task {i}")
+        TaskRepository.add_task(f"task-{i}", f"Task {i}", specification="Spec")
 
     # Create chain: each task depends on the previous one
     for i in range(1, chain_length):
@@ -371,8 +371,8 @@ def test_remove_dependency_long_chain(mock_db_path):
 def test_remove_dependency_with_completed_tasks(mock_db_path):
     """Test removing a dependency where tasks are completed."""
     # Create tasks with different statuses
-    TaskRepository.add_task("task-a", "Task A", status="completed")
-    TaskRepository.add_task("task-b", "Task B", status="in_progress")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec", status="completed")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec", status="in_progress")
 
     # Add dependency
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -392,13 +392,13 @@ def test_remove_dependency_multiple_independents(mock_db_path):
     """Test removing dependencies in multiple independent trees."""
     # Create two independent trees
     # Tree 1: B depends on A
-    TaskRepository.add_task("tree1-a", "Tree 1 A")
-    TaskRepository.add_task("tree1-b", "Tree 1 B")
+    TaskRepository.add_task("tree1-a", "Tree 1 A", specification="Spec")
+    TaskRepository.add_task("tree1-b", "Tree 1 B", specification="Spec")
     DependencyRepository.add_dependency("tree1-b", "tree1-a")
 
     # Tree 2: D depends on C
-    TaskRepository.add_task("tree2-c", "Tree 2 C")
-    TaskRepository.add_task("tree2-d", "Tree 2 D")
+    TaskRepository.add_task("tree2-c", "Tree 2 C", specification="Spec")
+    TaskRepository.add_task("tree2-d", "Tree 2 D", specification="Spec")
     DependencyRepository.add_dependency("tree2-d", "tree2-c")
 
     # Verify both dependencies exist

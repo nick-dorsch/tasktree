@@ -74,7 +74,7 @@ def test_feature_color_consistency():
 def test_api_tasks_includes_feature_color(mock_db_path, server_thread):
     """Test /api/tasks includes feature_color."""
     port = server_thread
-    TaskRepository.add_task("task-1", "Task 1")
+    TaskRepository.add_task("task-1", "Task 1", specification="Spec")
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -92,7 +92,7 @@ def test_api_tasks_includes_feature_color(mock_db_path, server_thread):
 def test_root_html_includes_feature_color_style(mock_db_path, server_thread):
     """Test root HTML includes feature color styles."""
     port = server_thread
-    TaskRepository.add_task("task-1", "Task 1")
+    TaskRepository.add_task("task-1", "Task 1", specification="Spec")
 
     # We need to know what color 'misc' gets
     # Since hashing is deterministic, we can calculate it

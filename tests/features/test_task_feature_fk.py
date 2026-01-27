@@ -26,8 +26,7 @@ def mock_db_path(test_db: Path, monkeypatch):
 def test_add_task_default_feature(mock_db_path):
     """Test that tasks get 'misc' feature_name by default."""
     task = TaskRepository.add_task(
-        name="test-task",
-        description="A test task",
+        name="test-task", description="A test task", specification="Spec"
     )
 
     assert task.feature_name == "misc"
@@ -38,6 +37,7 @@ def test_add_task_explicit_misc_feature(mock_db_path):
     task = TaskRepository.add_task(
         name="test-task",
         description="A test task",
+        specification="Spec",
         feature_name="misc",
     )
 
@@ -50,6 +50,7 @@ def test_add_task_nonexistent_feature(mock_db_path):
         TaskRepository.add_task(
             name="test-task",
             description="A test task",
+            specification="Spec",
             feature_name="nonexistent-feature",
         )
 
@@ -59,6 +60,7 @@ def test_list_tasks_includes_feature_name(mock_db_path):
     TaskRepository.add_task(
         name="task-1",
         description="Task 1",
+        specification="Spec",
     )
 
     tasks = TaskRepository.list_tasks()
@@ -72,6 +74,7 @@ def test_get_task_includes_feature_name(mock_db_path):
     TaskRepository.add_task(
         name="test-task",
         description="A test task",
+        specification="Spec",
     )
 
     task = TaskRepository.get_task("test-task")

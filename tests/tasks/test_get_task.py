@@ -29,6 +29,7 @@ def test_get_task_valid_task(mock_db_path):
     TaskRepository.add_task(
         name="existing-task",
         description="A task that exists",
+        specification="A specification",
         priority=5,
     )
 
@@ -95,6 +96,7 @@ def test_get_task_with_minimal_fields(mock_db_path):
     TaskRepository.add_task(
         name="minimal-task",
         description="Minimal description",
+        specification="A minimal specification",
     )
 
     # Get the task
@@ -106,7 +108,7 @@ def test_get_task_with_minimal_fields(mock_db_path):
     assert task.description == "Minimal description"
     assert task.priority == 0
     assert task.status == "pending"
-    assert task.specification == "Minimal description"
+    assert task.specification == "A minimal specification"
 
 
 def test_get_task_immediately_after_creation(mock_db_path):
@@ -115,6 +117,7 @@ def test_get_task_immediately_after_creation(mock_db_path):
     created = TaskRepository.add_task(
         name="immediate-task",
         description="Created just now",
+        specification="A specification",
         priority=7,
     )
 
@@ -134,6 +137,7 @@ def test_get_task_after_update(mock_db_path):
     TaskRepository.add_task(
         name="update-task",
         description="Original description",
+        specification="A specification",
         priority=3,
     )
 
@@ -159,6 +163,7 @@ def test_get_task_completed_task(mock_db_path):
     TaskRepository.add_task(
         name="completed-task",
         description="This task is done",
+        specification="A specification",
     )
     TaskRepository.complete_task("completed-task")
 
@@ -179,6 +184,7 @@ def test_get_task_multiple_tasks_exist(mock_db_path):
             name=f"task-{i}",
             description=f"Task number {i}",
             priority=i,
+            specification="A specification",
         )
 
     # Get a specific task
@@ -197,6 +203,7 @@ def test_get_task_after_delete_returns_none(mock_db_path):
     TaskRepository.add_task(
         name="delete-task",
         description="To be deleted",
+        specification="A specification",
     )
 
     # Verify it exists

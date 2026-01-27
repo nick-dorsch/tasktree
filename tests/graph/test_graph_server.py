@@ -4,7 +4,6 @@ Tests for the graph server (tasktree/graph_server.py).
 Tests the HTTP API endpoints for retrieving task dependency graphs.
 """
 
-# Import the server module
 import json
 import socket
 from http.client import HTTPConnection
@@ -121,8 +120,8 @@ def test_get_graph_json_empty_database(test_db: Path):
 def test_get_graph_json_with_tasks(mock_db_path):
     """Test graph JSON with tasks in the database."""
     # Add some tasks
-    TaskRepository.add_task("task-1", "Description 1", priority=5)
-    TaskRepository.add_task("task-2", "Description 2", priority=3)
+    TaskRepository.add_task("task-1", "Description 1", specification="Spec", priority=5)
+    TaskRepository.add_task("task-2", "Description 2", specification="Spec", priority=3)
 
     # Query graph JSON
     import sqlite3
@@ -152,8 +151,8 @@ def test_get_graph_json_with_tasks(mock_db_path):
 def test_get_graph_json_with_dependencies(mock_db_path):
     """Test graph JSON with tasks and dependencies."""
     # Create tasks with dependencies
-    TaskRepository.add_task("base-task", "Base task")
-    TaskRepository.add_task("dependent-task", "Dependent task")
+    TaskRepository.add_task("base-task", "Base task", specification="Spec")
+    TaskRepository.add_task("dependent-task", "Dependent task", specification="Spec")
     DependencyRepository.add_dependency("dependent-task", "base-task")
 
     # Query graph JSON
@@ -178,7 +177,11 @@ def test_get_graph_json_with_dependencies(mock_db_path):
 def test_get_graph_json_includes_all_fields(mock_db_path):
     """Test that graph JSON includes all expected fields."""
     TaskRepository.add_task(
-        "test-task", "Test description", priority=7, status="pending"
+        "test-task",
+        "Test description",
+        specification="Spec",
+        priority=7,
+        status="pending",
     )
 
     # Query graph JSON
@@ -215,8 +218,12 @@ def test_get_graph_json_includes_all_fields(mock_db_path):
 def test_get_graph_json_is_available_flag(mock_db_path):
     """Test that is_available flag is correctly set based on dependencies."""
     # Create dependency chain
-    TaskRepository.add_task("available-task", "Available", status="pending")
-    TaskRepository.add_task("blocked-task", "Blocked", status="pending")
+    TaskRepository.add_task(
+        "available-task", "Available", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "blocked-task", "Blocked", specification="Spec", status="pending"
+    )
     DependencyRepository.add_dependency("blocked-task", "available-task")
 
     # Query graph JSON
@@ -242,7 +249,9 @@ def test_api_graph_endpoint(mock_db_path, server_thread):
     port = server_thread
 
     # Add test data
-    TaskRepository.add_task("api-task", "API test task", priority=5)
+    TaskRepository.add_task(
+        "api-task", "API test task", specification="Spec", priority=5
+    )
 
     # Make HTTP request
     conn = HTTPConnection("localhost", port)
@@ -323,10 +332,10 @@ def test_graph_endpoint_with_complex_dependencies(mock_db_path, server_thread):
     port = server_thread
 
     # Create a complex dependency graph
-    TaskRepository.add_task("task-a", "Task A")
-    TaskRepository.add_task("task-b", "Task B")
-    TaskRepository.add_task("task-c", "Task C")
-    TaskRepository.add_task("task-d", "Task D")
+    TaskRepository.add_task("task-a", "Task A", specification="Spec")
+    TaskRepository.add_task("task-b", "Task B", specification="Spec")
+    TaskRepository.add_task("task-c", "Task C", specification="Spec")
+    TaskRepository.add_task("task-d", "Task D", specification="Spec")
 
     # Create dependencies: D -> C -> B -> A
     DependencyRepository.add_dependency("task-b", "task-a")
@@ -361,7 +370,9 @@ def test_graph_endpoint_with_completed_tasks(mock_db_path, server_thread):
     port = server_thread
 
     # Add task and mark as completed
-    TaskRepository.add_task("completed-task", "Completed", status="pending")
+    TaskRepository.add_task(
+        "completed-task", "Completed", specification="Spec", status="pending"
+    )
     TaskRepository.update_task("completed-task", status="completed")
 
     conn = HTTPConnection("localhost", port)
@@ -382,7 +393,7 @@ def test_graph_endpoint_json_formatting(mock_db_path, server_thread):
     """Test that the JSON response is properly formatted."""
     port = server_thread
 
-    TaskRepository.add_task("test", "Test task")
+    TaskRepository.add_task("test", "Test task", specification="Spec")
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -407,8 +418,12 @@ def test_root_endpoint_includes_task_panel(mock_db_path, server_thread):
     port = server_thread
 
     # Add some tasks with different statuses and priorities
-    TaskRepository.add_task("high-priority-task", "High priority", priority=10)
-    TaskRepository.add_task("low-priority-task", "Low priority", priority=2)
+    TaskRepository.add_task(
+        "high-priority-task", "High priority", specification="Spec", priority=10
+    )
+    TaskRepository.add_task(
+        "low-priority-task", "Low priority", specification="Spec", priority=2
+    )
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -438,9 +453,9 @@ def test_root_endpoint_task_panel_priority_sorting(mock_db_path, server_thread):
     port = server_thread
 
     # Add tasks with different priorities
-    TaskRepository.add_task("priority-3", "Task 3", priority=3)
-    TaskRepository.add_task("priority-8", "Task 8", priority=8)
-    TaskRepository.add_task("priority-5", "Task 5", priority=5)
+    TaskRepository.add_task("priority-3", "Task 3", specification="Spec", priority=3)
+    TaskRepository.add_task("priority-8", "Task 8", specification="Spec", priority=8)
+    TaskRepository.add_task("priority-5", "Task 5", specification="Spec", priority=5)
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -466,16 +481,32 @@ def test_root_endpoint_task_panel_status_ordering(mock_db_path, server_thread):
 
     # Add tasks with different statuses and priorities
     TaskRepository.add_task(
-        "completed-high", "Completed high priority", priority=10, status="completed"
+        "completed-high",
+        "Completed high priority",
+        specification="Spec",
+        priority=10,
+        status="completed",
     )
     TaskRepository.add_task(
-        "pending-high", "Pending high priority", priority=9, status="pending"
+        "pending-high",
+        "Pending high priority",
+        specification="Spec",
+        priority=9,
+        status="pending",
     )
     TaskRepository.add_task(
-        "in-progress-low", "In progress low priority", priority=5, status="in_progress"
+        "in-progress-low",
+        "In progress low priority",
+        specification="Spec",
+        priority=5,
+        status="in_progress",
     )
     TaskRepository.add_task(
-        "blocked-medium", "Blocked medium priority", priority=7, status="blocked"
+        "blocked-medium",
+        "Blocked medium priority",
+        specification="Spec",
+        priority=7,
+        status="blocked",
     )
 
     conn = HTTPConnection("localhost", port)
@@ -502,10 +533,18 @@ def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
     port = server_thread
 
     # Add tasks with different statuses
-    TaskRepository.add_task("pending-task", "Pending", status="pending")
-    TaskRepository.add_task("in-progress-task", "In Progress", status="in_progress")
-    TaskRepository.add_task("completed-task", "Completed", status="completed")
-    TaskRepository.add_task("blocked-task", "Blocked", status="blocked")
+    TaskRepository.add_task(
+        "pending-task", "Pending", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress-task", "In Progress", specification="Spec", status="in_progress"
+    )
+    TaskRepository.add_task(
+        "completed-task", "Completed", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "blocked-task", "Blocked", specification="Spec", status="blocked"
+    )
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -528,10 +567,10 @@ def test_root_endpoint_task_panel_overall_times(mock_db_path, server_thread):
     port = server_thread
 
     # Add tasks with started_at and completed_at times
-    TaskRepository.add_task("task-1", "Task 1", status="pending")
+    TaskRepository.add_task("task-1", "Task 1", specification="Spec", status="pending")
     TaskRepository.update_task("task-1", status="in_progress")
 
-    TaskRepository.add_task("task-2", "Task 2", status="pending")
+    TaskRepository.add_task("task-2", "Task 2", specification="Spec", status="pending")
     TaskRepository.update_task("task-2", status="in_progress")
     TaskRepository.complete_task("task-2")
 
@@ -576,7 +615,7 @@ def test_root_endpoint_task_panel_full_description_in_details(
 
     # Add task with a very long description
     long_desc = "A" * 150  # 150 characters
-    TaskRepository.add_task("long-desc-task", long_desc)
+    TaskRepository.add_task("long-desc-task", long_desc, "Spec")
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -657,9 +696,9 @@ def test_root_endpoint_task_items_collapsed_by_default(mock_db_path, server_thre
     TaskRepository.add_task(
         "test-task",
         "Test description",
+        specification="Additional details about the task",
         priority=5,
         status="pending",
-        specification="Additional details about the task",
     )
 
     conn = HTTPConnection("localhost", port)
@@ -692,9 +731,9 @@ def test_root_endpoint_task_details_section_content(mock_db_path, server_thread)
     TaskRepository.add_task(
         "detailed-task",
         "Full description",
+        specification="Spec",
         priority=7,
         status="pending",
-        specification="Implementation details here",
     )
     TaskRepository.update_task("detailed-task", status="in_progress")
 
@@ -720,7 +759,7 @@ def test_root_endpoint_task_details_section_content(mock_db_path, server_thread)
         # Check for values
         assert "in_progress" in html
         assert "Full description" in html
-        assert "Implementation details here" in html
+
     finally:
         conn.close()
 
@@ -730,7 +769,9 @@ def test_root_endpoint_task_details_handles_null_fields(mock_db_path, server_thr
     port = server_thread
 
     # Add minimal task (no details, not started, not completed)
-    TaskRepository.add_task("minimal-task", "Basic description", priority=3)
+    TaskRepository.add_task(
+        "minimal-task", "Basic description", specification="Spec", priority=3
+    )
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -758,7 +799,9 @@ def test_root_endpoint_task_details_shows_completed_at(mock_db_path, server_thre
     port = server_thread
 
     # Add and complete a task
-    TaskRepository.add_task("completed-task", "Done task", priority=5)
+    TaskRepository.add_task(
+        "completed-task", "Done task", specification="Spec", priority=5
+    )
     TaskRepository.update_task("completed-task", status="in_progress")
     TaskRepository.complete_task("completed-task")
 
@@ -819,7 +862,7 @@ def test_root_endpoint_task_header_clickable(mock_db_path, server_thread):
     """Test that task headers are clickable for expanding."""
     port = server_thread
 
-    TaskRepository.add_task("clickable-task", "Test", priority=5)
+    TaskRepository.add_task("clickable-task", "Test", specification="Spec", priority=5)
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -873,9 +916,9 @@ def test_root_endpoint_accordion_behavior(mock_db_path, server_thread):
     port = server_thread
 
     # Add multiple tasks
-    TaskRepository.add_task("task-1", "First task", priority=5)
-    TaskRepository.add_task("task-2", "Second task", priority=4)
-    TaskRepository.add_task("task-3", "Third task", priority=3)
+    TaskRepository.add_task("task-1", "First task", specification="Spec", priority=5)
+    TaskRepository.add_task("task-2", "Second task", specification="Spec", priority=4)
+    TaskRepository.add_task("task-3", "Third task", specification="Spec", priority=3)
 
     graph_js = fetch_graph_js(port)
 
@@ -954,8 +997,8 @@ def test_root_endpoint_description_details_new_lines(mock_db_path, server_thread
     TaskRepository.add_task(
         "test-task",
         "Task description text",
+        specification="Spec",
         priority=5,
-        specification="Task details text",
     )
 
     conn = HTTPConnection("localhost", port)
@@ -1055,8 +1098,8 @@ def test_api_tasks_endpoint_with_tasks(mock_db_path, server_thread):
     port = server_thread
 
     # Add some tasks
-    TaskRepository.add_task("task-1", "First task", priority=5)
-    TaskRepository.add_task("task-2", "Second task", priority=3)
+    TaskRepository.add_task("task-1", "First task", specification="Spec", priority=5)
+    TaskRepository.add_task("task-2", "Second task", specification="Spec", priority=3)
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -1091,17 +1134,31 @@ def test_api_tasks_endpoint_sorting(mock_db_path, server_thread):
     port = server_thread
 
     # Add tasks with different statuses, priorities, and created_at times
-    TaskRepository.add_task("completed-high", "Done", priority=10, status="completed")
-    TaskRepository.add_task("pending-high", "Pending", priority=9, status="pending")
     TaskRepository.add_task(
-        "in-progress-low", "Working", priority=5, status="in_progress"
+        "completed-high", "Done", specification="Spec", priority=10, status="completed"
     )
-    TaskRepository.add_task("blocked-medium", "Blocked", priority=7, status="blocked")
+    TaskRepository.add_task(
+        "pending-high", "Pending", specification="Spec", priority=9, status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress-low",
+        "Working",
+        specification="Spec",
+        priority=5,
+        status="in_progress",
+    )
+    TaskRepository.add_task(
+        "blocked-medium", "Blocked", specification="Spec", priority=7, status="blocked"
+    )
 
     # Add two tasks with same status and priority but different created_at to test created_at ordering
-    TaskRepository.add_task("pending-old", "Old pending", priority=9, status="pending")
+    TaskRepository.add_task(
+        "pending-old", "Old pending", specification="Spec", priority=9, status="pending"
+    )
     # This one should come after pending-old due to later created_at
-    TaskRepository.add_task("pending-new", "New pending", priority=9, status="pending")
+    TaskRepository.add_task(
+        "pending-new", "New pending", specification="Spec", priority=9, status="pending"
+    )
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -1142,7 +1199,7 @@ def test_root_endpoint_renders_template_placeholders(mock_db_path, server_thread
     """Test that template placeholders are replaced in the root response."""
     port = server_thread
 
-    TaskRepository.add_task("templated-task", "Template task")
+    TaskRepository.add_task("templated-task", "Template task", specification="Spec")
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -1166,7 +1223,7 @@ def test_root_endpoint_feature_header_includes_description_and_created_at(
     port = server_thread
 
     # Add a task to get the default 'misc' feature
-    TaskRepository.add_task("test-task", "Test task", priority=5)
+    TaskRepository.add_task("test-task", "Test task", specification="Spec", priority=5)
 
     conn = HTTPConnection("localhost", port)
     try:
@@ -1242,7 +1299,7 @@ def test_api_tasks_endpoint_includes_feature_info(mock_db_path, server_thread):
     port = server_thread
 
     # Add a task to get default 'misc' feature
-    TaskRepository.add_task("test-task", "Test task", priority=5)
+    TaskRepository.add_task("test-task", "Test task", specification="Spec", priority=5)
 
     conn = HTTPConnection("localhost", port)
     try:

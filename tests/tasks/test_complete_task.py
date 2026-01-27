@@ -16,7 +16,11 @@ def test_complete_task_success(test_db: Path, monkeypatch):
 
     # Create a task
     task = TaskRepository.add_task(
-        name="test-task", description="Test task", priority=5, status="in_progress"
+        name="test-task",
+        description="Test task",
+        specification="Test spec",
+        priority=5,
+        status="in_progress",
     )
     assert task.status == "in_progress"
 
@@ -34,7 +38,10 @@ def test_complete_task_from_pending(test_db: Path, monkeypatch):
 
     # Create a pending task
     task = TaskRepository.add_task(
-        name="pending-task", description="Pending task", status="pending"
+        name="pending-task",
+        description="Pending task",
+        specification="Pending spec",
+        status="pending",
     )
     assert task.status == "pending"
 
@@ -74,7 +81,11 @@ def test_complete_task_twice(test_db: Path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
     # Create and complete a task
-    TaskRepository.add_task(name="already-done", description="Already completed")
+    TaskRepository.add_task(
+        name="already-done",
+        description="Already completed",
+        specification="Already done spec",
+    )
     TaskRepository.complete_task("already-done")
 
     # Complete it again
@@ -90,10 +101,14 @@ def test_complete_task_with_dependencies(test_db: Path, monkeypatch):
 
     # Create tasks with dependencies
     TaskRepository.add_task(
-        name="dependency-task", description="Task that others depend on"
+        name="dependency-task",
+        description="Task that others depend on",
+        specification="Dependency spec",
     )
     TaskRepository.add_task(
-        name="dependent-task", description="Task that depends on another"
+        name="dependent-task",
+        description="Task that depends on another",
+        specification="Dependent spec",
     )
 
     # Add dependency

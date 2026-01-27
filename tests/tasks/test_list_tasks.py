@@ -32,7 +32,9 @@ def test_list_tasks_empty_database(mock_db_path):
 
 def test_list_tasks_single_task(mock_db_path):
     """Test listing tasks with a single task in the database."""
-    TaskRepository.add_task("single-task", "A single task", priority=5)
+    TaskRepository.add_task(
+        "single-task", "A single task", specification="Spec", priority=5
+    )
 
     tasks = TaskRepository.list_tasks()
     assert len(tasks) == 1
@@ -43,9 +45,9 @@ def test_list_tasks_single_task(mock_db_path):
 
 def test_list_tasks_multiple_tasks(mock_db_path):
     """Test listing multiple tasks."""
-    TaskRepository.add_task("task-1", "First task", priority=1)
-    TaskRepository.add_task("task-2", "Second task", priority=2)
-    TaskRepository.add_task("task-3", "Third task", priority=3)
+    TaskRepository.add_task("task-1", "First task", specification="Spec", priority=1)
+    TaskRepository.add_task("task-2", "Second task", specification="Spec", priority=2)
+    TaskRepository.add_task("task-3", "Third task", specification="Spec", priority=3)
 
     tasks = TaskRepository.list_tasks()
     assert len(tasks) == 3
@@ -53,9 +55,9 @@ def test_list_tasks_multiple_tasks(mock_db_path):
 
 def test_list_tasks_ordering_by_priority_descending(mock_db_path):
     """Test that tasks are ordered by priority in descending order."""
-    TaskRepository.add_task("low", "Low priority", priority=1)
-    TaskRepository.add_task("high", "High priority", priority=10)
-    TaskRepository.add_task("mid", "Mid priority", priority=5)
+    TaskRepository.add_task("low", "Low priority", specification="Spec", priority=1)
+    TaskRepository.add_task("high", "High priority", specification="Spec", priority=10)
+    TaskRepository.add_task("mid", "Mid priority", specification="Spec", priority=5)
 
     tasks = TaskRepository.list_tasks()
 
@@ -71,9 +73,11 @@ def test_list_tasks_ordering_by_priority_descending(mock_db_path):
 def test_list_tasks_ordering_by_created_at_when_priority_same(mock_db_path):
     """Test that tasks with same priority are ordered by created_at ascending."""
     # Add tasks with same priority in specific order
-    TaskRepository.add_task("first", "First created", priority=5)
-    TaskRepository.add_task("second", "Second created", priority=5)
-    TaskRepository.add_task("third", "Third created", priority=5)
+    TaskRepository.add_task("first", "First created", specification="Spec", priority=5)
+    TaskRepository.add_task(
+        "second", "Second created", specification="Spec", priority=5
+    )
+    TaskRepository.add_task("third", "Third created", specification="Spec", priority=5)
 
     tasks = TaskRepository.list_tasks()
 
@@ -85,10 +89,18 @@ def test_list_tasks_ordering_by_created_at_when_priority_same(mock_db_path):
 
 def test_list_tasks_filter_by_status_pending(mock_db_path):
     """Test filtering tasks by status='pending'."""
-    TaskRepository.add_task("pending-1", "Pending task 1", status="pending")
-    TaskRepository.add_task("pending-2", "Pending task 2", status="pending")
-    TaskRepository.add_task("in-progress-1", "In progress task", status="in_progress")
-    TaskRepository.add_task("completed-1", "Completed task", status="completed")
+    TaskRepository.add_task(
+        "pending-1", "Pending task 1", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "pending-2", "Pending task 2", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress-1", "In progress task", specification="Spec", status="in_progress"
+    )
+    TaskRepository.add_task(
+        "completed-1", "Completed task", specification="Spec", status="completed"
+    )
 
     tasks = TaskRepository.list_tasks(status="pending")
 
@@ -99,10 +111,18 @@ def test_list_tasks_filter_by_status_pending(mock_db_path):
 
 def test_list_tasks_filter_by_status_in_progress(mock_db_path):
     """Test filtering tasks by status='in_progress'."""
-    TaskRepository.add_task("pending-1", "Pending task", status="pending")
-    TaskRepository.add_task("in-progress-1", "In progress 1", status="in_progress")
-    TaskRepository.add_task("in-progress-2", "In progress 2", status="in_progress")
-    TaskRepository.add_task("completed-1", "Completed task", status="completed")
+    TaskRepository.add_task(
+        "pending-1", "Pending task", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress-1", "In progress 1", specification="Spec", status="in_progress"
+    )
+    TaskRepository.add_task(
+        "in-progress-2", "In progress 2", specification="Spec", status="in_progress"
+    )
+    TaskRepository.add_task(
+        "completed-1", "Completed task", specification="Spec", status="completed"
+    )
 
     tasks = TaskRepository.list_tasks(status="in_progress")
 
@@ -112,10 +132,18 @@ def test_list_tasks_filter_by_status_in_progress(mock_db_path):
 
 def test_list_tasks_filter_by_status_completed(mock_db_path):
     """Test filtering tasks by status='completed'."""
-    TaskRepository.add_task("pending-1", "Pending task", status="pending")
-    TaskRepository.add_task("completed-1", "Completed 1", status="completed")
-    TaskRepository.add_task("completed-2", "Completed 2", status="completed")
-    TaskRepository.add_task("completed-3", "Completed 3", status="completed")
+    TaskRepository.add_task(
+        "pending-1", "Pending task", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "completed-1", "Completed 1", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "completed-2", "Completed 2", specification="Spec", status="completed"
+    )
+    TaskRepository.add_task(
+        "completed-3", "Completed 3", specification="Spec", status="completed"
+    )
 
     tasks = TaskRepository.list_tasks(status="completed")
 
@@ -125,10 +153,10 @@ def test_list_tasks_filter_by_status_completed(mock_db_path):
 
 def test_list_tasks_filter_by_priority_min(mock_db_path):
     """Test filtering tasks by minimum priority."""
-    TaskRepository.add_task("low", "Low priority", priority=2)
-    TaskRepository.add_task("mid", "Mid priority", priority=5)
-    TaskRepository.add_task("high", "High priority", priority=8)
-    TaskRepository.add_task("max", "Max priority", priority=10)
+    TaskRepository.add_task("low", "Low priority", specification="Spec", priority=2)
+    TaskRepository.add_task("mid", "Mid priority", specification="Spec", priority=5)
+    TaskRepository.add_task("high", "High priority", specification="Spec", priority=8)
+    TaskRepository.add_task("max", "Max priority", specification="Spec", priority=10)
 
     tasks = TaskRepository.list_tasks(priority_min=5)
 
@@ -139,9 +167,9 @@ def test_list_tasks_filter_by_priority_min(mock_db_path):
 
 def test_list_tasks_filter_by_priority_min_zero(mock_db_path):
     """Test filtering with priority_min=0 returns all tasks."""
-    TaskRepository.add_task("zero", "Zero priority", priority=0)
-    TaskRepository.add_task("five", "Five priority", priority=5)
-    TaskRepository.add_task("ten", "Ten priority", priority=10)
+    TaskRepository.add_task("zero", "Zero priority", specification="Spec", priority=0)
+    TaskRepository.add_task("five", "Five priority", specification="Spec", priority=5)
+    TaskRepository.add_task("ten", "Ten priority", specification="Spec", priority=10)
 
     tasks = TaskRepository.list_tasks(priority_min=0)
 
@@ -151,9 +179,15 @@ def test_list_tasks_filter_by_priority_min_zero(mock_db_path):
 
 def test_list_tasks_filter_by_priority_min_boundary(mock_db_path):
     """Test filtering with priority_min at exact boundary."""
-    TaskRepository.add_task("below", "Below threshold", priority=4)
-    TaskRepository.add_task("exactly", "Exactly threshold", priority=5)
-    TaskRepository.add_task("above", "Above threshold", priority=6)
+    TaskRepository.add_task(
+        "below", "Below threshold", specification="Spec", priority=4
+    )
+    TaskRepository.add_task(
+        "exactly", "Exactly threshold", specification="Spec", priority=5
+    )
+    TaskRepository.add_task(
+        "above", "Above threshold", specification="Spec", priority=6
+    )
 
     tasks = TaskRepository.list_tasks(priority_min=5)
 
@@ -164,15 +198,29 @@ def test_list_tasks_filter_by_priority_min_boundary(mock_db_path):
 
 def test_list_tasks_filter_by_status_and_priority(mock_db_path):
     """Test filtering by both status and priority_min."""
-    TaskRepository.add_task("pending-low", "Pending low", status="pending", priority=2)
     TaskRepository.add_task(
-        "pending-high", "Pending high", status="pending", priority=8
+        "pending-low", "Pending low", specification="Spec", status="pending", priority=2
     )
     TaskRepository.add_task(
-        "completed-low", "Completed low", status="completed", priority=2
+        "pending-high",
+        "Pending high",
+        specification="Spec",
+        status="pending",
+        priority=8,
     )
     TaskRepository.add_task(
-        "completed-high", "Completed high", status="completed", priority=8
+        "completed-low",
+        "Completed low",
+        specification="Spec",
+        status="completed",
+        priority=2,
+    )
+    TaskRepository.add_task(
+        "completed-high",
+        "Completed high",
+        specification="Spec",
+        status="completed",
+        priority=8,
     )
 
     tasks = TaskRepository.list_tasks(status="pending", priority_min=5)
@@ -185,8 +233,12 @@ def test_list_tasks_filter_by_status_and_priority(mock_db_path):
 
 def test_list_tasks_filter_status_no_matches(mock_db_path):
     """Test filtering by status with no matching tasks."""
-    TaskRepository.add_task("pending-1", "Pending task", status="pending")
-    TaskRepository.add_task("pending-2", "Pending task 2", status="pending")
+    TaskRepository.add_task(
+        "pending-1", "Pending task", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "pending-2", "Pending task 2", specification="Spec", status="pending"
+    )
 
     tasks = TaskRepository.list_tasks(status="completed")
 
@@ -196,8 +248,8 @@ def test_list_tasks_filter_status_no_matches(mock_db_path):
 
 def test_list_tasks_filter_priority_min_no_matches(mock_db_path):
     """Test filtering by priority_min with no matching tasks."""
-    TaskRepository.add_task("low-1", "Low priority 1", priority=1)
-    TaskRepository.add_task("low-2", "Low priority 2", priority=2)
+    TaskRepository.add_task("low-1", "Low priority 1", specification="Spec", priority=1)
+    TaskRepository.add_task("low-2", "Low priority 2", specification="Spec", priority=2)
 
     tasks = TaskRepository.list_tasks(priority_min=8)
 
@@ -207,9 +259,15 @@ def test_list_tasks_filter_priority_min_no_matches(mock_db_path):
 
 def test_list_tasks_filter_combined_no_matches(mock_db_path):
     """Test filtering by both status and priority with no matches."""
-    TaskRepository.add_task("pending-low", "Pending low", status="pending", priority=2)
     TaskRepository.add_task(
-        "completed-high", "Completed high", status="completed", priority=8
+        "pending-low", "Pending low", specification="Spec", status="pending", priority=2
+    )
+    TaskRepository.add_task(
+        "completed-high",
+        "Completed high",
+        specification="Spec",
+        status="completed",
+        priority=8,
     )
 
     tasks = TaskRepository.list_tasks(status="pending", priority_min=8)
@@ -219,13 +277,25 @@ def test_list_tasks_filter_combined_no_matches(mock_db_path):
 
 def test_list_tasks_ordering_with_status_filter(mock_db_path):
     """Test that ordering is maintained when filtering by status."""
-    TaskRepository.add_task("pending-low", "Pending low", status="pending", priority=1)
-    TaskRepository.add_task("pending-mid", "Pending mid", status="pending", priority=5)
     TaskRepository.add_task(
-        "pending-high", "Pending high", status="pending", priority=10
+        "pending-low", "Pending low", specification="Spec", status="pending", priority=1
     )
     TaskRepository.add_task(
-        "completed-1", "Completed task", status="completed", priority=7
+        "pending-mid", "Pending mid", specification="Spec", status="pending", priority=5
+    )
+    TaskRepository.add_task(
+        "pending-high",
+        "Pending high",
+        specification="Spec",
+        status="pending",
+        priority=10,
+    )
+    TaskRepository.add_task(
+        "completed-1",
+        "Completed task",
+        specification="Spec",
+        status="completed",
+        priority=7,
     )
 
     tasks = TaskRepository.list_tasks(status="pending")
@@ -239,10 +309,14 @@ def test_list_tasks_ordering_with_status_filter(mock_db_path):
 
 def test_list_tasks_ordering_with_priority_filter(mock_db_path):
     """Test that ordering is maintained when filtering by priority_min."""
-    TaskRepository.add_task("high-1", "High priority 1", priority=10)
-    TaskRepository.add_task("high-2", "High priority 2", priority=8)
-    TaskRepository.add_task("mid", "Mid priority", priority=5)
-    TaskRepository.add_task("low", "Low priority", priority=2)
+    TaskRepository.add_task(
+        "high-1", "High priority 1", specification="Spec", priority=10
+    )
+    TaskRepository.add_task(
+        "high-2", "High priority 2", specification="Spec", priority=8
+    )
+    TaskRepository.add_task("mid", "Mid priority", specification="Spec", priority=5)
+    TaskRepository.add_task("low", "Low priority", specification="Spec", priority=2)
 
     tasks = TaskRepository.list_tasks(priority_min=5)
 
@@ -288,10 +362,18 @@ def test_list_tasks_all_fields_present(mock_db_path):
 
 def test_list_tasks_with_different_statuses(mock_db_path):
     """Test listing tasks with various status values."""
-    TaskRepository.add_task("blocked", "Blocked task", status="blocked")
-    TaskRepository.add_task("pending", "Pending task", status="pending")
-    TaskRepository.add_task("in-progress", "In progress", status="in_progress")
-    TaskRepository.add_task("completed", "Completed", status="completed")
+    TaskRepository.add_task(
+        "blocked", "Blocked task", specification="Spec", status="blocked"
+    )
+    TaskRepository.add_task(
+        "pending", "Pending task", specification="Spec", status="pending"
+    )
+    TaskRepository.add_task(
+        "in-progress", "In progress", specification="Spec", status="in_progress"
+    )
+    TaskRepository.add_task(
+        "completed", "Completed", specification="Spec", status="completed"
+    )
 
     tasks = TaskRepository.list_tasks()
 
@@ -319,6 +401,7 @@ def test_list_tasks_medium_dataset_filters(
             name=f"task-{i:02d}",
             description=f"Task {i}",
             priority=i % 10,
+            specification="Spec",
             status=statuses[i % 3],
         )
 
@@ -331,8 +414,8 @@ def test_list_tasks_medium_dataset_filters(
 
 def test_list_tasks_none_parameters(mock_db_path):
     """Test that passing None for optional parameters works correctly."""
-    TaskRepository.add_task("task-1", "Task 1", priority=5)
-    TaskRepository.add_task("task-2", "Task 2", priority=3)
+    TaskRepository.add_task("task-1", "Task 1", specification="Spec", priority=5)
+    TaskRepository.add_task("task-2", "Task 2", specification="Spec", priority=3)
 
     # Explicitly pass None for both parameters
     tasks = TaskRepository.list_tasks(status=None, priority_min=None)
@@ -366,10 +449,18 @@ def test_list_tasks_filter_by_feature_name(mock_db_path):
         )
         conn.commit()
 
-    TaskRepository.add_task("task-1", "Task 1", feature_name="misc", priority=5)
-    TaskRepository.add_task("task-2", "Task 2", feature_name="feature-a", priority=8)
-    TaskRepository.add_task("task-3", "Task 3", feature_name="feature-b", priority=3)
-    TaskRepository.add_task("task-4", "Task 4", feature_name="feature-a", priority=6)
+    TaskRepository.add_task(
+        "task-1", "Task 1", specification="Spec", feature_name="misc", priority=5
+    )
+    TaskRepository.add_task(
+        "task-2", "Task 2", specification="Spec", feature_name="feature-a", priority=8
+    )
+    TaskRepository.add_task(
+        "task-3", "Task 3", specification="Spec", feature_name="feature-b", priority=3
+    )
+    TaskRepository.add_task(
+        "task-4", "Task 4", specification="Spec", feature_name="feature-a", priority=6
+    )
 
     tasks = TaskRepository.list_tasks(feature_name="feature-a")
 
@@ -394,8 +485,12 @@ def test_list_tasks_filter_by_feature_name_no_matches(mock_db_path):
         )
         conn.commit()
 
-    TaskRepository.add_task("task-1", "Task 1", feature_name="misc")
-    TaskRepository.add_task("task-2", "Task 2", feature_name="feature-a")
+    TaskRepository.add_task(
+        "task-1", "Task 1", specification="Spec", feature_name="misc"
+    )
+    TaskRepository.add_task(
+        "task-2", "Task 2", specification="Spec", feature_name="feature-a"
+    )
 
     tasks = TaskRepository.list_tasks(feature_name="nonexistent")
 
@@ -427,16 +522,32 @@ def test_list_tasks_filter_by_feature_and_status(mock_db_path):
         conn.commit()
 
     TaskRepository.add_task(
-        "task-1", "Task 1", feature_name="feature-a", status="pending"
+        "task-1",
+        "Task 1",
+        specification="Spec",
+        feature_name="feature-a",
+        status="pending",
     )
     TaskRepository.add_task(
-        "task-2", "Task 2", feature_name="feature-a", status="completed"
+        "task-2",
+        "Task 2",
+        specification="Spec",
+        feature_name="feature-a",
+        status="completed",
     )
     TaskRepository.add_task(
-        "task-3", "Task 3", feature_name="feature-b", status="pending"
+        "task-3",
+        "Task 3",
+        specification="Spec",
+        feature_name="feature-b",
+        status="pending",
     )
     TaskRepository.add_task(
-        "task-4", "Task 4", feature_name="feature-a", status="pending"
+        "task-4",
+        "Task 4",
+        specification="Spec",
+        feature_name="feature-a",
+        status="pending",
     )
 
     tasks = TaskRepository.list_tasks(feature_name="feature-a", status="pending")
@@ -471,16 +582,36 @@ def test_list_tasks_filter_by_feature_priority_and_status(mock_db_path):
         conn.commit()
 
     TaskRepository.add_task(
-        "task-1", "Task 1", feature_name="feature-a", status="pending", priority=3
+        "task-1",
+        "Task 1",
+        specification="Spec",
+        feature_name="feature-a",
+        status="pending",
+        priority=3,
     )
     TaskRepository.add_task(
-        "task-2", "Task 2", feature_name="feature-a", status="pending", priority=8
+        "task-2",
+        "Task 2",
+        specification="Spec",
+        feature_name="feature-a",
+        status="pending",
+        priority=8,
     )
     TaskRepository.add_task(
-        "task-3", "Task 3", feature_name="feature-b", status="pending", priority=9
+        "task-3",
+        "Task 3",
+        specification="Spec",
+        feature_name="feature-b",
+        status="pending",
+        priority=9,
     )
     TaskRepository.add_task(
-        "task-4", "Task 4", feature_name="feature-a", status="completed", priority=10
+        "task-4",
+        "Task 4",
+        specification="Spec",
+        feature_name="feature-a",
+        status="completed",
+        priority=10,
     )
 
     tasks = TaskRepository.list_tasks(
@@ -510,9 +641,15 @@ def test_list_tasks_filter_by_default_feature(mock_db_path):
         )
         conn.commit()
 
-    TaskRepository.add_task("task-1", "Task 1")  # Defaults to 'misc' feature
-    TaskRepository.add_task("task-2", "Task 2", feature_name="feature-a")
-    TaskRepository.add_task("task-3", "Task 3")  # Defaults to 'misc' feature
+    TaskRepository.add_task(
+        "task-1", "Task 1", specification="Spec"
+    )  # Defaults to 'misc' feature
+    TaskRepository.add_task(
+        "task-2", "Task 2", specification="Spec", feature_name="feature-a"
+    )
+    TaskRepository.add_task(
+        "task-3", "Task 3", specification="Spec"
+    )  # Defaults to 'misc' feature
 
     tasks = TaskRepository.list_tasks(feature_name="misc")
 

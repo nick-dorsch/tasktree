@@ -18,6 +18,7 @@ def test_update_task_description_only(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="test-task",
         description="Original description",
+        specification="Specification",
         priority=5,
         status="pending",
     )
@@ -42,6 +43,7 @@ def test_update_task_priority_only(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="priority-task",
         description="Test task",
+        specification="Specification",
         priority=3,
     )
 
@@ -64,6 +66,7 @@ def test_update_task_status_only(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="status-task",
         description="Test task",
+        specification="Specification",
         status="pending",
     )
 
@@ -86,6 +89,7 @@ def test_update_task_specification_only(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="details-task",
         description="Test task",
+        specification="Specification",
     )
 
     # Update only specification
@@ -139,6 +143,7 @@ def test_update_task_add_specification_to_task_without_specification(
     TaskRepository.add_task(
         name="add-details",
         description="Task without details",
+        specification="Specification",
     )
 
     # Add specification
@@ -235,6 +240,7 @@ def test_update_task_no_fields_specified(test_db: Path, monkeypatch):
     original = TaskRepository.add_task(
         name="no-update",
         description="Original description",
+        specification="Specification",
         priority=5,
     )
 
@@ -280,6 +286,7 @@ def test_update_task_status_from_pending_to_completed(test_db: Path, monkeypatch
     TaskRepository.add_task(
         name="skip-in-progress",
         description="Skip in_progress",
+        specification="Specification",
         status="pending",
     )
 
@@ -303,6 +310,7 @@ def test_update_task_priority_bounds(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="priority-bounds",
         description="Test priority bounds",
+        specification="Specification",
         priority=5,
     )
 
@@ -331,6 +339,7 @@ def test_update_task_with_long_specification(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="long-details",
         description="Task for long details",
+        specification="Specification",
     )
 
     # Update with long specification
@@ -354,6 +363,7 @@ def test_update_task_with_unicode_specification(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="unicode-details",
         description="Task for unicode",
+        specification="Specification",
     )
 
     # Update with unicode specification
@@ -378,6 +388,7 @@ def test_update_task_status_preserves_timestamps(test_db: Path, monkeypatch):
         name="timestamp-preserve",
         description="Test timestamp preservation",
         status="pending",
+        specification="Specification",
     )
 
     # Start task
@@ -403,6 +414,7 @@ def test_update_task_different_status_values(test_db: Path, monkeypatch):
     TaskRepository.add_task(
         name="status-values",
         description="Test status values",
+        specification="Specification",
     )
 
     # Test each valid status
@@ -424,6 +436,7 @@ def test_update_task_multiple_consecutive_updates(test_db: Path, monkeypatch):
         name="consecutive-updates",
         description="Original",
         priority=1,
+        specification="Specification",
     )
 
     # First update

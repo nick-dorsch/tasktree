@@ -16,7 +16,11 @@ def test_start_task_success(test_db: Path, monkeypatch):
 
     # Create a pending task
     task = TaskRepository.add_task(
-        name="test-task", description="Test task", priority=5, status="pending"
+        name="test-task",
+        description="Test task",
+        specification="Test spec",
+        priority=5,
+        status="pending",
     )
     assert task.status == "pending"
 
@@ -34,7 +38,10 @@ def test_start_task_from_completed(test_db: Path, monkeypatch):
 
     # Create a completed task
     TaskRepository.add_task(
-        name="completed-task", description="Completed task", status="pending"
+        name="completed-task",
+        description="Completed task",
+        specification="Test spec",
+        status="pending",
     )
     TaskRepository.complete_task("completed-task")
 
@@ -107,10 +114,14 @@ def test_start_task_with_dependencies(test_db: Path, monkeypatch):
 
     # Create tasks with dependencies
     TaskRepository.add_task(
-        name="dependency-task", description="Task that others depend on"
+        name="dependency-task",
+        specification="Test spec",
+        description="Task that others depend on",
     )
     TaskRepository.add_task(
-        name="dependent-task", description="Task that depends on another"
+        name="dependent-task",
+        specification="Test spec",
+        description="Task that depends on another",
     )
 
     # Add dependency
@@ -130,7 +141,9 @@ def test_start_task_makes_task_unavailable(test_db: Path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", test_db)
 
     # Create a pending task
-    TaskRepository.add_task(name="available-task", description="Available task")
+    TaskRepository.add_task(
+        name="available-task", description="Available task", specification="Spec"
+    )
 
     # Verify it's available
     available = DependencyRepository.get_available_tasks()
