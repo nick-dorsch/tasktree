@@ -62,7 +62,7 @@ def test_graph_js_includes_progress_display_logic(server_thread):
             in js_content
         )
         assert (
-            "const countStyle = allCompleted ? ' style=\"color: #4CAF50; font-weight: bold;\"' : '';"
+            "const countStyle = allCompleted ? ' style=\"color: #22d3ee; font-weight: bold;\"' : '';"
             in js_content
         )
 
@@ -104,7 +104,7 @@ def test_server_renders_progress_counts(mock_db, server_thread):
         html = response.read().decode()
 
         assert (
-            '<span class="feature-count" style="color: #4CAF50; font-weight: bold;">2 / 2</span>'
+            '<span class="feature-count" style="color: #22d3ee; font-weight: bold;">2 / 2</span>'
             in html
         )
     finally:

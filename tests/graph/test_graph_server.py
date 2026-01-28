@@ -554,10 +554,10 @@ def test_root_endpoint_task_panel_status_colors(mock_db_path, server_thread):
         html = response.read().decode()
 
         # Check for status colors (these match the STATUS_COLORS in the viewer)
-        assert "#2196F3" in html  # Pending - Blue
-        assert "#FFC107" in html  # In Progress - Yellow/Amber
-        assert "#4CAF50" in html  # Completed - Green
-        assert "#F44336" in html  # Blocked - Red
+        assert "#6366f1" in html  # Pending - Indigo
+        assert "#fff000" in html  # In Progress - Yellow
+        assert "#22d3ee" in html  # Completed - Cyan
+        assert "#f43f5e" in html  # Blocked - Rose
     finally:
         conn.close()
 
@@ -676,14 +676,14 @@ def test_root_endpoint_legend_includes_blocked_status(server_thread):
         html = response.read().decode()
 
         # Check that legend includes all status types
-        assert "Blocked" in html
-        assert "In Progress" in html
-        assert "Pending" in html
-        assert "Completed" in html
+        assert "BLOCKED" in html
+        assert "IN PROGRESS" in html
+        assert "PENDING" in html
+        assert "COMPLETE" in html
 
         # Check that blocked status appears in legend with correct color
-        # The legend should contain the blocked color (#F44336)
-        assert "#F44336" in html
+        # The legend should contain the blocked color (#f43f5e)
+        assert "#f43f5e" in html
     finally:
         conn.close()
 
