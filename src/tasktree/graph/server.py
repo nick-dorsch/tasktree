@@ -166,9 +166,17 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         for feature_name in sorted(
             tasks_by_feature.keys(), key=lambda x: feature_order.get(x, 999)
         ):
+            feature_tasks = tasks_by_feature[feature_name]
+            completed_tasks = len([t for t in feature_tasks if t[2] == "completed"])
+            total_tasks = len(feature_tasks)
+            all_completed = completed_tasks == total_tasks and total_tasks > 0
+            count_style = (
+                ' style="color: #4CAF50; font-weight: bold;"' if all_completed else ""
+            )
+
             feature_tasks_html = ""
             feature_color = self._get_feature_color(feature_name)
-            for task in tasks_by_feature[feature_name]:
+            for task in feature_tasks:
                 (
                     name,
                     description,
@@ -230,7 +238,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                     <div class="feature-main-info">
                         <span class="feature-chevron">▶</span>
                         <span class="feature-name" title="{feature_name}">{feature_name}</span>
-                        <span class="feature-count">{len(tasks_by_feature[feature_name])}</span>
+                        <span class="feature-count"{count_style}>{completed_tasks} / {total_tasks}</span>
                     </div>
                     <div class="feature-meta-info">
                         <div class="feature-description">{feature_info_detail["description"]}</div>
@@ -271,7 +279,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             return
 
         content_type = self.mime_types.get(
-            asset_path.suffix.lower(), "application/octet-stream"
+            safe_path.suffix.lower(), "application/octet-stream"
         )
 
         self.send_response(200)

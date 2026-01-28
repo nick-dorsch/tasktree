@@ -467,12 +467,17 @@ function updateTaskList(tasks) {
                 '</div>';
         });
 
+        const completedTasks = featureTasks.filter(t => t.status === 'completed').length;
+        const totalTasks = featureTasks.length;
+        const allCompleted = completedTasks === totalTasks && totalTasks > 0;
+        const countStyle = allCompleted ? ' style="color: #4CAF50; font-weight: bold;"' : '';
+
         taskItemsHtml += '<div class="feature-group" data-feature="' + featureName + '">' +
             '<div class="feature-header ' + featureClass + '" onclick="toggleFeatureTasks(this)" style="border-left: 4px solid ' + featureColor + '; background-color: ' + featureColor + '1A;">' +
             '<div class="feature-main-info">' +
             '<span class="feature-chevron">▶</span>' +
             '<span class="feature-name" title="' + featureName + '">' + featureName + '</span>' +
-            '<span class="feature-count">' + featureTasks.length + '</span>' +
+            '<span class="feature-count"' + countStyle + '>' + completedTasks + ' / ' + totalTasks + '</span>' +
             '</div>' +
             '</div>' +
             '<div class="feature-tasks" style="display: ' + featureDisplay + ';">' +
