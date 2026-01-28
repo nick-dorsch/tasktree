@@ -78,22 +78,6 @@ defs.append('marker')
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('fill', '#666');
 
-// Define glow filter for available tasks
-const filter = defs.append('filter')
-    .attr('id', 'glow')
-    .attr('x', '-50%')
-    .attr('y', '-50%')
-    .attr('width', '200%')
-    .attr('height', '200%');
-
-filter.append('feGaussianBlur')
-    .attr('stdDeviation', '3')
-    .attr('result', 'coloredBlur');
-
-const feMerge = filter.append('feMerge');
-feMerge.append('feMergeNode').attr('in', 'coloredBlur');
-feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-
 // Create container for zoom/pan
 const container = svg.append('g');
 
@@ -155,12 +139,11 @@ function getNodeRadius(d) {
 }
 
 function getNodeStroke(d) {
-    // Highlight available tasks with gold border (same as in-progress)
-    return d.is_available ? '#FFC107' : '#333';
+    return 'none';
 }
 
 function getNodeStrokeWidth(d) {
-    return d.is_available ? 3 : 2;
+    return 0;
 }
 
 function updateGraph(graphData) {
@@ -246,7 +229,11 @@ function updateGraph(graphData) {
         .attr('fill', getNodeColor)
         .attr('stroke', getNodeStroke)
         .attr('stroke-width', getNodeStrokeWidth)
-        .attr('filter', d => d.is_available || d.status === 'in_progress' ? 'url(#glow)' : null);
+        .attr('filter', d => {
+            if (d.is_available) return 'url(#glow-available)';
+            if (d.status === 'in_progress') return 'url(#glow-in-progress)';
+            return 'url(#glow-status)';
+        });
 
     // Update labels
     label = labelGroup.selectAll('.node-label')

@@ -391,12 +391,26 @@
       height: 16px;
       border-radius: 50%;
       margin-right: 8px;
-      border: 2px solid #333;
     }
 
     .legend-color-box.available {
-      border: 2px solid #FFC107;
       box-shadow: 0 0 5px #FFC107;
+    }
+
+    .legend-color-box.in-progress {
+      box-shadow: 0 0 5px #FFFF00;
+    }
+
+    .legend-color-box.pending {
+      box-shadow: 0 0 5px #2196F3;
+    }
+
+    .legend-color-box.completed {
+      box-shadow: 0 0 5px #4CAF50;
+    }
+
+    .legend-color-box.blocked {
+      box-shadow: 0 0 5px #F44336;
     }
 
     .legend-size-example {
@@ -441,6 +455,35 @@
   </div>
 
   <div id="graph"></div>
+  <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="glow-available" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feFlood flood-color="#FFC107" flood-opacity="1" result="glowColor"/>
+        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow"/>
+        <feMerge>
+          <feMergeNode in="softGlow"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="glow-in-progress" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feFlood flood-color="#FFFF00" flood-opacity="1" result="glowColor"/>
+        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow"/>
+        <feMerge>
+          <feMergeNode in="softGlow"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="glow-status" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+  </svg>
   <div class="tooltip" id="tooltip"></div>
   <div class="loading" id="loading">Loading graph data...</div>
 
@@ -450,19 +493,19 @@
     <div class="legend-section">
       <div class="legend-section-title">Status</div>
       <div class="legend-item">
-        <div class="legend-color-box" style="background: #F44336;"></div>
+        <div class="legend-color-box blocked" style="background: #F44336;"></div>
         <span>Blocked</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color-box" style="background: #FFC107;"></div>
-        <span>In Progress (gold glow)</span>
+        <div class="legend-color-box in-progress" style="background: #FFC107;"></div>
+        <span>In Progress (yellow glow)</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color-box" style="background: #2196F3;"></div>
+        <div class="legend-color-box pending" style="background: #2196F3;"></div>
         <span>Pending</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color-box" style="background: #4CAF50;"></div>
+        <div class="legend-color-box completed" style="background: #4CAF50;"></div>
         <span>Completed</span>
       </div>
       <div class="legend-item">
