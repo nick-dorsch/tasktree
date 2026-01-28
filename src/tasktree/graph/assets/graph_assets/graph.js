@@ -51,7 +51,7 @@ const HEIGHT = window.innerHeight;
 
 // Status colors
 const STATUS_COLORS = {
-    pending: '#2196F3',
+    pending: '#4A6984',
     in_progress: '#FFC107',
     completed: '#4CAF50',
     blocked: '#F44336',
@@ -130,6 +130,7 @@ function hideTooltip() {
 }
 
 function getNodeColor(d) {
+    if (d.is_available) return '#2196F3';
     return STATUS_COLORS[d.status] || '#999';
 }
 
@@ -232,6 +233,7 @@ function updateGraph(graphData) {
         .attr('filter', d => {
             if (d.is_available) return 'url(#glow-available)';
             if (d.status === 'in_progress') return 'url(#glow-in-progress)';
+            if (d.status === 'pending') return null;
             return 'url(#glow-status)';
         });
 
@@ -394,7 +396,7 @@ function updateTaskList(tasks) {
 
     // Status colors
     const statusColors = {
-        pending: '#2196F3',
+        pending: '#4A6984',
         in_progress: '#FFC107',
         completed: '#4CAF50',
         blocked: '#F44336',

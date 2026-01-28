@@ -394,7 +394,7 @@
     }
 
     .legend-color-box.available {
-      box-shadow: 0 0 5px #FFC107;
+      box-shadow: 0 0 5px #2196F3;
     }
 
     .legend-color-box.in-progress {
@@ -402,7 +402,7 @@
     }
 
     .legend-color-box.pending {
-      box-shadow: 0 0 5px #2196F3;
+      box-shadow: none;
     }
 
     .legend-color-box.completed {
@@ -459,7 +459,7 @@
     <defs>
       <filter id="glow-available" x="-50%" y="-50%" width="200%" height="200%">
         <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-        <feFlood flood-color="#FFC107" flood-opacity="1" result="glowColor"/>
+        <feFlood flood-color="#2196F3" flood-opacity="1" result="glowColor"/>
         <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow"/>
         <feMerge>
           <feMergeNode in="softGlow"/>
@@ -501,8 +501,8 @@
         <span>In Progress (yellow glow)</span>
       </div>
       <div class="legend-item">
-        <div class="legend-color-box pending" style="background: #2196F3;"></div>
-        <span>Pending</span>
+        <div class="legend-color-box pending" style="background: #4A6984;"></div>
+        <span>Pending (Dull Blue)</span>
       </div>
       <div class="legend-item">
         <div class="legend-color-box completed" style="background: #4CAF50;"></div>
@@ -510,7 +510,7 @@
       </div>
       <div class="legend-item">
         <div class="legend-color-box available" style="background: #2196F3;"></div>
-        <span>Available (gold glow)</span>
+        <span>Available (blue glow)</span>
       </div>
     </div>
   </div>
