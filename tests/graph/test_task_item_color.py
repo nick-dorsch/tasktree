@@ -1,9 +1,9 @@
+import hashlib
 import socket
 from http.client import HTTPConnection
 from pathlib import Path
 from threading import Thread
 from time import sleep
-import hashlib
 
 import pytest
 

@@ -43,16 +43,16 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
     }
 
     FEATURE_COLORS = [
-        "#FF6B6B",  # Coral Red
-        "#4ECDC4",  # Turquoise
-        "#45B7D1",  # Sky Blue
-        "#96CEB4",  # Sage Green
-        "#FECA57",  # Golden Yellow
-        "#B983FF",  # Lavender
-        "#FD79A8",  # Pink
-        "#A29BFE",  # Periwinkle
-        "#6C5CE7",  # Purple
-        "#00B894",  # Emerald
+        "#9D50BB",  # Amethyst Purple
+        "#6E48AA",  # Deep Violet
+        "#00D4FF",  # Mana Blue
+        "#FFD700",  # Gold
+        "#A855F7",  # Bright Purple
+        "#3B82F6",  # Arcane Blue
+        "#F59E0B",  # Amber
+        "#8B5CF6",  # Royal Violet
+        "#06B6D4",  # Cyan Magic
+        "#D946EF",  # Fuchsia Spark
     ]
 
     def _get_feature_color(self, feature_name: str) -> str:
@@ -157,10 +157,10 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
 
         task_items_html = ""
         status_colors = {
-            "pending": "#2196F3",
-            "in_progress": "#FFC107",
-            "completed": "#4CAF50",
-            "blocked": "#F44336",
+            "pending": "#6366f1",  # Indigo
+            "in_progress": "#fff000",  # Bright Yellow
+            "completed": "#22d3ee",  # Cyan/Bright Blue
+            "blocked": "#f43f5e",  # Rose
         }
 
         for feature_name in sorted(
@@ -171,7 +171,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
             total_tasks = len(feature_tasks)
             all_completed = completed_tasks == total_tasks and total_tasks > 0
             count_style = (
-                ' style="color: #4CAF50; font-weight: bold;"' if all_completed else ""
+                ' style="color: #22d3ee; font-weight: bold;"' if all_completed else ""
             )
 
             feature_tasks_html = ""
@@ -253,7 +253,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         task_items_rendered = (
             task_items_html
             if task_items_html
-            else '<div style="padding: 12px; color: #999; font-size: 12px;">'
+            else '<div style="padding: 12px; color: #7c3aed; font-size: 12px;">'
             "No tasks available"
             "</div>"
         )

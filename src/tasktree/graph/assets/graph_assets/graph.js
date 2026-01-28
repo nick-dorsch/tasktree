@@ -51,10 +51,10 @@ const HEIGHT = window.innerHeight;
 
 // Status colors
 const STATUS_COLORS = {
-    pending: '#4A6984',
-    in_progress: '#FFC107',
-    completed: '#4CAF50',
-    blocked: '#F44336',
+    pending: '#6366f1',
+    in_progress: '#fff000',
+    completed: '#22d3ee',
+    blocked: '#f43f5e',
 };
 
 // Create SVG
@@ -76,7 +76,7 @@ defs.append('marker')
     .attr('orient', 'auto')
     .append('path')
     .attr('d', 'M0,-5L10,0L0,5')
-    .attr('fill', '#666');
+    .attr('fill', '#4B3D61');
 
 // Create container for zoom/pan
 const container = svg.append('g');
@@ -109,14 +109,17 @@ const tooltip = d3.select('#tooltip');
 
 function showTooltip(event, d) {
     const content = `
-        <div><span class="tooltip-label">Task:</span> ${d.name}</div>
-        <div><span class="tooltip-label">Description:</span> ${d.description || 'N/A'}</div>
-        <div><span class="tooltip-label">Status:</span> ${d.status}</div>
-        <div><span class="tooltip-label">Priority:</span> ${d.priority}</div>
-        <div><span class="tooltip-label">Available:</span> ${d.is_available ? 'Yes' : 'No'}</div>
-        ${d.started_at ? `<div><span class="tooltip-label">Started:</span> ${d.started_at}</div>` : ''}
-        ${d.completed_at ? `<div><span class="tooltip-label">Completed:</span> ${d.completed_at}</div>` : ''}
-        ${d.completion_minutes !== null && d.completion_minutes !== undefined ? `<div><span class="tooltip-label">Duration:</span> ${d.completion_minutes} min</div>` : ''}
+        <div style="margin-bottom: 8px; border-bottom: 1px solid rgba(157, 80, 187, 0.2); padding-bottom: 4px;">
+            <span class="tooltip-label" style="color: #ffd700;">Task:</span> 
+            <span style="font-weight: 800; color: #ede9fe;">${d.name}</span>
+        </div>
+        <div><span class="tooltip-label">Description:</span> <span style="color: #c4b5fd;">${d.description || 'N/A'}</span></div>
+        <div><span class="tooltip-label">Status:</span> <span style="color: ${STATUS_COLORS[d.status]};">${d.status}</span></div>
+        <div><span class="tooltip-label">Priority:</span> <span style="color: #ddd6fe;">${d.priority}</span></div>
+        <div><span class="tooltip-label">Available:</span> <span style="color: ${d.is_available ? '#ff7e00' : '#6b7280'};">${d.is_available ? 'Yes' : 'No'}</span></div>
+        ${d.started_at ? `<div><span class="tooltip-label">Started:</span> <span style="color: #ddd6fe;">${d.started_at}</span></div>` : ''}
+        ${d.completed_at ? `<div><span class="tooltip-label">Completed:</span> <span style="color: #ddd6fe;">${d.completed_at}</span></div>` : ''}
+        ${d.completion_minutes !== null && d.completion_minutes !== undefined ? `<div><span class="tooltip-label">Duration:</span> <span style="color: #ddd6fe;">${d.completion_minutes} min</span></div>` : ''}
     `;
 
     tooltip.html(content)
@@ -130,7 +133,7 @@ function hideTooltip() {
 }
 
 function getNodeColor(d) {
-    if (d.is_available) return '#2196F3';
+    if (d.is_available) return '#ff7e00';
     return STATUS_COLORS[d.status] || '#999';
 }
 
@@ -362,7 +365,7 @@ function updateTaskList(tasks) {
     const taskListDiv = document.querySelector('.task-list');
 
     if (!tasks || tasks.length === 0) {
-        taskListDiv.innerHTML = '<div style="padding: 12px; color: #999; font-size: 12px;">No tasks available</div>';
+        taskListDiv.innerHTML = '<div style="padding: 12px; color: #7c3aed; font-size: 12px;">No tasks available</div>';
         return;
     }
 
@@ -396,10 +399,10 @@ function updateTaskList(tasks) {
 
     // Status colors
     const statusColors = {
-        pending: '#4A6984',
-        in_progress: '#FFC107',
-        completed: '#4CAF50',
-        blocked: '#F44336',
+        pending: '#6366f1',
+        in_progress: '#fff000',
+        completed: '#22d3ee',
+        blocked: '#f43f5e',
     };
 
     // Group tasks by feature
@@ -472,7 +475,7 @@ function updateTaskList(tasks) {
         const completedTasks = featureTasks.filter(t => t.status === 'completed').length;
         const totalTasks = featureTasks.length;
         const allCompleted = completedTasks === totalTasks && totalTasks > 0;
-        const countStyle = allCompleted ? ' style="color: #4CAF50; font-weight: bold;"' : '';
+        const countStyle = allCompleted ? ' style="color: #22d3ee; font-weight: bold;"' : '';
 
         taskItemsHtml += '<div class="feature-group" data-feature="' + featureName + '">' +
             '<div class="feature-header ' + featureClass + '" onclick="toggleFeatureTasks(this)" style="border-left: 4px solid ' + featureColor + '; background-color: ' + featureColor + '1A;">' +
