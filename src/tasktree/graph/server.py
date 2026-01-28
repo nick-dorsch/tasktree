@@ -401,8 +401,8 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(error_data, indent=2).encode())
 
     def log_message(self, format: str, *args) -> None:
-        """Override to provide cleaner log messages."""
-        print(f"{self.address_string()} - {format % args}")
+        """Silence standard logging of requests."""
+        pass
 
 
 def run_server(port: int, db_path: Path) -> None:
