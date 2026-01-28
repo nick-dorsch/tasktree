@@ -12,7 +12,7 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       overflow: hidden;
-      background-color: #1a1a1a;
+      background-color: #1d1721;
     }
 
     #graph {
@@ -27,7 +27,7 @@
       left: 20px;
       width: 320px;
       max-height: calc(100vh - 40px);
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(22, 13, 31, 0.6);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -282,7 +282,7 @@
     .node-label {
       font-size: 10px;
       fill: #e0e0e0;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
       pointer-events: none;
       user-select: none;
     }
@@ -345,7 +345,7 @@
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(29, 23, 33, 0.6);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -458,28 +458,28 @@
   <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
     <defs>
       <filter id="glow-available" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-        <feFlood flood-color="#2196F3" flood-opacity="1" result="glowColor"/>
-        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow"/>
+        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+        <feFlood flood-color="#2196F3" flood-opacity="1" result="glowColor" />
+        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow" />
         <feMerge>
-          <feMergeNode in="softGlow"/>
-          <feMergeNode in="SourceGraphic"/>
+          <feMergeNode in="softGlow" />
+          <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
       <filter id="glow-in-progress" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-        <feFlood flood-color="#FFFF00" flood-opacity="1" result="glowColor"/>
-        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow"/>
+        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+        <feFlood flood-color="#FFFF00" flood-opacity="1" result="glowColor" />
+        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow" />
         <feMerge>
-          <feMergeNode in="softGlow"/>
-          <feMergeNode in="SourceGraphic"/>
+          <feMergeNode in="softGlow" />
+          <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
       <filter id="glow-status" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
         <feMerge>
-          <feMergeNode in="coloredBlur"/>
-          <feMergeNode in="SourceGraphic"/>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
     </defs>
