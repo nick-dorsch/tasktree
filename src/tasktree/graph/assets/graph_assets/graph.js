@@ -233,6 +233,8 @@ function updateGraph(graphData) {
         .attr('fill', getNodeColor)
         .attr('stroke', getNodeStroke)
         .attr('stroke-width', getNodeStrokeWidth)
+        .attr('data-status', d => d.status)
+        .style('--base-radius', d => getNodeRadius(d) + 'px')
         .attr('filter', d => {
             if (d.is_available) return 'url(#glow-available)';
             if (d.status === 'in_progress') return 'url(#glow-in-progress)';

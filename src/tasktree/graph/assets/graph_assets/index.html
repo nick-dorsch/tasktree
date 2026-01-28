@@ -283,6 +283,17 @@
       stroke-width: 2px;
     }
 
+    /* More Subtle Node Pulse */
+    @keyframes node-wizard-pulse {
+      0% { r: var(--base-radius); }
+      50% { r: calc(var(--base-radius) * 1.15); }
+      100% { r: var(--base-radius); }
+    }
+
+    .node[data-status="in_progress"] {
+      animation: node-wizard-pulse 2s infinite ease-in-out;
+    }
+
     .node-label {
       font-size: 11px;
       font-weight: 500;
@@ -370,6 +381,10 @@
       box-shadow: 0 0 10px currentColor;
     }
 
+    .legend-color-box.in-progress {
+      animation: dot-sparkle 2s infinite ease-in-out;
+    }
+
   </style>
 </head>
 
@@ -396,12 +411,21 @@
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
-      <filter id="glow-in-progress" x="-50%" y="-50%" width="200%" height="200%">
-        <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-        <feFlood flood-color="#fff000" flood-opacity="0.8" result="glowColor" />
-        <feComposite in="glowColor" in2="coloredBlur" operator="in" result="softGlow" />
+      <filter id="glow-in-progress" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="6" result="coloredBlur">
+          <animate attributeName="stdDeviation" values="4;8;4" dur="3s" repeatCount="indefinite" />
+        </feGaussianBlur>
+        <feFlood flood-color="#fff000" flood-opacity="0.8" result="glow1">
+          <animate attributeName="flood-opacity" values="0.5;0.8;0.5" dur="3s" repeatCount="indefinite" />
+        </feFlood>
+        <feFlood flood-color="#a855f7" flood-opacity="0.5" result="glow2">
+          <animate attributeName="flood-opacity" values="0.1;0.4;0.1" dur="4s" repeatCount="indefinite" />
+        </feFlood>
+        <feComposite in="glow1" in2="coloredBlur" operator="in" result="softGlow1" />
+        <feComposite in="glow2" in2="coloredBlur" operator="in" result="softGlow2" />
         <feMerge>
-          <feMergeNode in="softGlow" />
+          <feMergeNode in="softGlow2" />
+          <feMergeNode in="softGlow1" />
           <feMergeNode in="SourceGraphic" />
         </feMerge>
       </filter>
