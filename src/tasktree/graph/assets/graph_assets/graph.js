@@ -46,8 +46,8 @@ function toggleTaskDetails(headerElement) {
 // Configuration
 const API_ENDPOINT = '/api/graph';
 const TASKS_ENDPOINT = '/api/tasks';
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
+let WIDTH = window.innerWidth;
+let HEIGHT = window.innerHeight;
 
 // Status colors
 const STATUS_COLORS = {
@@ -509,8 +509,10 @@ setInterval(() => {
 
 // Handle window resize
 window.addEventListener('resize', () => {
-    const newWidth = window.innerWidth;
-    const newHeight = window.innerHeight;
+    WIDTH = window.innerWidth;
+    HEIGHT = window.innerHeight;
+    const newWidth = WIDTH;
+    const newHeight = HEIGHT;
 
     svg.attr('width', newWidth).attr('height', newHeight);
 

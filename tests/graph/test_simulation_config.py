@@ -65,3 +65,17 @@ def test_resize_handler_updates_xy_forces(server_thread):
     assert "simulation.force('x', d3.forceX(newWidth / 2).strength(0.05))" in graph_js
     assert "simulation.force('y', d3.forceY(newHeight / 2).strength(0.05))" in graph_js
     assert "simulation.force('center'" not in graph_js
+
+
+def test_resize_handler_recalculates_global_dimensions(server_thread):
+    """Test that the resize handler recalculates global WIDTH and HEIGHT."""
+    port = server_thread
+    graph_js = fetch_graph_js(port)
+
+    # Verify global WIDTH/HEIGHT are now 'let' instead of 'const'
+    assert "let WIDTH = window.innerWidth;" in graph_js
+    assert "let HEIGHT = window.innerHeight;" in graph_js
+
+    # Verify they are updated in the resize handler
+    assert "WIDTH = window.innerWidth;" in graph_js
+    assert "HEIGHT = window.innerHeight;" in graph_js
