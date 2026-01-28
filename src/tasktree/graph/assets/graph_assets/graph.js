@@ -182,30 +182,20 @@ function updateGraph(graphData) {
     const previousNodeCount = positionCache.size;
     const previousLinkCount = link ? link.size() : 0;
 
-    // Update links (stable key function handles D3 mutation)
+    // Update links
     link = linkGroup.selectAll('.link')
         .data(links, d => {
             const source = typeof d.source === 'object' ? d.source.id : d.source;
             const target = typeof d.target === 'object' ? d.target.id : d.target;
             return `${source}-${target}`;
-        });
-
-    link.exit().remove();
-
-    const linkEnter = link.enter()
-        .append('path')
+        })
+        .join('path')
         .attr('class', 'link');
-
-    link = linkEnter.merge(link);
 
     // Update nodes
     node = nodeGroup.selectAll('.node')
-        .data(nodes, d => d.id);
-
-    node.exit().remove();
-
-    const nodeEnter = node.enter()
-        .append('circle')
+        .data(nodes, d => d.id)
+        .join('circle')
         .attr('class', 'node')
         .call(d3.drag()
             .on('start', dragstarted)
@@ -214,20 +204,12 @@ function updateGraph(graphData) {
         .on('mouseover', showTooltip)
         .on('mouseout', hideTooltip);
 
-    node = nodeEnter.merge(node);
-
     // Restore positions for existing nodes AFTER data join
     node.each(d => {
         const cached = positionCache.get(d.id);
         if (cached) {
-            d.x = cached.x;
-            d.y = cached.y;
-            d.vx = cached.vx;
-            d.vy = cached.vy;
-            d.fx = cached.fx;
-            d.fy = cached.fy;
+            Object.assign(d, cached);
         }
-        // New nodes will get default force-directed positions
     });
 
     node.attr('r', getNodeRadius)
@@ -245,18 +227,11 @@ function updateGraph(graphData) {
 
     // Update labels
     label = labelGroup.selectAll('.node-label')
-        .data(nodes, d => d.id);
-
-    label.exit().remove();
-
-    const labelEnter = label.enter()
-        .append('text')
+        .data(nodes, d => d.id)
+        .join('text')
         .attr('class', 'node-label')
-        .attr('dy', 4);
-
-    label = labelEnter.merge(label);
-
-    label.text(d => d.name.length > 20 ? d.name.substring(0, 18) + '...' : d.name);
+        .attr('dy', 4)
+        .text(d => d.name.length > 20 ? d.name.substring(0, 18) + '...' : d.name);
 
     // Detect structural changes
     const structureChanged =
@@ -292,10 +267,7 @@ function ticked() {
         const offsetX = (dx / dist) * targetRadius;
         const offsetY = (dy / dist) * targetRadius;
 
-        const adjustedTargetX = targetX - offsetX;
-        const adjustedTargetY = targetY - offsetY;
-
-        return `M${sourceX},${sourceY}L${adjustedTargetX},${adjustedTargetY}`;
+        return `M${sourceX},${sourceY}L${targetX - offsetX},${targetY - offsetY}`;
     });
 
     node.attr('cx', d => d.x)
