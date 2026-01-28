@@ -92,11 +92,11 @@ svg.call(zoom);
 
 // Initialize force simulation
 const simulation = d3.forceSimulation()
-    .force('link', d3.forceLink().id(d => d.id).distance(50))
-    .force('charge', d3.forceManyBody().strength(-30))
-    .force('x', d3.forceX(WIDTH / 2).strength(0.05))
-    .force('y', d3.forceY(HEIGHT / 2).strength(0.05))
-    .force('collision', d3.forceCollide().radius(30));
+    .force('link', d3.forceLink().id(d => d.id).distance(120))
+    .force('charge', d3.forceManyBody().strength(-200))
+    .force('x', d3.forceX(WIDTH / 2).strength(0.02))
+    .force('y', d3.forceY(HEIGHT / 2).strength(0.02))
+    .force('collision', d3.forceCollide().radius(50));
 
 // Graph elements
 let linkGroup = container.append('g').attr('class', 'links');
@@ -488,7 +488,7 @@ window.addEventListener('resize', () => {
 
     svg.attr('width', newWidth).attr('height', newHeight);
 
-    simulation.force('x', d3.forceX(newWidth / 2).strength(0.05));
-    simulation.force('y', d3.forceY(newHeight / 2).strength(0.05));
+    simulation.force('x', d3.forceX(newWidth / 2).strength(0.02));
+    simulation.force('y', d3.forceY(newHeight / 2).strength(0.02));
     simulation.alpha(0.3).restart();
 });
