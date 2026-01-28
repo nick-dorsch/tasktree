@@ -295,8 +295,8 @@ function ticked() {
     node.attr('cx', d => d.x)
         .attr('cy', d => d.y);
 
-    label.attr('x', d => d.x)
-        .attr('y', d => d.y);
+    label.attr('x', d => d.x + getNodeRadius(d) * 0.7)
+        .attr('y', d => d.y - getNodeRadius(d) * 0.7);
 }
 
 function dragstarted(event, d) {
