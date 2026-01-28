@@ -223,7 +223,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 <div class="task-item" data-status="{status}" data-feature="{feature_name}" data-task-name="{name}" style="background-color: {feature_color}1A;">
                     <div class="task-header" onclick="toggleTaskDetails(this)">
                         <span class="task-status-dot" style="background: {status_color};"></span>
-                        <span class="task-name" title="{name}">{name}</span>
+                        <span class="task-name">{name}</span>
                         <span class="task-expand-icon">▶</span>
                     </div>
                     <div class="task-details" style="display: none;">
@@ -237,7 +237,7 @@ class GraphAPIHandler(BaseHTTPRequestHandler):
                 <div class="feature-header" onclick="toggleFeatureTasks(this)" style="border-left: 4px solid {feature_color}; background-color: {feature_color}1A;">
                     <div class="feature-main-info">
                         <span class="feature-chevron">▶</span>
-                        <span class="feature-name" title="{feature_name}">{feature_name}</span>
+                        <span class="feature-name">{feature_name}</span>
                         <span class="feature-count"{count_style}>{completed_tasks} / {total_tasks}</span>
                     </div>
                     <div class="feature-meta-info">
